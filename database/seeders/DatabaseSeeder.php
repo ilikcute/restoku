@@ -12,9 +12,11 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            RolePermissionSeeder::class,
-            TenantSeeder::class,
-            DemoDataSeeder::class,
+            RolePermissionSeeder::class,   // Paling pertama (wajib)
+            TenantSeeder::class,           // Tenant + User default
+            DemoDataSeeder::class,         // Data dummy (produk, kategori, dll)
         ]);
+
+        $this->command->info('🎉 Database seeding selesai!');
     }
 }

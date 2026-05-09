@@ -12,23 +12,24 @@ class TenantSeeder extends Seeder
 {
     public function run(): void
     {
-        // Buat Tenant utama (Demo)
+        // Buat Tenant Demo
         $tenant = Tenant::firstOrCreate(
             ['slug' => 'restoku-pos-demo'],
             ['name' => 'Restoku POS Demo']
         );
 
-        // Panggil Role & Permission Seeder
+        // Setup Role & Permission terlebih dahulu
         $this->call(RolePermissionSeeder::class);
 
-        // ==================== USERS ====================
+        // ==================== USER DEFAULT ====================
         $admin = User::firstOrCreate(
             ['email' => 'admin@restoku.id'],
             [
                 'tenant_id' => $tenant->id,
                 'name'      => 'Budi Santoso',
-                'role'      => UserRole::ADMIN,           // Kolom enum (bisa kita diskusikan lagi)
+                'role'      => UserRole::ADMIN,
                 'password'  => Hash::make('password'),
+                'is_active' => true,
             ]
         );
         $admin->assignRole('admin');
@@ -40,6 +41,7 @@ class TenantSeeder extends Seeder
                 'name'      => 'Dewi Lestari',
                 'role'      => UserRole::MANAGER,
                 'password'  => Hash::make('password'),
+                'is_active' => true,
             ]
         );
         $manager->assignRole('manager');
@@ -51,10 +53,11 @@ class TenantSeeder extends Seeder
                 'name'      => 'Agus Setiawan',
                 'role'      => UserRole::CASHIER,
                 'password'  => Hash::make('password'),
+                'is_active' => true,
             ]
         );
         $cashier->assignRole('cashier');
 
-        $this->command->info('✅ Tenant Demo + Users berhasil dibuat!');
+        $this->command->info('✅ Tenant Demo + 3 User default (Admin, Manager, Cashier) berhasil dibuat!');
     }
 }

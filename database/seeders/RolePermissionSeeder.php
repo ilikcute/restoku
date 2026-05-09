@@ -10,6 +10,7 @@ class RolePermissionSeeder extends Seeder
 {
     public function run(): void
     {
+        // Reset cache permissions agar tidak ada data lama
         app()->make('cache')->forget('spatie.permission.cache');
 
         // ==================== PERMISSIONS ====================
@@ -43,7 +44,7 @@ class RolePermissionSeeder extends Seeder
             'edit-customers',
             'delete-customers',
 
-            // POS & Transaction
+            // POS & Sales
             'view-pos',
             'create-order',
             'edit-order',
@@ -52,11 +53,11 @@ class RolePermissionSeeder extends Seeder
             'view-sales',
             'view-sales-returns',
 
-            // Inventory
+            // Inventory & Stok
             'view-inventory',
             'view-stocks',
-            'view-stock-movements',
             'create-stock-adjustment',
+            'view-stock-movements',
             'view-purchases',
             'create-purchases',
 
@@ -69,7 +70,7 @@ class RolePermissionSeeder extends Seeder
             'view-report-sales',
             'view-report-inventory',
 
-            // Settings
+            // Settings & User Management
             'view-settings',
             'manage-users',
             'manage-roles',
@@ -82,9 +83,11 @@ class RolePermissionSeeder extends Seeder
         }
 
         // ==================== ROLES ====================
+        // Admin - Full Access
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
-        $adminRole->syncPermissions($permissions);   // Full access
+        $adminRole->syncPermissions($permissions);
 
+        // Manager
         $managerRole = Role::firstOrCreate(['name' => 'manager']);
         $managerRole->syncPermissions([
             'view-dashboard',
@@ -109,6 +112,7 @@ class RolePermissionSeeder extends Seeder
             'edit-profile',
         ]);
 
+        // Cashier - Paling terbatas
         $cashierRole = Role::firstOrCreate(['name' => 'cashier']);
         $cashierRole->syncPermissions([
             'view-dashboard',
@@ -119,6 +123,6 @@ class RolePermissionSeeder extends Seeder
             'edit-profile',
         ]);
 
-        $this->command->info('✅ Role & Permission berhasil di-setup!');
+        $this->command->info('✅ Role & Permission berhasil dibuat!');
     }
 }

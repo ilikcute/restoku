@@ -3,79 +3,61 @@
 namespace Database\Factories;
 
 use App\Enums\UserRole;
-use App\Models\User;
+use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-/**
- * @extends Factory<User>
- */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
-    protected static ?string $password;
+    protected $model = \App\Models\User::class;
 
     public function definition(): array
     {
-        $names = [
-            'Budi Santoso', 'Siti Aminah', 'Agus Setiawan', 'Dewi Lestari',
-            'Bambang Pamungkas', 'Ahmad Fauzi', 'Linda Wijaya', 'Rizky Ramadhan',
-            'Putri Handayani', 'Eko Prasetyo', 'Maya Sari', 'Hendra Wijaya',
-            'Slamet Raharjo', 'Ani Suryani', 'Dedi Kurniawan', 'Rina Permata',
-            'Andi Wijaya', 'Yanti Susanti', 'Fajar Pratama', 'Diana Putri',
-        ];
-
         return [
-            'name' => fake()->randomElement($names),
-            'email' => fake()->unique()->safeEmail(),
+            'tenant_id'    => Tenant::inRandomOrder()->first()?->id ?? 1,
+            'name'         => $this->faker->name(),
+            'email'        => $this->faker->unique()->safeEmail(),
+            'role'         => UserRole::CASHIER,   // default
+            'password'     => Hash::make('password'),
+            'is_active'    => true,
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
-            'role' => UserRole::CASHIER,
-            'is_active' => true,
         ];
     }
 
-    /**
-     * State: Admin
-     */
+    // ==================== STATE METHODS ====================
+
     public function admin(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'role' => UserRole::ADMIN,
-        ]);
+            'name' => 'Admin ' . $this->faker->lastName(),
+        ])->withSpatieRole('admin');
     }
 
-    /**
-     * State: Manager
-     */
     public function manager(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'role' => UserRole::MANAGER,
-        ]);
+            'name' => 'Manager ' . $this->faker->lastName(),
+        ])->withSpatieRole('manager');
     }
 
-    /**
-     * State: Cashier
-     */
     public function cashier(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'role' => UserRole::CASHIER,
-        ]);
+        ])->withSpatieRole('cashier');
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
+     * Assign Spatie Permission Role setelah user dibuat
      */
-    public function unverified(): static
+    public function withSpatieRole(string $roleName): static
     {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
-        ]);
+        return $this->afterCreating(function (\App\Models\User $user) use ($roleName) {
+            $user->assignRole($roleName);
+        });
     }
 }
