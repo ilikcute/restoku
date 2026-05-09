@@ -7,6 +7,7 @@ use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 class UserFactory extends Factory
 {
@@ -57,6 +58,8 @@ class UserFactory extends Factory
     public function withSpatieRole(string $roleName): static
     {
         return $this->afterCreating(function (\App\Models\User $user) use ($roleName) {
+            Role::findOrCreate($roleName);
+
             $user->assignRole($roleName);
         });
     }

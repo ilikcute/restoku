@@ -14,16 +14,25 @@ use App\Services\PrinterService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
-class OrderController extends BaseApiController
+class OrderController extends BaseApiController implements HasMiddleware
 {
     public function __construct(
         protected InventoryService $inventoryService,
         protected PrinterService $printerService,
         protected OrderService $orderService,
     ) {}
+
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('shift', only: ['store']),
+        ];
+    }
 
     public function index(Request $request)
     {
@@ -88,13 +97,10 @@ class OrderController extends BaseApiController
                     );
                 }
 
-                // 1. Pastikan shift aktif
-                $shift = Shift::where('tenant_id', $tenantId)
-                    ->where('user_id', $userId)
-                    ->where('status', 'open')
-                    ->first();
+                // 1. Ambil shift aktif yang sudah divalidasi oleh ShiftMiddleware.
+                $shift = $request->attributes->get('current_shift');
 
-                if (! $shift) {
+                if (! $shift instanceof Shift || $shift->tenant_id !== $tenantId) {
                     return $this->errorResponse('Anda harus membuka Shift terlebih dahulu sebelum melakukan transaksi.', 422);
                 }
 
