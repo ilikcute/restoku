@@ -3,7 +3,7 @@
 namespace App\Services\Auth;
 
 use App\Enums\UserRole;
-use App\Models\Tenant;
+use App\Interfaces\AuthRepositoryInterface;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -11,17 +11,21 @@ use Illuminate\Validation\ValidationException;
 
 class AuthService
 {
+    public function __construct(
+        protected AuthRepositoryInterface $authRepository
+    ) {}
+
     /**
      * Register a new user and tenant
      */
     public function register(array $data): array
     {
-        $tenant = Tenant::create([
+        $tenant = $this->authRepository->createTenant([
             'name' => $data['tenant_name'],
             'slug' => Str::slug($data['tenant_name']),
         ]);
 
-        $user = User::create([
+        $user = $this->authRepository->createUser([
             'name' => $data['name'],
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
@@ -45,7 +49,7 @@ class AuthService
      */
     public function login(array $data): array
     {
-        $user = User::where('email', $data['email'])->first();
+        $user = $this->authRepository->findUserByEmail($data['email']);
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
             throw ValidationException::withMessages([
@@ -59,7 +63,6 @@ class AuthService
             ]);
         }
 
-        // Abilities based on role for POS
         $abilities = $this->getUserAbilities($user);
 
         $token = $user->createToken($data['device_name'], $abilities)->plainTextToken;
@@ -88,6 +91,6 @@ class AuthService
      */
     public function logout(User $user): void
     {
-        $user->currentAccessToken()->delete();
+        $this->authRepository->revokeCurrentToken($user);
     }
 }
