@@ -6,6 +6,7 @@ use App\Interfaces\AuthRepositoryInterface;
 use App\Interfaces\CategoryRepositoryInterface;
 use App\Interfaces\CustomerRepositoryInterface;
 use App\Interfaces\DailyClosingRepositoryInterface;
+use App\Interfaces\DashboardRepositoryInterface;
 use App\Interfaces\FinancialRepositoryInterface;
 use App\Interfaces\InventoryRepositoryInterface;
 use App\Interfaces\OrderRepositoryInterface;
@@ -24,6 +25,7 @@ use App\Repositories\AuthRepository;
 use App\Repositories\CategoryRepository;
 use App\Repositories\CustomerRepository;
 use App\Repositories\DailyClosingRepository;
+use App\Repositories\DashboardRepository;
 use App\Repositories\FinancialRepository;
 use App\Repositories\InventoryRepository;
 use App\Repositories\OrderRepository;
@@ -62,6 +64,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(ProfileRepositoryInterface::class, ProfileRepository::class);
         $this->app->bind(PublicMenuRepositoryInterface::class, PublicMenuRepository::class);
         $this->app->bind(ShiftRepositoryInterface::class, ShiftRepository::class);
+        $this->app->bind(DashboardRepositoryInterface::class, DashboardRepository::class);
     }
 
     /**
