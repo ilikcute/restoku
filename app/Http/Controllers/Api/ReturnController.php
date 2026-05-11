@@ -6,19 +6,17 @@ use App\Http\Requests\Api\Finance\Return\StoreOrderReturnRequest;
 use App\Http\Requests\Api\Finance\Return\StorePurchaseReturnRequest;
 use App\Http\Resources\Api\Transactions\OrderResource;
 use App\Http\Resources\Api\Transactions\PurchaseResource;
-use App\Models\Order;
-use App\Models\Purchase;
-use App\Services\InventoryService;
+use App\Interfaces\ReturnRepositoryInterface;
 use Exception;
 use Illuminate\Http\Request;
 
 class ReturnController extends BaseApiController
 {
-    protected $inventoryService;
+    protected ReturnRepositoryInterface $returnRepository;
 
-    public function __construct(InventoryService $inventoryService)
+    public function __construct(ReturnRepositoryInterface $returnRepository)
     {
-        $this->inventoryService = $inventoryService;
+        $this->returnRepository = $returnRepository;
     }
 
     /**
@@ -27,19 +25,16 @@ class ReturnController extends BaseApiController
     public function storeOrderReturn(StoreOrderReturnRequest $request)
     {
         try {
-            $order = Order::where('tenant_id', $request->user()->tenant_id)
-                ->with('items')
-                ->findOrFail($request->order_id);
-
-            $this->inventoryService->processOrderReturn(
-                $order,
+            $order = $this->returnRepository->processOrderReturn(
+                $request->user()->tenant_id,
+                $request->order_id,
                 $request->items,
                 $request->user()->id,
                 $request->account_id
             );
 
             return $this->successResponse(
-                new OrderResource($order->load(['items.product', 'user', 'returnUser'])),
+                new OrderResource($order),
                 'Retur penjualan berhasil diproses.'
             );
         } catch (Exception $e) {
@@ -53,19 +48,16 @@ class ReturnController extends BaseApiController
     public function storePurchaseReturn(StorePurchaseReturnRequest $request)
     {
         try {
-            $purchase = Purchase::where('tenant_id', $request->user()->tenant_id)
-                ->with('items')
-                ->findOrFail($request->purchase_id);
-
-            $this->inventoryService->processPurchaseReturn(
-                $purchase,
+            $purchase = $this->returnRepository->processPurchaseReturn(
+                $request->user()->tenant_id,
+                $request->purchase_id,
                 $request->items,
                 $request->user()->id,
                 $request->account_id
             );
 
             return $this->successResponse(
-                new PurchaseResource($purchase->load(['items.product', 'user', 'supplier', 'returnUser'])),
+                new PurchaseResource($purchase),
                 'Retur pembelian berhasil diproses.'
             );
         } catch (Exception $e) {
@@ -83,30 +75,19 @@ class ReturnController extends BaseApiController
             'type' => 'required|in:order,purchase',
         ]);
 
-        $tenantId = $request->user()->tenant_id;
-        $number = $request->number;
+        $data = $this->returnRepository->searchTransaction(
+            $request->user()->tenant_id,
+            $request->number,
+            $request->type
+        );
+
+        if (! $data) {
+            return $this->errorResponse('Transaksi tidak ditemukan.', 404);
+        }
 
         if ($request->type === 'order') {
-            $data = Order::where('tenant_id', $tenantId)
-                ->where('order_number', $number)
-                ->with(['items.product', 'user', 'returnUser'])
-                ->first();
-
-            if (! $data) {
-                return $this->errorResponse('Transaksi tidak ditemukan.', 404);
-            }
-
             return $this->successResponse(new OrderResource($data));
         } else {
-            $data = Purchase::where('tenant_id', $tenantId)
-                ->where('purchase_number', $number)
-                ->with(['items.product', 'user', 'supplier', 'returnUser'])
-                ->first();
-
-            if (! $data) {
-                return $this->errorResponse('Transaksi tidak ditemukan.', 404);
-            }
-
             return $this->successResponse(new PurchaseResource($data));
         }
     }

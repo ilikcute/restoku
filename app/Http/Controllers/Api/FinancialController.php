@@ -6,54 +6,39 @@ use App\Http\Requests\Api\Finance\Transaction\StoreFinancialTransactionRequest;
 use App\Http\Resources\Api\Finance\AccountResource;
 use App\Http\Resources\Api\Finance\CategoryResource;
 use App\Http\Resources\Api\Finance\TransactionResource;
+use App\Interfaces\FinancialRepositoryInterface;
 use App\Models\Account;
-use App\Models\ExpenseCategory;
-use App\Models\IncomeCategory;
-use App\Models\Transaction;
-use App\Services\InventoryService;
 use Illuminate\Http\Request;
 
 class FinancialController extends BaseApiController
 {
-    protected $inventoryService;
+    protected FinancialRepositoryInterface $financialRepository;
 
-    public function __construct(InventoryService $inventoryService)
+    public function __construct(FinancialRepositoryInterface $financialRepository)
     {
-        $this->inventoryService = $inventoryService;
+        $this->financialRepository = $financialRepository;
     }
 
     public function accounts(Request $request)
     {
-        $accounts = Account::where('tenant_id', $request->user()->tenant_id)->get();
+        $accounts = $this->financialRepository->getAccounts($request->user()->tenant_id);
 
         return $this->successResponse(AccountResource::collection($accounts));
     }
 
     public function transactions(Request $request)
     {
-        $transactions = Transaction::where('tenant_id', $request->user()->tenant_id)
-            ->with(['account', 'user', 'expenseCategory', 'incomeCategory', 'reference'])
-            ->latest()
-            ->paginate(20);
+        $transactions = $this->financialRepository->getTransactions($request->user()->tenant_id, 20);
 
         return $this->successResponse(TransactionResource::collection($transactions)->response()->getData(true));
     }
 
     public function storeTransaction(StoreFinancialTransactionRequest $request)
     {
-        $validated = $request->validated();
-
-        $transaction = $this->inventoryService->recordTransaction(
+        $transaction = $this->financialRepository->storeTransaction(
             $request->user()->tenant_id,
-            $validated['account_id'],
             $request->user()->id,
-            $validated['type'],
-            $validated['amount'],
-            $validated['description'],
-            null,
-            null,
-            $validated['expense_category_id'] ?? null,
-            $validated['income_category_id'] ?? null
+            $request->validated()
         );
 
         return $this->successResponse(new TransactionResource($transaction->load(['account', 'user', 'expenseCategory', 'incomeCategory'])), 'Transaksi berhasil dicatat.', 201);
@@ -61,14 +46,14 @@ class FinancialController extends BaseApiController
 
     public function expenseCategories(Request $request)
     {
-        $categories = ExpenseCategory::where('tenant_id', $request->user()->tenant_id)->get();
+        $categories = $this->financialRepository->getExpenseCategories($request->user()->tenant_id);
 
         return $this->successResponse(CategoryResource::collection($categories));
     }
 
     public function incomeCategories(Request $request)
     {
-        $categories = IncomeCategory::where('tenant_id', $request->user()->tenant_id)->get();
+        $categories = $this->financialRepository->getIncomeCategories($request->user()->tenant_id);
 
         return $this->successResponse(CategoryResource::collection($categories));
     }
@@ -82,8 +67,7 @@ class FinancialController extends BaseApiController
             'is_active' => 'boolean',
         ]);
 
-        $validated['tenant_id'] = $request->user()->tenant_id;
-        $account = Account::create($validated);
+        $account = $this->financialRepository->storeAccount($request->user()->tenant_id, $validated);
 
         return $this->successResponse(new AccountResource($account), 'Akun berhasil dibuat.', 201);
     }
@@ -99,7 +83,7 @@ class FinancialController extends BaseApiController
             'is_active' => 'boolean',
         ]);
 
-        $account->update($validated);
+        $account = $this->financialRepository->updateAccount($account, $validated);
 
         return $this->successResponse(new AccountResource($account), 'Akun berhasil diperbarui.');
     }
@@ -108,13 +92,12 @@ class FinancialController extends BaseApiController
     {
         $this->authorizeTenant($account);
 
-        // Prevent deletion if account has transactions
-        if ($account->transactions()->count() > 0) {
-            return $this->errorResponse('Gagal menghapus. Rekening ini memiliki riwayat transaksi.', 422);
+        try {
+            $this->financialRepository->destroyAccount($account);
+
+            return $this->successResponse(null, 'Akun berhasil dihapus.');
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 422);
         }
-
-        $account->delete();
-
-        return $this->successResponse(null, 'Akun berhasil dihapus.');
     }
 }
