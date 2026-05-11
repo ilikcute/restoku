@@ -5,14 +5,22 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\Master\Unit\StoreUnitRequest;
 use App\Http\Requests\Api\Master\Unit\UpdateUnitRequest;
 use App\Http\Resources\Api\Master\UnitResource;
+use App\Interfaces\UnitRepositoryInterface;
 use App\Models\Unit;
 use Illuminate\Http\Request;
 
 class UnitController extends BaseApiController
 {
+    public function __construct(
+        protected UnitRepositoryInterface $unitRepository
+    ) {}
     public function index(Request $request)
     {
-        $units = Unit::where('tenant_id', $request->user()->tenant_id)->get();
+        $units = $this->unitRepository->getAllByTenant(
+            $request->user()->tenant_id,
+            $request->search,
+            $request->integer('per_page') ?: null
+        );
 
         return $this->successResponse(UnitResource::collection($units));
     }
@@ -21,7 +29,8 @@ class UnitController extends BaseApiController
     {
         $validated = $request->validated();
         $validated['tenant_id'] = $request->user()->tenant_id;
-        $unit = Unit::create($validated);
+
+        $unit = $this->unitRepository->create($validated);
 
         return $this->successResponse(new UnitResource($unit), 'Unit created successfully', 201);
     }
@@ -30,13 +39,16 @@ class UnitController extends BaseApiController
     {
         $this->authorizeTenant($unit);
 
+        $unit->loadCount('products');
+
         return $this->successResponse(new UnitResource($unit));
     }
 
     public function update(UpdateUnitRequest $request, Unit $unit)
     {
         $this->authorizeTenant($unit);
-        $unit->update($request->validated());
+
+        $unit = $this->unitRepository->update($unit->id, $request->validated());
 
         return $this->successResponse(new UnitResource($unit), 'Unit updated successfully');
     }
@@ -44,7 +56,12 @@ class UnitController extends BaseApiController
     public function destroy(Unit $unit)
     {
         $this->authorizeTenant($unit);
-        $unit->delete();
+
+        $deleted = $this->unitRepository->delete($unit->id);
+
+        if (! $deleted) {
+            return $this->errorResponse('Cannot delete unit with existing products.', 422);
+        }
 
         return $this->successResponse(null, 'Unit deleted successfully');
     }
