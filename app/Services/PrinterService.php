@@ -36,14 +36,14 @@ class PrinterService
             /* Header - Tenant Identity */
             $this->printer->setJustification(Printer::JUSTIFY_CENTER);
 
-            // Logo — resize ke max 300px agar tidak memenuhi struk
+            // Logo — Resize ke max width tanpa kanvas (karena semua dicenter)
             $logoPath = null;
             if ($order->tenant->logo) {
                 $logoPath = storage_path('app/public/'.$order->tenant->logo);
             }
             if ($logoPath && file_exists($logoPath)) {
                 try {
-                    $resized = $this->resizeLogoForReceipt($logoPath, 300);
+                    $resized = $this->resizeLogoForReceipt($logoPath, 250);
                     $src = $resized ?: $logoPath;
                     $logo = EscposImage::load($src, false);
                     $this->printer->bitImage($logo);
@@ -55,31 +55,35 @@ class PrinterService
                 }
             }
 
-            $this->printer->selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-            $this->printer->text($order->tenant->name."\n");
+            $this->printer->selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
+            $this->printer->setEmphasis(true);
+            $this->printer->text(str_pad(mb_substr($order->tenant->name, 0, 32), 32, ' ', STR_PAD_BOTH)."\n");
             $this->printer->selectPrintMode();
+            $this->printer->setEmphasis(false);
+
+            $this->printer->text("\n"); // Tambahan spasi antara Nama Resto dan Alamat
 
             if ($order->tenant->address) {
-                $this->printer->text($order->tenant->address."\n");
+                $this->printer->text(str_pad(mb_substr($order->tenant->address, 0, 32), 32, ' ', STR_PAD_BOTH)."\n");
             }
             if ($order->tenant->phone) {
-                $this->printer->text($order->tenant->phone."\n");
+                $this->printer->text(str_pad(mb_substr($order->tenant->phone, 0, 32), 32, ' ', STR_PAD_BOTH)."\n");
             }
             $this->printer->text("--------------------------------\n");
 
-            /* Transaction Identity Section — tiap field di baris terpisah */
-            $this->printer->setJustification(Printer::JUSTIFY_LEFT);
-            $this->printer->text($this->formatTwoColumns('Bill No ', ': '.$order->order_number, 32)."\n");
-            $this->printer->text($this->formatTwoColumns('Name    ', ': '.($order->customer_name ?? '-'), 32)."\n");
-            $this->printer->text($this->formatTwoColumns('Date    ', ': '.$order->created_at->format('d/m/Y'), 32)."\n");
-            $this->printer->text($this->formatTwoColumns('Shift   ', ': '.($order->shift->name ?? ($order->shift_id ? 'Shift #'.$order->shift_id : 'NIGHT')), 32)."\n");
-            $this->printer->text($this->formatTwoColumns('Table   ', ': '.($order->table_number ?? '-'), 32)."\n");
-            $this->printer->text($this->formatTwoColumns('Cashier ', ': '.($order->user->name ?? 'User'), 32)."\n");
+            /* Transaction Identity Section — tiap field di baris terpisah, ditarik ke 32 char */
+            $this->printer->text(str_pad(str_pad('Bill No', 9).': '.$order->order_number, 32, ' ', STR_PAD_RIGHT)."\n");
+            $this->printer->text(str_pad(str_pad('Name', 9).': '.($order->customer_name ?? '-'), 32, ' ', STR_PAD_RIGHT)."\n");
+            $this->printer->text(str_pad(str_pad('Date', 9).': '.$order->created_at->format('d/m/Y'), 32, ' ', STR_PAD_RIGHT)."\n");
+            $this->printer->text(str_pad(str_pad('Shift', 9).': '.($order->shift->name ?? ($order->shift_id ? 'Shift #'.$order->shift_id : 'NIGHT')), 32, ' ', STR_PAD_RIGHT)."\n");
+            $this->printer->text(str_pad(str_pad('Table', 9).': '.($order->table_number ?? '-'), 32, ' ', STR_PAD_RIGHT)."\n");
+            $this->printer->text(str_pad(str_pad('Cashier', 9).': '.($order->user->name ?? 'User'), 32, ' ', STR_PAD_RIGHT)."\n");
 
             $this->printer->text("--------------------------------\n");
 
             /* Table Header */
-            $this->printer->text("QTY  NAMA PRODUK              TOTAL\n");
+            // QTY (3) + spasi (1) + NAMA PRODUK (18) + spasi (1) + TOTAL (9) = 32 karakter
+            $this->printer->text("QTY NAMA PRODUK            TOTAL\n");
             $this->printer->text("--------------------------------\n");
 
             /* Items Grouped by Category */
@@ -88,27 +92,29 @@ class PrinterService
             });
 
             foreach ($itemsByCategory as $categoryName => $items) {
-                $this->printer->text($categoryName."\n");
+                $this->printer->text(str_pad($categoryName, 32, ' ', STR_PAD_RIGHT)."\n");
                 $categorySubtotal = 0;
 
                 foreach ($items as $item) {
-                    $qty = str_pad($item->quantity, 3);
-                    $name = mb_substr($item->product_name, 0, 22); // 22 char — lebih panjang
+                    $qty = str_pad($item->quantity, 3, ' ', STR_PAD_RIGHT);
+                    $name = mb_substr($item->product_name, 0, 18); // 18 karakter max
+                    $namePad = str_pad($name, 18, ' ', STR_PAD_RIGHT);
                     $total = number_format($item->subtotal, 0, ',', '.');
+                    $totalPad = str_pad($total, 9, ' ', STR_PAD_LEFT);
 
-                    // Format: "1   Nasi Goreng Special       25.000"
-                    $line = $qty.' '.str_pad($name, 22).' '.str_pad($total, 6, ' ', STR_PAD_LEFT);
+                    // Gabungan pastikan pas 32 karakter
+                    $line = $qty.' '.$namePad.' '.$totalPad;
                     $this->printer->text($line."\n");
 
                     // Tampilkan diskon jika ada
                     if ($item->discount_amount > 0) {
                         $discPct = number_format($item->discount_amount / ($item->price * $item->quantity) * 100, 0);
-                        $this->printer->text("     Diskon: {$discPct}%\n");
+                        $this->printer->text(str_pad("     Diskon: {$discPct}%", 32, ' ', STR_PAD_RIGHT)."\n");
                     }
 
                     // Tampilkan notes jika ada
                     if ($item->notes) {
-                        $this->printer->text("     *{$item->notes}\n");
+                        $this->printer->text(str_pad("     *{$item->notes}", 32, ' ', STR_PAD_RIGHT)."\n");
                     }
 
                     $categorySubtotal += $item->subtotal;
@@ -128,30 +134,29 @@ class PrinterService
             $this->printer->text($this->formatTwoColumns('ROUNDING', number_format($order->rounding, 0, ',', '.'), 32)."\n");
 
             $this->printer->text("\n");
-            $this->printer->setJustification(Printer::JUSTIFY_CENTER);
-            $this->printer->selectPrintMode(Printer::MODE_DOUBLE_WIDTH | Printer::MODE_DOUBLE_HEIGHT);
-            $this->printer->text("Grand Total\n");
-            $this->printer->text(number_format($order->total_amount, 0, ',', '.')."\n");
+            $this->printer->selectPrintMode(Printer::MODE_DOUBLE_HEIGHT);
+            $this->printer->setEmphasis(true);
+            $this->printer->text(str_pad('GRAND TOTAL', 32, ' ', STR_PAD_BOTH)."\n");
+            $this->printer->text(str_pad(number_format($order->total_amount, 0, ',', '.'), 32, ' ', STR_PAD_BOTH)."\n");
+            $this->printer->setEmphasis(false);
             $this->printer->selectPrintMode();
-            $this->printer->setJustification(Printer::JUSTIFY_LEFT);
 
             $this->printer->text("--------------------------------\n");
             $this->printer->text($this->formatTwoColumns('Total Paid', number_format($order->paid_amount, 0, ',', '.'), 32)."\n");
             $this->printer->text($this->formatTwoColumns('Change', number_format($order->change_amount, 0, ',', '.'), 32)."\n");
 
             /* Footer Message */
-            $this->printer->setJustification(Printer::JUSTIFY_CENTER);
             $this->printer->text("\n");
 
             if ($order->tenant->footer_text) {
-                $this->printer->text($order->tenant->footer_text."\n");
+                $this->printer->text(str_pad(mb_substr($order->tenant->footer_text, 0, 32), 32, ' ', STR_PAD_BOTH)."\n");
             } else {
-                $this->printer->text("Terima Kasih!\n");
-                $this->printer->text("Selamat Menikmati Hidangan Kami\n");
+                $this->printer->text(str_pad('Terima Kasih!', 32, ' ', STR_PAD_BOTH)."\n");
+                $this->printer->text(str_pad('Selamat Menikmati Hidangan Kami', 32, ' ', STR_PAD_BOTH)."\n");
             }
 
             if ($additionalFooter) {
-                $this->printer->text($additionalFooter."\n");
+                $this->printer->text(str_pad(mb_substr($additionalFooter, 0, 32), 32, ' ', STR_PAD_BOTH)."\n");
             }
 
             $this->printer->text("\n\n");
@@ -414,17 +419,16 @@ POWERSHELL,
             $srcW = imagesx($src);
             $srcH = imagesy($src);
 
-            if ($srcW <= $maxWidth) {
-                imagedestroy($src);
-
-                return null; // No resize needed
-            }
-
             $ratio = $maxWidth / $srcW;
             $newW = $maxWidth;
             $newH = (int) ($srcH * $ratio);
 
             $dst = imagecreatetruecolor($newW, $newH);
+
+            // Isi dengan background putih agar tidak hitam jika transparan
+            $white = imagecolorallocate($dst, 255, 255, 255);
+            imagefill($dst, 0, 0, $white);
+
             imagecopyresampled($dst, $src, 0, 0, 0, 0, $newW, $newH, $srcW, $srcH);
 
             $tmpPath = sys_get_temp_dir().'/receipt_logo_'.uniqid().'.png';
