@@ -5,29 +5,33 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\Master\Customer\StoreCustomerRequest;
 use App\Http\Requests\Api\Master\Customer\UpdateCustomerRequest;
 use App\Http\Resources\Api\Master\CustomerResource;
+use App\Interfaces\CustomerRepositoryInterface;
 use App\Models\Customer;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class CustomerController extends BaseApiController
 {
+    public function __construct(
+        protected CustomerRepositoryInterface $customerRepository
+    ) {}
+
     public function index(Request $request)
     {
-        $customers = Customer::where('tenant_id', $request->user()->tenant_id)
-            ->latest()
-            ->get();
+        $customers = $this->customerRepository->getAllByTenant(
+            $request->user()->tenant_id,
+            $request->search,
+            $request->integer('per_page') ?: null
+        );
 
         return $this->successResponse(CustomerResource::collection($customers));
     }
 
     public function store(StoreCustomerRequest $request)
     {
-        Log::info('Customer Store Request Received', $request->all());
         $validated = $request->validated();
         $validated['tenant_id'] = $request->user()->tenant_id;
 
-        $customer = Customer::create($validated);
-        Log::info('Customer Created Successfully', ['id' => $customer->id]);
+        $customer = $this->customerRepository->create($validated);
 
         return $this->successResponse(new CustomerResource($customer), 'Customer created successfully', 201);
     }
@@ -42,7 +46,8 @@ class CustomerController extends BaseApiController
     public function update(UpdateCustomerRequest $request, Customer $customer)
     {
         $this->authorizeTenant($customer);
-        $customer->update($request->validated());
+
+        $customer = $this->customerRepository->update($customer->id, $request->validated());
 
         return $this->successResponse(new CustomerResource($customer), 'Customer updated successfully');
     }
@@ -50,7 +55,8 @@ class CustomerController extends BaseApiController
     public function destroy(Customer $customer)
     {
         $this->authorizeTenant($customer);
-        $customer->delete();
+
+        $this->customerRepository->delete($customer->id);
 
         return $this->successResponse(null, 'Customer deleted successfully');
     }
