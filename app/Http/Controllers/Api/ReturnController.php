@@ -24,22 +24,18 @@ class ReturnController extends BaseApiController
      */
     public function storeOrderReturn(StoreOrderReturnRequest $request)
     {
-        try {
-            $order = $this->returnRepository->processOrderReturn(
-                $request->user()->tenant_id,
-                $request->order_id,
-                $request->items,
-                $request->user()->id,
-                $request->account_id
-            );
+        $order = $this->returnRepository->processOrderReturn(
+            $request->user()->tenant_id,
+            $request->order_id,
+            $request->items,
+            $request->user()->id,
+            $request->account_id
+        );
 
-            return $this->successResponse(
-                new OrderResource($order),
-                'Retur penjualan berhasil diproses.'
-            );
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage(), 422);
-        }
+        return $this->successResponse(
+            new OrderResource($order),
+            'Retur penjualan berhasil diproses.'
+        );
     }
 
     /**
@@ -47,34 +43,25 @@ class ReturnController extends BaseApiController
      */
     public function storePurchaseReturn(StorePurchaseReturnRequest $request)
     {
-        try {
-            $purchase = $this->returnRepository->processPurchaseReturn(
-                $request->user()->tenant_id,
-                $request->purchase_id,
-                $request->items,
-                $request->user()->id,
-                $request->account_id
-            );
+        $purchase = $this->returnRepository->processPurchaseReturn(
+            $request->user()->tenant_id,
+            $request->purchase_id,
+            $request->items,
+            $request->user()->id,
+            $request->account_id
+        );
 
-            return $this->successResponse(
-                new PurchaseResource($purchase),
-                'Retur pembelian berhasil diproses.'
-            );
-        } catch (Exception $e) {
-            return $this->errorResponse($e->getMessage(), 422);
-        }
+        return $this->successResponse(
+            new PurchaseResource($purchase),
+            'Retur pembelian berhasil diproses.'
+        );
     }
 
     /**
      * Search for a transaction by number (Order or Purchase).
      */
-    public function search(Request $request)
+    public function search(\App\Http\Requests\Api\Finance\Return\SearchTransactionRequest $request)
     {
-        $request->validate([
-            'number' => 'required|string',
-            'type' => 'required|in:order,purchase',
-        ]);
-
         $data = $this->returnRepository->searchTransaction(
             $request->user()->tenant_id,
             $request->number,

@@ -93,6 +93,16 @@ class OrderService
                 ->get();
         }
 
+        // Hitung base subtotal terlebih dahulu untuk pengecekan min_purchase
+        $baseSubtotal = 0.0;
+        foreach ($items as $item) {
+            $product = $products->get($item['product_id']);
+            if ($product) {
+                ['price' => $price] = self::resolveProductPrice($product, $orderType);
+                $baseSubtotal += $price * $item['quantity'];
+            }
+        }
+
         foreach ($items as $item) {
             $product = $products->get($item['product_id']);
 
@@ -106,6 +116,11 @@ class OrderService
             $itemPromotionDiscount = 0;
             foreach ($promotions as $promo) {
                 if ($promo->type === 'announcement') {
+                    continue;
+                }
+
+                // Cek syarat minimal belanja
+                if ($promo->min_purchase > 0 && $baseSubtotal < $promo->min_purchase) {
                     continue;
                 }
 

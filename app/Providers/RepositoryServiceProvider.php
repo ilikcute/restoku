@@ -20,6 +20,7 @@ use App\Interfaces\ReportRepositoryInterface;
 use App\Interfaces\ReturnRepositoryInterface;
 use App\Interfaces\ShiftRepositoryInterface;
 use App\Interfaces\SupplierRepositoryInterface;
+use App\Interfaces\TenantRepositoryInterface;
 use App\Interfaces\UnitRepositoryInterface;
 use App\Interfaces\UserRepositoryInterface;
 use App\Repositories\AuthRepository;
@@ -40,6 +41,7 @@ use App\Repositories\ReportRepository;
 use App\Repositories\ReturnRepository;
 use App\Repositories\ShiftRepository;
 use App\Repositories\SupplierRepository;
+use App\Repositories\TenantRepository;
 use App\Repositories\UnitRepository;
 use App\Repositories\UserRepository;
 use Illuminate\Support\ServiceProvider;
@@ -68,6 +70,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(ShiftRepositoryInterface::class, ShiftRepository::class);
         $this->app->bind(DashboardRepositoryInterface::class, DashboardRepository::class);
         $this->app->bind(PromotionRepositoryInterface::class, PromotionRepository::class);
+        $this->app->bind(TenantRepositoryInterface::class, TenantRepository::class);
     }
 
     /**

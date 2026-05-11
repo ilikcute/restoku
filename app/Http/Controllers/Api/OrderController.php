@@ -45,25 +45,19 @@ class OrderController extends BaseApiController implements HasMiddleware
             return $this->errorResponse('Anda harus membuka Shift terlebih dahulu sebelum melakukan transaksi.', 422);
         }
 
-        try {
-            $result = $this->orderRepository->processOrder(
-                $tenantId,
-                $userId,
-                $shift,
-                $validated,
-                $requestIdempotencyKey
-            );
+        $result = $this->orderRepository->processOrder(
+            $tenantId,
+            $userId,
+            $shift,
+            $validated,
+            $requestIdempotencyKey
+        );
 
-            if ($result['status'] === 'existing') {
-                return $this->successResponse(new OrderResource($result['order']), 'Order already processed.');
-            }
-
-            return $this->successResponse(new OrderResource($result['order']), 'Order created successfully', 201);
-        } catch (\Exception $e) {
-            $status = $e->getCode() === 409 ? 409 : 422;
-
-            return $this->errorResponse($e->getMessage(), $status);
+        if ($result['status'] === 'existing') {
+            return $this->successResponse(new OrderResource($result['order']), 'Order already processed.');
         }
+
+        return $this->successResponse(new OrderResource($result['order']), 'Order created successfully', 201);
     }
 
     public function show(Order $order)

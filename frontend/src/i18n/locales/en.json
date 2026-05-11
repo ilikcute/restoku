@@ -47,7 +47,6 @@
         "email": "Email",
         "address": "Address",
         "city": "City",
-        "all_rights": "All Rights Reserved",
         "download_receipt": "Download Receipt",
         "manage": "Manage",
         "efficiently": "efficiently"
@@ -130,6 +129,21 @@
         "all_categories": "All",
         "checkout": "Pay Now"
     },
+    "checkout": {
+        "process_payment": "Process Payment",
+        "total_due": "Total Due",
+        "customer": "Customer",
+        "select_customer": "Select Customer (Optional)",
+        "payment_method": "Payment Method",
+        "financial_account": "Cash Account",
+        "cash_given": "Cash Given",
+        "change_due": "Change Due",
+        "confirm_payment": "Confirm Payment",
+        "success_title": "Transaction Success",
+        "new_order": "New Order",
+        "print_receipt": "Print Receipt",
+        "send_wa": "Send via WhatsApp"
+    },
     "days": {
         "Mon": "Mon",
         "Tue": "Tue",
@@ -148,6 +162,7 @@
     },
     "product": {
         "short_name": "Short Name",
+        "code": "Product Code (SKU)",
         "barcode": "Barcode",
         "tax_rate": "Tax Rate (%)",
         "service_charge_rate": "Service Charge Rate (%)",
@@ -296,7 +311,8 @@
         "welcome_back": "Welcome back",
         "nice_day": "Have a nice day!",
         "shift_open": "Shift Open",
-        "logged_in_as": "Logged in as"
+        "logged_in_as": "Logged in as",
+        "all_rights": "All Rights Reserved"
     },
     "user_menu": {
         "profile": "My Profile",

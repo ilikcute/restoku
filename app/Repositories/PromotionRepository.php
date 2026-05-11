@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Interfaces\PromotionRepositoryInterface;
 use App\Models\Promotion;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class PromotionRepository implements PromotionRepositoryInterface
 {

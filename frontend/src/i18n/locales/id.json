@@ -84,7 +84,8 @@
         "users": "Pengguna",
         "promotions": "Promosi (Running Text)",
         "tax_report": "Laporan Pajak",
-        "audit_trail": "Audit Trail (Log)"
+        "audit_trail": "Audit Trail (Log)",
+        "logout": "Keluar"
     },
     "dashboard": {
         "total_menu": "Total Menu",

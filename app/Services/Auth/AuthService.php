@@ -5,6 +5,7 @@ namespace App\Services\Auth;
 use App\Enums\UserRole;
 use App\Interfaces\AuthRepositoryInterface;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -20,26 +21,31 @@ class AuthService
      */
     public function register(array $data): array
     {
-        $tenant = $this->authRepository->createTenant([
-            'name' => $data['tenant_name'],
-            'slug' => Str::slug($data['tenant_name']),
-        ]);
+        return DB::transaction(function () use ($data) {
+            $tenant = $this->authRepository->createTenant([
+                'name' => $data['tenant_name'],
+                'slug' => Str::slug($data['tenant_name']),
+            ]);
 
-        $user = $this->authRepository->createUser([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'phone' => $data['phone'] ?? null,
-            'password' => Hash::make($data['password']),
-            'tenant_id' => $tenant->id,
-            'role' => UserRole::ADMIN,
-        ]);
+            $user = $this->authRepository->createUser([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'] ?? null,
+                'password' => Hash::make($data['password']),
+                'tenant_id' => $tenant->id,
+                'role' => UserRole::ADMIN,
+            ]);
 
-        $token = $user->createToken($data['device_name'], ['*'])->plainTextToken;
+            // Assign Spatie role (lowercase 'admin' as per seeder)
+            $user->assignRole('admin');
 
-        return [
-            'user' => $user,
-            'token' => $token,
-        ];
+            $token = $user->createToken($data['device_name'], ['*'])->plainTextToken;
+
+            return [
+                'user' => $user,
+                'token' => $token,
+            ];
+        });
     }
 
     /**

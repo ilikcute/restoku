@@ -58,32 +58,18 @@ class FinancialController extends BaseApiController
         return $this->successResponse(CategoryResource::collection($categories));
     }
 
-    public function storeAccount(Request $request)
+    public function storeAccount(\App\Http\Requests\Api\Finance\Account\StoreAccountRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'account_number' => 'nullable|string|max:255',
-            'balance' => 'numeric|min:0',
-            'is_active' => 'boolean',
-        ]);
-
-        $account = $this->financialRepository->storeAccount($request->user()->tenant_id, $validated);
+        $account = $this->financialRepository->storeAccount($request->user()->tenant_id, $request->validated());
 
         return $this->successResponse(new AccountResource($account), 'Akun berhasil dibuat.', 201);
     }
 
-    public function updateAccount(Request $request, Account $account)
+    public function updateAccount(\App\Http\Requests\Api\Finance\Account\UpdateAccountRequest $request, Account $account)
     {
         $this->authorizeTenant($account);
 
-        $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'account_number' => 'nullable|string|max:255',
-            'balance' => 'numeric|min:0',
-            'is_active' => 'boolean',
-        ]);
-
-        $account = $this->financialRepository->updateAccount($account, $validated);
+        $account = $this->financialRepository->updateAccount($account, $request->validated());
 
         return $this->successResponse(new AccountResource($account), 'Akun berhasil diperbarui.');
     }

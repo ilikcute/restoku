@@ -46,32 +46,24 @@ class ShiftController extends BaseApiController
 
     public function open(OpenShiftRequest $request)
     {
-        try {
-            $shift = $this->shiftRepository->openShift(
-                $request->user()->tenant_id,
-                $request->user()->id,
-                $request->validated()
-            );
+        $shift = $this->shiftRepository->openShift(
+            $request->user()->tenant_id,
+            $request->user()->id,
+            $request->validated()
+        );
 
-            return $this->successResponse(new ShiftResource($shift), 'Shift berhasil dibuka.', 201);
-        } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage(), 422);
-        }
+        return $this->successResponse(new ShiftResource($shift), 'Shift berhasil dibuka.', 201);
     }
 
     public function close(CloseShiftRequest $request)
     {
-        try {
-            $shift = $this->shiftRepository->closeShift(
-                $request->user()->tenant_id,
-                $request->user()->id,
-                $request->validated()
-            );
+        $shift = $this->shiftRepository->closeShift(
+            $request->user()->tenant_id,
+            $request->user()->id,
+            $request->validated()
+        );
 
-            return $this->successResponse(new ShiftResource($shift), 'Shift berhasil ditutup.');
-        } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage(), 422);
-        }
+        return $this->successResponse(new ShiftResource($shift), 'Shift berhasil ditutup.');
     }
 
     public function downloadReport($id)

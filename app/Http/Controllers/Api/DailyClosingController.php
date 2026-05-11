@@ -40,17 +40,13 @@ class DailyClosingController extends BaseApiController
 
     public function store(StoreDailyClosingRequest $request)
     {
-        try {
-            $closing = $this->dailyClosingRepository->processClosing(
-                $request->user()->tenant_id,
-                $request->user()->id,
-                $request->validated()
-            );
+        $closing = $this->dailyClosingRepository->processClosing(
+            $request->user()->tenant_id,
+            $request->user()->id,
+            $request->validated()
+        );
 
-            return $this->successResponse(new DailyClosingResource($closing), 'Closing harian berhasil diselesaikan.', 201);
-        } catch (\Exception $e) {
-            return $this->errorResponse($e->getMessage(), 422);
-        }
+        return $this->successResponse(new DailyClosingResource($closing), 'Closing harian berhasil diselesaikan.', 201);
     }
 
     public function show(DailyClosing $dailyClosing)
