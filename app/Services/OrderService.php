@@ -141,9 +141,9 @@ class OrderService
             }
 
             // Total diskon per item (diskon produk bawaan + diskon promo)
-            $totalItemDiscount = $discount + $itemPromotionDiscount;
-
-            $itemSubtotal = ($price - $totalItemDiscount) * $item['quantity'];
+            $totalItemDiscount = max(0, min($price, $discount + $itemPromotionDiscount));
+            $itemNetPrice = max(0, $price - $totalItemDiscount);
+            $itemSubtotal = $itemNetPrice * $item['quantity'];
             $itemTax = $itemSubtotal * ($product->tax_rate / 100);
             $itemService = $itemSubtotal * ($product->service_charge_rate / 100);
 

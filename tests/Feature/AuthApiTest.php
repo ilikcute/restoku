@@ -3,8 +3,15 @@
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    Role::findOrCreate('admin');
+    Role::findOrCreate('manager');
+    Role::findOrCreate('cashier');
+});
 
 test('user can register with a new tenant', function () {
     $response = $this->postJson(route('api.v1.auth.register'), [
@@ -51,6 +58,49 @@ test('user can login and receive a token', function () {
             'status',
             'data' => ['user', 'token'],
         ]);
+});
+
+test('inactive user cannot login', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create([
+        'tenant_id' => $tenant->id,
+        'password' => bcrypt('Password123!'),
+        'is_active' => false,
+    ]);
+
+    $response = $this->postJson(route('api.v1.auth.login'), [
+        'email' => $user->email,
+        'password' => 'Password123!',
+        'device_name' => 'POS-Unit-01',
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['email']);
+});
+
+test('manager login token only has manager abilities', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->manager()->create([
+        'tenant_id' => $tenant->id,
+        'password' => bcrypt('Password123!'),
+        'is_active' => true,
+    ]);
+
+    $response = $this->postJson(route('api.v1.auth.login'), [
+        'email' => $user->email,
+        'password' => 'Password123!',
+        'device_name' => 'POS-Unit-01',
+    ]);
+
+    $response->assertSuccessful();
+
+    $token = $user->fresh()->tokens()->latest()->first();
+
+    expect($token)->not->toBeNull()
+        ->and($token->can('pos:manage'))->toBeTrue()
+        ->and($token->can('pos:report'))->toBeTrue()
+        ->and($token->can('pos:cashier'))->toBeFalse()
+        ->and($token->can('unlisted:ability'))->toBeFalse();
 });
 
 test('user can get profile info when authenticated', function () {

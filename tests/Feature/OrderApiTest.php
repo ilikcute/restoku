@@ -4,6 +4,7 @@ use App\Models\Account;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Promotion;
 use App\Models\Shift;
 use App\Models\Stock;
 use App\Models\StockMovement;
@@ -167,4 +168,54 @@ test('retrying checkout with the same idempotency key returns existing order', f
         ->and(Transaction::where('tenant_id', $this->tenant->id)
             ->where('reference_type', Order::class)
             ->count())->toBe(1);
+});
+
+test('fixed promotion discount cannot make order total negative', function () {
+    $this->product->update([
+        'price' => 5000,
+        'discount_amount' => 0,
+        'tax_rate' => 0,
+        'service_charge_rate' => 0,
+    ]);
+
+    Promotion::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'type' => 'discount_fixed',
+        'discount_value' => 10000,
+        'applicable_type' => 'all',
+        'is_active' => true,
+        'start_date' => now()->subDay(),
+        'end_date' => now()->addDay(),
+        'min_purchase' => 0,
+    ]);
+
+    Stock::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'product_id' => $this->product->id,
+        'current_stock' => 10,
+    ]);
+
+    $response = $this->actingAs($this->cashier, 'sanctum')
+        ->postJson(route('api.v1.orders.store'), [
+            'idempotency_key' => (string) Str::uuid(),
+            'customer_name' => 'Guest Customer',
+            'account_id' => $this->account->id,
+            'items' => [
+                [
+                    'product_id' => $this->product->id,
+                    'quantity' => 1,
+                ],
+            ],
+            'payment_method' => 'cash',
+            'paid_amount' => 0,
+        ]);
+
+    $response->assertCreated();
+
+    $order = Order::findOrFail($response->json('data.id'));
+    $this->shift->refresh();
+
+    expect((float) $order->total_amount)->toBe(0.0)
+        ->and((float) $order->paid_amount)->toBe(0.0)
+        ->and((float) $this->shift->total_sales)->toBe(0.0);
 });

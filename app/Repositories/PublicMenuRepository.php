@@ -10,9 +10,10 @@ use Illuminate\Support\Str;
 
 class PublicMenuRepository implements PublicMenuRepositoryInterface
 {
-    public function getActiveProducts()
+    public function getActiveProducts(int $tenantId)
     {
         return Product::with(['category', 'unit'])
+            ->where('tenant_id', $tenantId)
             ->where('is_active', true)
             ->get();
     }
@@ -36,15 +37,21 @@ class PublicMenuRepository implements PublicMenuRepositoryInterface
         ];
     }
 
-    public function getPendingOrderByToken(string $token): array
+    public function getPendingOrderByToken(string $token, ?int $tenantId = null): array
     {
-        $order = PendingOrder::where('token', $token)
-            ->where('status', 'pending')
-            ->firstOrFail();
+        $query = PendingOrder::where('token', $token)
+            ->where('status', 'pending');
+
+        if ($tenantId !== null) {
+            $query->where('tenant_id', $tenantId);
+        }
+
+        $order = $query->firstOrFail();
 
         // Enrich items with product details
-        $items = collect($order->items)->map(function ($item) {
+        $items = collect($order->items)->map(function ($item) use ($order) {
             $product = Product::with(['category', 'unit'])
+                ->where('tenant_id', $order->tenant_id)
                 ->find($item['product_id']);
 
             if ($product) {

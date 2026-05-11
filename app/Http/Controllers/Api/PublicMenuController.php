@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\Public\StorePublicOrderRequest;
 use App\Http\Resources\Api\Master\ProductResource;
 use App\Interfaces\PublicMenuRepositoryInterface;
+use Illuminate\Http\Request;
 
 class PublicMenuController extends BaseApiController
 {
@@ -20,15 +21,13 @@ class PublicMenuController extends BaseApiController
      */
     public function products()
     {
-        try {
-            $products = $this->publicMenuRepository->getActiveProducts();
+        $validated = request()->validate([
+            'tenant_id' => 'required|integer|exists:tenants,id',
+        ]);
 
-            return $this->successResponse(ProductResource::collection($products));
-        } catch (\Exception $e) {
-            \Log::error('Public Menu Error: '.$e->getMessage());
+        $products = $this->publicMenuRepository->getActiveProducts($validated['tenant_id']);
 
-            return $this->errorResponse($e->getMessage(), 500);
-        }
+        return $this->successResponse(ProductResource::collection($products));
     }
 
     /**
@@ -44,9 +43,10 @@ class PublicMenuController extends BaseApiController
     /**
      * Fetch pending order data (to be used by POS)
      */
-    public function fetchOrder($token)
+    public function fetchOrder(Request $request, $token)
     {
-        $data = $this->publicMenuRepository->getPendingOrderByToken($token);
+        $tenantId = $request->user()?->tenant_id;
+        $data = $this->publicMenuRepository->getPendingOrderByToken($token, $tenantId);
 
         return $this->successResponse($data);
     }

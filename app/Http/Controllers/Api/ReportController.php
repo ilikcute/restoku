@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 class ReportController extends BaseApiController
 {
     protected ReportRepositoryInterface $reportRepository;
+
     protected ReportExportService $exportService;
 
     public function __construct(
@@ -140,7 +141,10 @@ class ReportController extends BaseApiController
         } catch (\Exception $e) {
             Log::error('Excel Export Error: '.$e->getMessage());
 
-            return response()->json(['message' => 'Gagal membuat file Excel: '.$e->getMessage()], 500);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal membuat file Excel.',
+            ], 500);
         }
     }
 
