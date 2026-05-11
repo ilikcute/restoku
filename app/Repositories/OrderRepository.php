@@ -70,7 +70,7 @@ class OrderRepository implements OrderRepositoryInterface
                 }
 
                 $orderType = $validated['order_type'] ?? 'regular';
-                $totals = $this->orderService->calculateOrderTotals($validated['items'], $orderType);
+                $totals = $this->orderService->calculateOrderTotals($validated['items'], $orderType, $tenantId);
 
                 $paidAmount = $validated['paid_amount'] ?? 0;
                 $changeAmount = $paidAmount - $totals['grand_total'];

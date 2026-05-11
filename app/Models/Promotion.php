@@ -13,6 +13,12 @@ class Promotion extends Model
         'tenant_id',
         'title',
         'content',
+        'type',
+        'discount_value',
+        'min_purchase',
+        'max_discount',
+        'applicable_type',
+        'requirement_data',
         'is_active',
         'start_date',
         'end_date',
@@ -24,7 +30,27 @@ class Promotion extends Model
         'start_date' => 'date',
         'end_date' => 'date',
         'priority' => 'integer',
+        'discount_value' => 'float',
+        'min_purchase' => 'float',
+        'max_discount' => 'float',
+        'requirement_data' => 'array',
     ];
+
+    /**
+     * Relationship with specific products.
+     */
+    public function products()
+    {
+        return $this->belongsToMany(Product::class, 'promotion_product');
+    }
+
+    /**
+     * Relationship with specific categories.
+     */
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class, 'promotion_category');
+    }
 
     /**
      * Scope a query to only include active promotions.

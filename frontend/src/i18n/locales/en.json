@@ -84,6 +84,8 @@
         "purchase_return_report": "Purchase Return History",
         "users": "Users",
         "promotions": "Marquee Promotions",
+        "tax_report": "Tax Report",
+        "audit_trail": "Audit Trail (Logs)",
         "logout": "Logout"
     },
     "auth": {
@@ -289,6 +291,18 @@
         "select_language": "Select Application Language",
         "language_desc": "Select the language you want to use for the application interface."
     },
+    "header": {
+        "greeting": "Hi",
+        "welcome_back": "Welcome back",
+        "nice_day": "Have a nice day!",
+        "shift_open": "Shift Open",
+        "logged_in_as": "Logged in as"
+    },
+    "user_menu": {
+        "profile": "My Profile",
+        "users": "User Management",
+        "logout": "Logout"
+    },
     "reports": {
         "title": "Sales Report & Recapitulation",
         "period": "Date Range",
@@ -314,6 +328,12 @@
         "transactions": "Transactions",
         "product": "Product",
         "qty": "Qty",
-        "total": "Total"
+        "total": "Total",
+        "tax_report": "Tax Report (VAT/PB1)",
+        "reported_sales": "Reported Sales Recap (TAX)",
+        "synced_only_desc": "Only showing data synced to tax office",
+        "total_dpp": "Total DPP (Net)",
+        "total_tax_pb1": "Total Tax (PB1)",
+        "total_reported": "Total Reported"
     }
 }

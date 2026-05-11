@@ -20,6 +20,9 @@ return new class extends Migration
             $table->string('logo')->nullable();
             $table->text('footer_text')->nullable();
             $table->boolean('printer_use_default')->default(true);
+            $table->string('kitchen_printer_connection_type')->nullable();
+            $table->string('kitchen_printer_address')->nullable();
+            $table->integer('kitchen_printer_port')->nullable();
             $table->string('printer_connection_type')->nullable();
             $table->string('printer_address')->nullable();
             $table->unsignedInteger('printer_port')->nullable();

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Promotion;
 use Illuminate\Support\Facades\DB;
 
 class OrderService
@@ -71,7 +72,7 @@ class OrderService
      *   grand_total: float,
      * }
      */
-    public function calculateOrderTotals(array $items, string $orderType = 'regular'): array
+    public function calculateOrderTotals(array $items, string $orderType = 'regular', ?int $tenantId = null): array
     {
         $subtotal = 0.0;
         $discountTotal = 0.0;
@@ -83,6 +84,15 @@ class OrderService
         $productIds = array_column($items, 'product_id');
         $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
 
+        // Ambil promosi aktif jika ada tenantId
+        $promotions = [];
+        if ($tenantId) {
+            $promotions = Promotion::where('tenant_id', $tenantId)
+                ->active()
+                ->with(['products', 'categories'])
+                ->get();
+        }
+
         foreach ($items as $item) {
             $product = $products->get($item['product_id']);
 
@@ -92,12 +102,38 @@ class OrderService
 
             ['price' => $price, 'discount' => $discount] = self::resolveProductPrice($product, $orderType);
 
-            $itemSubtotal = ($price - $discount) * $item['quantity'];
+            // Cek Promosi khusus produk ini (Item-based)
+            $itemPromotionDiscount = 0;
+            foreach ($promotions as $promo) {
+                if ($promo->type === 'announcement') {
+                    continue;
+                }
+
+                $isApplicable = false;
+                if ($promo->applicable_type === 'all') {
+                    $isApplicable = true;
+                } elseif ($promo->applicable_type === 'products' && $promo->products->contains('id', $product->id)) {
+                    $isApplicable = true;
+                } elseif ($promo->applicable_type === 'categories' && $promo->categories->contains('id', $product->category_id)) {
+                    $isApplicable = true;
+                }
+
+                if ($isApplicable && $promo->type === 'discount_percentage') {
+                    $itemPromotionDiscount += ($price * ($promo->discount_value / 100));
+                } elseif ($isApplicable && $promo->type === 'discount_fixed') {
+                    $itemPromotionDiscount += $promo->discount_value;
+                }
+            }
+
+            // Total diskon per item (diskon produk bawaan + diskon promo)
+            $totalItemDiscount = $discount + $itemPromotionDiscount;
+
+            $itemSubtotal = ($price - $totalItemDiscount) * $item['quantity'];
             $itemTax = $itemSubtotal * ($product->tax_rate / 100);
             $itemService = $itemSubtotal * ($product->service_charge_rate / 100);
 
             $subtotal += $itemSubtotal;
-            $discountTotal += $discount * $item['quantity'];
+            $discountTotal += $totalItemDiscount * $item['quantity'];
             $taxTotal += $itemTax;
             $serviceTotal += $itemService;
 
@@ -108,11 +144,15 @@ class OrderService
                 'notes' => $item['notes'] ?? null,
                 'price' => $price,
                 'cost_price' => (float) $product->cost_price,
-                'discount_amount' => $discount,
+                'discount_amount' => $totalItemDiscount,
                 'tax_amount' => $itemTax,
                 'subtotal' => $itemSubtotal,
             ];
         }
+
+        // --- GLOBAL PROMOTIONS (Cart-based) ---
+        // Misal: Diskon tambahan jika total belanja > min_purchase
+        // (Untuk saat ini kita fokus ke item-based dulu agar tidak tumpang tindih kompleks)
 
         $grandTotalBeforeRounding = $subtotal + $taxTotal + $serviceTotal;
         $rounding = self::calculateRounding($grandTotalBeforeRounding);

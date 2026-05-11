@@ -13,6 +13,7 @@ use App\Interfaces\OrderRepositoryInterface;
 use App\Interfaces\ProcurementRepositoryInterface;
 use App\Interfaces\ProductRepositoryInterface;
 use App\Interfaces\ProfileRepositoryInterface;
+use App\Interfaces\PromotionRepositoryInterface;
 use App\Interfaces\PublicMenuRepositoryInterface;
 use App\Interfaces\PurchaseRepositoryInterface;
 use App\Interfaces\ReportRepositoryInterface;
@@ -32,6 +33,7 @@ use App\Repositories\OrderRepository;
 use App\Repositories\ProcurementRepository;
 use App\Repositories\ProductRepository;
 use App\Repositories\ProfileRepository;
+use App\Repositories\PromotionRepository;
 use App\Repositories\PublicMenuRepository;
 use App\Repositories\PurchaseRepository;
 use App\Repositories\ReportRepository;
@@ -65,6 +67,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(PublicMenuRepositoryInterface::class, PublicMenuRepository::class);
         $this->app->bind(ShiftRepositoryInterface::class, ShiftRepository::class);
         $this->app->bind(DashboardRepositoryInterface::class, DashboardRepository::class);
+        $this->app->bind(PromotionRepositoryInterface::class, PromotionRepository::class);
     }
 
     /**

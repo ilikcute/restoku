@@ -5,7 +5,7 @@
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/60 backdrop-blur-lg p-6 rounded-3xl border border-slate-200/50 shadow-sm">
         <div>
           <h2 class="text-2xl font-black text-slate-800 tracking-tight italic uppercase">Daftar <span class="text-emerald-600">Promosi</span></h2>
-          <p class="text-slate-500 text-sm font-medium mt-1">Kelola teks berjalan dan promosi untuk layar konsumen.</p>
+          <p class="text-slate-500 text-sm font-medium mt-1">Kelola strategi diskon dan promosi yang terintegrasi dengan penjualan.</p>
         </div>
         <Button label="Tambah Promosi Baru" icon="pi pi-plus" class="!rounded-2xl !px-6 !py-3 !font-bold shadow-lg shadow-emerald-200/50 hover:scale-105 transition-transform" @click="openNew" />
       </div>
@@ -21,12 +21,24 @@
                 </div>
               </template>
             </Column>
-            <Column field="title" header="Pesan Promosi" sortable>
+            <Column field="title" header="Promosi & Tipe" sortable>
               <template #body="slotProps">
                 <div class="flex flex-col">
                   <span class="font-bold text-slate-800">{{ slotProps.data.title }}</span>
-                  <span v-if="slotProps.data.content" class="text-xs text-slate-400 mt-0.5 line-clamp-1 italic">{{ slotProps.data.content }}</span>
+                  <div class="flex items-center gap-2 mt-1">
+                    <Tag :severity="getTypeSeverity(slotProps.data.type)" :value="getTypeLabel(slotProps.data.type)" class="!text-[9px] !px-2 !py-0.5" />
+                    <span v-if="slotProps.data.type !== 'announcement'" class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                      {{ formatDiscount(slotProps.data) }}
+                    </span>
+                  </div>
                 </div>
+              </template>
+            </Column>
+            <Column field="applicable_type" header="Target" style="width: 150px">
+              <template #body="slotProps">
+                <span class="text-xs font-medium text-slate-600">
+                  {{ getApplicableLabel(slotProps.data.applicable_type) }}
+                </span>
               </template>
             </Column>
             <Column field="is_active" header="Status" style="width: 120px">
@@ -40,14 +52,14 @@
                 </div>
               </template>
             </Column>
-            <Column header="Masa Berlaku" style="width: 250px">
+            <Column header="Masa Berlaku" style="width: 200px">
               <template #body="slotProps">
                 <div class="flex items-center gap-2 text-slate-500 text-xs font-medium">
                   <i class="pi pi-calendar text-[10px]"></i>
                   <span v-if="slotProps.data.start_date || slotProps.data.end_date">
                     {{ formatDate(slotProps.data.start_date) }} - {{ formatDate(slotProps.data.end_date) }}
                   </span>
-                  <span v-else class="text-slate-300 italic">Selalu Tampil</span>
+                  <span v-else class="text-slate-300 italic">Selalu Aktif</span>
                 </div>
               </template>
             </Column>
@@ -64,68 +76,87 @@
       </Card>
 
       <!-- Enhanced Dialog Structure -->
-      <Dialog v-model:visible="itemDialog" :style="{width: '500px'}" :header="item.id ? 'Edit Promosi' : 'Promosi Baru'" :modal="true" class="p-fluid !rounded-3xl overflow-hidden shadow-2xl" pt:root:class="!rounded-3xl" pt:header:class="!bg-slate-50 !p-6 !border-b !border-slate-100" pt:content:class="!p-6">
+      <Dialog v-model:visible="itemDialog" :style="{width: '600px'}" :header="item.id ? 'Edit Promosi' : 'Promosi Baru'" :modal="true" class="p-fluid !rounded-3xl overflow-hidden shadow-2xl" pt:root:class="!rounded-3xl" pt:header:class="!bg-slate-50 !p-6 !border-b !border-slate-100" pt:content:class="!p-6">
         <div class="space-y-6">
-          <!-- Form Header Info -->
-          <div class="flex items-start gap-4 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-            <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0">
-              <i class="pi pi-megaphone text-xl"></i>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Left Side: Basic Info -->
+            <div class="space-y-4">
+              <div class="flex flex-col gap-2">
+                <label for="title" class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Judul / Pesan Promosi</label>
+                <InputText id="title" v-model.trim="item.title" required="true" autofocus :class="{'p-invalid': submitted && !item.title}" placeholder="Contoh: Promo Gila Gajian!" class="!rounded-xl !bg-slate-50 !border-slate-100 focus:!ring-emerald-500 !p-3" />
+                <small class="p-error v-if='submitted && !item.title'">Judul wajib diisi.</small>
+              </div>
+
+              <div class="flex flex-col gap-2">
+                <label for="type" class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Tipe Promosi</label>
+                <Select id="type" v-model="item.type" :options="promotionTypes" optionLabel="label" optionValue="value" placeholder="Pilih Tipe" class="!rounded-xl !bg-slate-50 !border-slate-100" />
+              </div>
+
+              <div v-if="item.type && item.type !== 'announcement' && item.type !== 'buy_x_get_y'" class="flex flex-col gap-2">
+                <label for="discount_value" class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
+                  {{ item.type === 'discount_percentage' ? 'Persentase Diskon (%)' : 'Nilai Potongan (Rp)' }}
+                </label>
+                <InputNumber id="discount_value" v-model="item.discount_value" :min="0" :suffix="item.type === 'discount_percentage' ? '%' : ''" class="!rounded-xl overflow-hidden" pt:input:class="!bg-slate-50 !p-3" />
+              </div>
+
+              <div class="flex flex-col gap-2">
+                <label for="min_purchase" class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Minimal Belanja (Opsional)</label>
+                <InputNumber id="min_purchase" v-model="item.min_purchase" :min="0" mode="currency" currency="IDR" locale="id-ID" class="!rounded-xl overflow-hidden" pt:input:class="!bg-slate-50 !p-3" />
+              </div>
             </div>
-            <div>
-              <p class="text-sm font-bold text-emerald-900">Informasi Promosi</p>
-              <p class="text-[11px] text-emerald-700/70 leading-relaxed font-medium">Pastikan pesan singkat, padat, dan menarik perhatian pelanggan di layar konsumen.</p>
+
+            <!-- Right Side: Rules & Target -->
+            <div class="space-y-4">
+              <div class="flex flex-col gap-2">
+                <label for="applicable_type" class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Target Promosi</label>
+                <Select id="applicable_type" v-model="item.applicable_type" :options="applicableTypes" optionLabel="label" optionValue="value" placeholder="Pilih Target" class="!rounded-xl !bg-slate-50 !border-slate-100" />
+              </div>
+
+              <div v-if="item.applicable_type === 'products'" class="flex flex-col gap-2">
+                <label for="product_ids" class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Pilih Produk</label>
+                <MultiSelect id="product_ids" v-model="item.product_ids" :options="products" optionLabel="name" optionValue="id" placeholder="Pilih Produk" :filter="true" class="!rounded-xl !bg-slate-50 !border-slate-100" />
+              </div>
+
+              <div v-if="item.applicable_type === 'categories'" class="flex flex-col gap-2">
+                <label for="category_ids" class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Pilih Kategori</label>
+                <MultiSelect id="category_ids" v-model="item.category_ids" :options="categories" optionLabel="name" optionValue="id" placeholder="Pilih Kategori" :filter="true" class="!rounded-xl !bg-slate-50 !border-slate-100" />
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col gap-2">
+                  <label for="priority" class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Prioritas</label>
+                  <InputNumber id="priority" v-model="item.priority" :min="0" class="!rounded-xl overflow-hidden" pt:input:class="!bg-slate-50 !p-3" />
+                </div>
+                <div class="flex flex-col gap-2 justify-center pt-5">
+                  <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 transition-colors" :class="{'bg-emerald-50 border-emerald-100': item.is_active}">
+                    <Checkbox id="is_active" v-model="item.is_active" :binary="true" />
+                    <label for="is_active" class="text-sm font-bold cursor-pointer" :class="item.is_active ? 'text-emerald-700' : 'text-slate-500'">Aktif</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="p-3 bg-blue-50 rounded-2xl border border-blue-100 space-y-3">
+                <p class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2">
+                  <i class="pi pi-calendar-times"></i> Penjadwalan
+                </p>
+                <div class="grid grid-cols-2 gap-2">
+                  <DatePicker v-model="item.start_date" dateFormat="yy-mm-dd" placeholder="Mulai" class="!rounded-lg" pt:input:class="!bg-white !border-blue-100 !p-2 !text-[10px]" />
+                  <DatePicker v-model="item.end_date" dateFormat="yy-mm-dd" placeholder="Selesai" class="!rounded-lg" pt:input:class="!bg-white !border-blue-100 !p-2 !text-[10px]" />
+                </div>
+              </div>
             </div>
           </div>
 
-          <div class="space-y-4">
-            <div class="flex flex-col gap-2">
-              <label for="title" class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Isi Pesan (Running Text)</label>
-              <InputText id="title" v-model.trim="item.title" required="true" autofocus :class="{'p-invalid': submitted && !item.title}" placeholder="Contoh: Diskon 10% setiap hari Jumat!" class="!rounded-xl !bg-slate-50 !border-slate-100 focus:!ring-emerald-500 !p-3" />
-              <small class="p-error flex items-center gap-1 ml-1" v-if="submitted && !item.title">
-                <i class="pi pi-exclamation-circle text-[10px]"></i> Isi pesan wajib diisi.
-              </small>
-            </div>
-
-            <div class="flex flex-col gap-2">
-              <label for="content" class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Keterangan Tambahan (Opsional)</label>
-              <Textarea id="content" v-model="item.content" rows="3" class="!rounded-xl !bg-slate-50 !border-slate-100 focus:!ring-emerald-500 !p-3" placeholder="Detail promo atau catatan internal..." />
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-              <div class="flex flex-col gap-2">
-                <label for="priority" class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Prioritas Tampil</label>
-                <InputNumber id="priority" v-model="item.priority" showButtons :min="0" class="!rounded-xl overflow-hidden !border-slate-100" pt:input:class="!bg-slate-50 !p-3" />
-              </div>
-              <div class="flex flex-col gap-2 justify-center pt-5">
-                <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 transition-colors" :class="{'bg-emerald-50 border-emerald-100': item.is_active}">
-                  <Checkbox id="is_active" v-model="item.is_active" :binary="true" />
-                  <label for="is_active" class="text-sm font-bold cursor-pointer" :class="item.is_active ? 'text-emerald-700' : 'text-slate-500'">Status Aktif</label>
-                </div>
-              </div>
-            </div>
-
-            <div class="p-4 bg-blue-50 rounded-2xl border border-blue-100 space-y-4">
-              <p class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2">
-                <i class="pi pi-calendar-times"></i> Penjadwalan Otomatis
-              </p>
-              <div class="grid grid-cols-2 gap-4">
-                <div class="flex flex-col gap-2">
-                  <label for="start_date" class="text-[10px] font-bold text-blue-400 uppercase ml-1">Mulai Tampil</label>
-                  <DatePicker id="start_date" v-model="item.start_date" dateFormat="yy-mm-dd" showIcon iconDisplay="input" class="!rounded-xl overflow-hidden" pt:input:class="!bg-white !border-blue-100 !p-2 !text-xs" />
-                </div>
-                <div class="flex flex-col gap-2">
-                  <label for="end_date" class="text-[10px] font-bold text-blue-400 uppercase ml-1">Selesai Tampil</label>
-                  <DatePicker id="end_date" v-model="item.end_date" dateFormat="yy-mm-dd" showIcon iconDisplay="input" class="!rounded-xl overflow-hidden" pt:input:class="!bg-white !border-blue-100 !p-2 !text-xs" />
-                </div>
-              </div>
-            </div>
+          <div class="flex flex-col gap-2">
+            <label for="content" class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Keterangan / Konten Promosi</label>
+            <Textarea id="content" v-model="item.content" rows="2" class="!rounded-xl !bg-slate-50 !border-slate-100 focus:!ring-emerald-500 !p-3" placeholder="Detail promosi yang akan muncul sebagai subtitle..." />
           </div>
         </div>
 
         <template #footer>
           <div class="flex gap-3 p-2">
             <Button label="Batal" icon="pi pi-times" text class="!rounded-xl !text-slate-400 hover:!bg-slate-100" @click="hideDialog" />
-            <Button label="Simpan Promosi" icon="pi pi-check" :loading="saving" class="!rounded-xl !bg-emerald-600 !border-none !px-8 h-12 font-bold shadow-lg shadow-emerald-100" @click="saveItem" />
+            <Button label="Simpan" icon="pi pi-check" :loading="saving" class="!rounded-xl !bg-emerald-600 !border-none !px-8 h-12 font-bold shadow-lg shadow-emerald-100" @click="saveItem" />
           </div>
         </template>
       </Dialog>
@@ -135,7 +166,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { promotionApi } from '@/api/master';
+import { promotionApi, productApi, categoryApi } from '@/api/master';
 import { useToast } from 'primevue/usetoast';
 import AppPage from '@/components/layout/AppPage.vue';
 import Button from 'primevue/button';
@@ -146,32 +177,98 @@ import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
 import Checkbox from 'primevue/checkbox';
 import Textarea from 'primevue/textarea';
+import Select from 'primevue/select';
+import MultiSelect from 'primevue/multiselect';
 import Tag from 'primevue/tag';
 import DatePicker from 'primevue/datepicker';
 import Card from 'primevue/card';
 
 const toast = useToast();
 const items = ref([]);
+const products = ref([]);
+const categories = ref([]);
 const loading = ref(false);
 const itemDialog = ref(false);
 const item = ref({});
 const submitted = ref(false);
 const saving = ref(false);
 
+const promotionTypes = [
+  { label: 'Pengumuman (Teks)', value: 'announcement' },
+  { label: 'Diskon Persen (%)', value: 'discount_percentage' },
+  { label: 'Diskon Tetap (Rp)', value: 'discount_fixed' },
+  { label: 'Beli X Gratis Y', value: 'buy_x_get_y' }
+];
+
+const applicableTypes = [
+  { label: 'Semua Produk', value: 'all' },
+  { label: 'Produk Tertentu', value: 'products' },
+  { label: 'Kategori Tertentu', value: 'categories' }
+];
+
 async function load() {
   loading.value = true;
   try {
-    const response = await promotionApi.getAll({ active_only: 0 });
-    items.value = response?.data?.data || [];
+    const [promoRes, prodRes, catRes] = await Promise.all([
+      promotionApi.getAll({ active_only: 0 }),
+      productApi.getAll({ per_page: 1000 }),
+      categoryApi.getAll()
+    ]);
+
+    items.value = promoRes?.data?.data || [];
+
+    // Handle Laravel pagination structure vs simple collection
+    const prodData = prodRes?.data?.data;
+    products.value = Array.isArray(prodData) ? prodData : (prodData?.data || []);
+
+    const catData = catRes?.data?.data;
+    categories.value = Array.isArray(catData) ? catData : (catData?.data || []);
+
   } catch (error) {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'Gagal mengambil data promosi', life: 3000 });
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Gagal mengambil data', life: 3000 });
+    console.error('Promotion load error:', error);
   } finally {
     loading.value = false;
   }
 }
 
+function getTypeLabel(type) {
+  const t = promotionTypes.find(x => x.value === type);
+  return t ? t.label : type;
+}
+
+function getTypeSeverity(type) {
+  switch (type) {
+    case 'announcement': return 'info';
+    case 'discount_percentage': return 'success';
+    case 'discount_fixed': return 'warning';
+    case 'buy_x_get_y': return 'danger';
+    default: return 'secondary';
+  }
+}
+
+function getApplicableLabel(type) {
+  const t = applicableTypes.find(x => x.value === type);
+  return t ? t.label : type;
+}
+
+function formatDiscount(data) {
+  if (data.type === 'discount_percentage') return `${data.discount_value}% OFF`;
+  if (data.type === 'discount_fixed') return `Rp ${data.discount_value.toLocaleString()} OFF`;
+  return '';
+}
+
 function openNew() {
-  item.value = { is_active: true, priority: 0 };
+  item.value = {
+    is_active: true,
+    priority: 0,
+    type: 'announcement',
+    applicable_type: 'all',
+    discount_value: 0,
+    min_purchase: 0,
+    product_ids: [],
+    category_ids: []
+  };
   submitted.value = false;
   itemDialog.value = true;
 }
@@ -182,8 +279,11 @@ function hideDialog() {
 }
 
 function editItem(data) {
-  item.value = { ...data };
-  // Convert date strings to Date objects for DatePicker
+  item.value = {
+    ...data,
+    product_ids: data.product_ids || [],
+    category_ids: data.category_ids || []
+  };
   if (item.value.start_date) item.value.start_date = new Date(item.value.start_date);
   if (item.value.end_date) item.value.end_date = new Date(item.value.end_date);
   itemDialog.value = true;
@@ -191,18 +291,16 @@ function editItem(data) {
 
 async function saveItem() {
   submitted.value = true;
-  if (!item.value.title) return;
+  if (!item.value.title || !item.value.type) return;
 
   saving.value = true;
   try {
     const payload = { ...item.value };
     if (payload.start_date instanceof Date) {
-        const offset = payload.start_date.getTimezoneOffset();
-        payload.start_date = new Date(payload.start_date.getTime() - (offset*60*1000)).toISOString().split('T')[0];
+        payload.start_date = payload.start_date.toISOString().split('T')[0];
     }
     if (payload.end_date instanceof Date) {
-        const offset = payload.end_date.getTimezoneOffset();
-        payload.end_date = new Date(payload.end_date.getTime() - (offset*60*1000)).toISOString().split('T')[0];
+        payload.end_date = payload.end_date.toISOString().split('T')[0];
     }
 
     if (item.value.id) {
@@ -236,7 +334,7 @@ async function confirmDelete(data) {
 function formatDate(date) {
   if (!date) return '...';
   const d = new Date(date);
-  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
 }
 
 onMounted(() => {
@@ -263,3 +361,4 @@ onMounted(() => {
   @apply py-4 border-none;
 }
 </style>
+

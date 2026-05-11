@@ -547,8 +547,41 @@ class DemoDataSeeder extends Seeder
         // 7. Promotions
         Promotion::updateOrCreate(
             ['tenant_id' => $tenant->id, 'title' => 'Promo Grand Opening'],
-            ['content' => 'Diskon 10% untuk semua menu!', 'is_active' => true, 'priority' => 1]
+            [
+                'content' => 'Diskon 10% untuk semua menu!',
+                'type' => 'discount_percentage',
+                'discount_value' => 10,
+                'applicable_type' => 'all',
+                'is_active' => true,
+                'priority' => 1
+            ]
         );
+
+        $promoFood = Promotion::updateOrCreate(
+            ['tenant_id' => $tenant->id, 'title' => 'Nasi Goreng Hemat'],
+            [
+                'content' => 'Potongan 5rb khusus Nasi Goreng!',
+                'type' => 'discount_fixed',
+                'discount_value' => 5000,
+                'applicable_type' => 'products',
+                'is_active' => true,
+                'priority' => 2
+            ]
+        );
+        $promoFood->products()->sync([$products[0]->id]);
+
+        $promoDrink = Promotion::updateOrCreate(
+            ['tenant_id' => $tenant->id, 'title' => 'Minuman Segar'],
+            [
+                'content' => 'Diskon 15% untuk semua kategori Minuman!',
+                'type' => 'discount_percentage',
+                'discount_value' => 15,
+                'applicable_type' => 'categories',
+                'is_active' => true,
+                'priority' => 3
+            ]
+        );
+        $promoDrink->categories()->sync([$categories['Minuman']->id]);
 
         // 8. Transactions Simulation
         // A. Open Shift

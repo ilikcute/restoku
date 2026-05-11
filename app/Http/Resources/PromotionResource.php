@@ -18,6 +18,18 @@ class PromotionResource extends JsonResource
             'id' => $this->id,
             'title' => $this->title,
             'content' => $this->content,
+            'type' => $this->type,
+            'discount_value' => (float) $this->discount_value,
+            'min_purchase' => (float) $this->min_purchase,
+            'max_discount' => (float) $this->max_discount,
+            'applicable_type' => $this->applicable_type,
+            'requirement_data' => $this->requirement_data,
+            'product_ids' => $this->whenLoaded('products', function () {
+                return $this->products->pluck('id');
+            }),
+            'category_ids' => $this->whenLoaded('categories', function () {
+                return $this->categories->pluck('id');
+            }),
             'is_active' => $this->is_active,
             'start_date' => $this->start_date?->format('Y-m-d'),
             'end_date' => $this->end_date?->format('Y-m-d'),
