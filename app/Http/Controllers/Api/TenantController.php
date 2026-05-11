@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Services\PrinterService;
 use App\Http\Resources\Api\TenantResource;
+use App\Services\PrinterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -53,6 +53,10 @@ class TenantController extends BaseApiController
             'connection_type' => $tenant->printer_connection_type ?: config('printer.connection_type'),
             'address' => $tenant->printer_address ?: config('printer.address'),
             'port' => $tenant->printer_port ?: config('printer.port'),
+            // Kitchen printer
+            'kitchen_connection_type' => $tenant->kitchen_printer_connection_type,
+            'kitchen_address' => $tenant->kitchen_printer_address,
+            'kitchen_port' => $tenant->kitchen_printer_port,
             'defaults' => [
                 'connection_type' => config('printer.connection_type'),
                 'address' => config('printer.address'),
@@ -115,10 +119,35 @@ class TenantController extends BaseApiController
         ], 'Pengaturan printer berhasil diperbarui.');
     }
 
+    public function updateKitchenPrinterSettings(Request $request)
+    {
+        $tenant = $request->user()->tenant;
+
+        $validated = $request->validate([
+            'kitchen_connection_type' => 'nullable|string|in:windows,network,file',
+            'kitchen_address' => 'nullable|string|max:255',
+            'kitchen_port' => 'nullable|integer|min:1|max:65535',
+        ]);
+
+        $tenant->update([
+            'kitchen_printer_connection_type' => $validated['kitchen_connection_type'] ?? null,
+            'kitchen_printer_address' => $validated['kitchen_address'] ?? null,
+            'kitchen_printer_port' => $validated['kitchen_port'] ?? null,
+        ]);
+
+        return $this->successResponse(null, 'Pengaturan printer dapur berhasil diperbarui.');
+    }
+
     public function testPrinter(Request $request, PrinterService $printerService)
     {
         $tenant = $request->user()->tenant;
-        $printed = $printerService->printTestPage($tenant, $request->user()->name);
+        $type = $request->input('type', 'cashier');
+
+        if ($type === 'kitchen') {
+            $printed = $printerService->printKitchenTestPage($tenant, $request->user()->name);
+        } else {
+            $printed = $printerService->printTestPage($tenant, $request->user()->name);
+        }
 
         if (! $printed) {
             return $this->errorResponse(

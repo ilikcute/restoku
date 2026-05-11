@@ -1,33 +1,59 @@
 <template>
-  <AppPage :title="$t('settings.printer_settings')" :breadcrumb="[$t('common.settings'), $t('settings.printer_settings')]" no-card>
-    <div class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-      <Card class="!rounded-3xl border-none shadow-sm overflow-hidden">
-        <template #title>
-          <div class="flex items-center gap-3 px-2 pt-2">
-            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-              <i class="pi pi-print text-xl"></i>
-            </div>
-            <div>
-              <div class="text-lg font-bold text-slate-800">{{ $t('settings.printer_settings') }}</div>
-              <p class="text-sm text-slate-400 font-normal">{{ $t('settings.printer_settings_desc') }}</p>
+  <AppPage
+    :title="$t('settings.printer_settings')"
+    :breadcrumb="[$t('common.settings'), $t('settings.printer_settings')]"
+    no-card
+  >
+    <div class="max-w-4xl mx-auto space-y-6">
+
+      <!-- ===== PRINTER KASIR ===== -->
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <!-- Card Header -->
+        <div class="flex items-center gap-4 px-6 py-5 border-b border-slate-100 bg-slate-50/60">
+          <div class="w-11 h-11 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+            <i class="pi pi-print text-xl"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-slate-800">Printer Kasir</h2>
+            <p class="text-sm text-slate-400">Printer utama untuk mencetak struk transaksi pelanggan.</p>
+          </div>
+          <div class="ml-auto">
+            <span
+              class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"
+              :class="form.use_default
+                ? 'bg-sky-50 text-sky-600 border border-sky-100'
+                : 'bg-emerald-50 text-emerald-600 border border-emerald-100'"
+            >
+              {{ form.use_default ? 'Mode Default Server' : 'Mode Custom' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="p-6 space-y-5">
+          <!-- Toggle Use Default -->
+          <div
+            class="flex items-start gap-4 p-4 rounded-2xl border transition-colors cursor-pointer"
+            :class="form.use_default ? 'bg-sky-50 border-sky-100' : 'bg-slate-50 border-slate-100'"
+            @click="form.use_default = !form.use_default"
+          >
+            <Checkbox v-model="form.use_default" :binary="true" inputId="useDefaultPrinter" class="mt-0.5" @click.stop />
+            <div class="space-y-0.5">
+              <label for="useDefaultPrinter" class="font-bold text-slate-800 cursor-pointer block">
+                Gunakan konfigurasi default server
+              </label>
+              <p class="text-sm text-slate-500">
+                Jika aktif, sistem memakai nilai dari <code class="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono">config/printer.php</code> dan <code class="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono">.env</code>. Nonaktifkan untuk menggunakan printer khusus tenant ini.
+              </p>
             </div>
           </div>
-        </template>
-        <template #content>
-          <div class="p-2 space-y-6">
-            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <div class="flex items-start gap-3">
-                <Checkbox v-model="form.use_default" :binary="true" inputId="useDefaultPrinter" />
-                <div class="space-y-1">
-                  <label for="useDefaultPrinter" class="font-bold text-slate-800 cursor-pointer">Gunakan default server</label>
-                  <p class="text-sm text-slate-500">
-                    Jika aktif, sistem memakai nilai dari `config/printer.php` dan `.env`. Jika nonaktif, gunakan printer khusus tenant ini.
-                  </p>
-                </div>
-              </div>
-            </div>
 
+          <!-- Custom Printer Fields -->
+          <div
+            class="space-y-4 transition-opacity"
+            :class="form.use_default ? 'opacity-40 pointer-events-none' : 'opacity-100'"
+          >
             <div class="grid gap-4 md:grid-cols-2">
+              <!-- Tipe Koneksi -->
               <div class="flex flex-col gap-2">
                 <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Tipe Koneksi</label>
                 <Select
@@ -35,45 +61,26 @@
                   :options="connectionTypes"
                   optionLabel="label"
                   optionValue="value"
-                  class="w-full !rounded-xl !bg-slate-50 !border-slate-100"
+                  class="w-full !rounded-xl !bg-slate-50 !border-slate-200"
                   pt:input:class="!p-3"
                   :disabled="form.use_default"
                   placeholder="Pilih tipe koneksi"
                 />
               </div>
 
-              <div v-if="!form.use_default && form.connection_type === 'windows'" class="flex flex-col gap-2">
-                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Printer Ready Terdeteksi</label>
-                <div class="flex gap-2">
-                  <Select
-                    v-model="selectedDetectedPrinter"
-                    :options="detectedPrinters"
-                    optionLabel="label"
-                    optionValue="value"
-                    class="w-full !rounded-xl !bg-slate-50 !border-slate-100"
-                    pt:input:class="!p-3"
-                    placeholder="Pilih printer dari Windows"
-                    :disabled="scanning"
-                    @change="applyDetectedPrinter"
-                  />
-                  <Button icon="pi pi-refresh" severity="secondary" outlined class="!rounded-xl shrink-0" :loading="scanning" @click="scanPrinters" />
-                </div>
-                <p class="text-xs text-slate-400">
-                  Menampilkan printer Windows yang terdeteksi dalam kondisi siap/online. Jika kosong, Anda masih bisa isi manual.
-                </p>
-              </div>
-
+              <!-- Alamat Printer -->
               <div class="flex flex-col gap-2">
                 <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Alamat / Nama Printer</label>
                 <InputText
                   v-model="form.address"
-                  class="!rounded-xl !bg-slate-50 !border-slate-100"
+                  class="!rounded-xl !bg-slate-50 !border-slate-200"
                   :disabled="form.use_default"
                   :placeholder="addressPlaceholder"
                 />
               </div>
             </div>
 
+            <!-- Port (only for network) -->
             <div v-if="form.connection_type === 'network'" class="grid gap-4 md:grid-cols-2">
               <div class="flex flex-col gap-2">
                 <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Port</label>
@@ -83,65 +90,212 @@
                   :max="65535"
                   class="w-full"
                   :disabled="form.use_default"
-                  pt:input:class="!rounded-xl !bg-slate-50 !p-3 !border-slate-100"
+                  pt:input:class="!rounded-xl !bg-slate-50 !p-3 !border-slate-200"
                 />
               </div>
             </div>
 
-            <div class="flex flex-wrap gap-3 pt-2 border-t border-slate-50">
-              <Button :label="$t('common.save')" icon="pi pi-check" class="!rounded-xl !px-8 h-12 font-bold" :loading="saving" @click="save" />
-              <Button label="Test Print" icon="pi pi-send" severity="secondary" outlined class="!rounded-xl !px-6 h-12 font-bold" :loading="testing" @click="testPrinter" />
+            <!-- Printer Terdeteksi (Windows only) -->
+            <div v-if="!form.use_default && form.connection_type === 'windows'" class="flex flex-col gap-2">
+              <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Printer Windows Terdeteksi</label>
+              <div class="flex gap-2">
+                <Select
+                  v-model="selectedDetectedPrinter"
+                  :options="detectedPrinters"
+                  optionLabel="label"
+                  optionValue="value"
+                  class="flex-1 !rounded-xl !bg-slate-50 !border-slate-200"
+                  pt:input:class="!p-3"
+                  placeholder="Pilih printer dari Windows atau isi manual"
+                  :disabled="scanning"
+                  @change="applyDetectedPrinter"
+                />
+                <Button
+                  icon="pi pi-refresh"
+                  severity="secondary"
+                  outlined
+                  class="!rounded-xl shrink-0"
+                  :loading="scanning"
+                  @click="scanPrinters"
+                  v-tooltip.top="'Scan ulang printer'"
+                />
+              </div>
+              <p class="text-xs text-slate-400 ml-1">
+                Menampilkan printer Windows yang siap/online. Jika kosong, Anda bisa mengisi nama printer secara manual di atas.
+              </p>
             </div>
           </div>
-        </template>
-      </Card>
 
-      <Card class="!rounded-3xl border-none shadow-sm overflow-hidden">
-        <template #title>
-          <div class="flex items-center gap-3 px-2 pt-2">
-            <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
-              <i class="pi pi-server text-xl"></i>
+          <!-- Config Preview -->
+          <div class="grid md:grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-900 text-white text-sm">
+            <div class="space-y-0.5">
+              <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Tipe Aktif</div>
+              <div class="font-bold text-emerald-400">{{ resolved.connection_type || '-' }}</div>
             </div>
-            <span class="text-lg font-bold text-slate-800">Resolusi Konfigurasi</span>
-          </div>
-        </template>
-        <template #content>
-          <div class="p-2 space-y-4">
-            <div class="rounded-2xl border border-dashed border-slate-200 bg-white p-5 space-y-3">
-              <div class="flex justify-between items-center text-sm">
-                <span class="text-slate-500">Mode aktif</span>
-                <span class="font-black" :class="form.use_default ? 'text-sky-600' : 'text-emerald-600'">
-                  {{ form.use_default ? 'Default Server' : 'Custom Tenant' }}
-                </span>
-              </div>
-              <div class="flex justify-between items-center text-sm">
-                <span class="text-slate-500">Tipe koneksi</span>
-                <span class="font-bold text-slate-900">{{ resolved.connection_type || '-' }}</span>
-              </div>
-              <div class="flex justify-between items-center text-sm">
-                <span class="text-slate-500">Alamat</span>
-                <span class="font-bold text-slate-900">{{ resolved.address || '-' }}</span>
-              </div>
-              <div class="flex justify-between items-center text-sm">
-                <span class="text-slate-500">Port</span>
-                <span class="font-bold text-slate-900">{{ resolved.connection_type === 'network' ? resolved.port : '-' }}</span>
-              </div>
+            <div class="space-y-0.5">
+              <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Alamat Aktif</div>
+              <div class="font-bold">{{ resolved.address || '-' }}</div>
             </div>
-
-            <div class="rounded-2xl bg-slate-900 text-white p-5 space-y-2">
-              <div class="text-[10px] uppercase tracking-[0.25em] text-slate-400 font-bold">Default Server</div>
-              <div class="text-sm">Tipe: <span class="font-bold">{{ defaults.connection_type || '-' }}</span></div>
-              <div class="text-sm">Alamat: <span class="font-bold">{{ defaults.address || '-' }}</span></div>
-              <div class="text-sm">Port: <span class="font-bold">{{ defaults.port || '-' }}</span></div>
-            </div>
-
-            <div class="rounded-2xl bg-amber-50 border border-amber-100 p-4 text-sm text-amber-900">
-              Untuk printer Windows, isi nama printer persis seperti yang terdaftar di mesin server.
-              Untuk printer Network, isi IP printer dan port-nya.
+            <div class="space-y-0.5">
+              <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Port</div>
+              <div class="font-bold">{{ resolved.connection_type === 'network' ? resolved.port : '-' }}</div>
             </div>
           </div>
-        </template>
-      </Card>
+
+          <!-- Actions -->
+          <div class="flex flex-wrap gap-3 pt-1">
+            <Button
+              :label="$t('common.save')"
+              icon="pi pi-check"
+              class="!rounded-xl !px-8 h-11 font-bold !bg-emerald-600 !border-none shadow-sm shadow-emerald-100"
+              :loading="saving"
+              @click="save"
+            />
+            <Button
+              label="Test Print Kasir"
+              icon="pi pi-send"
+              severity="secondary"
+              outlined
+              class="!rounded-xl !px-6 h-11 font-bold"
+              :loading="testing"
+              @click="testPrinter('cashier')"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== PRINTER DAPUR ===== -->
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <!-- Card Header -->
+        <div class="flex items-center gap-4 px-6 py-5 border-b border-slate-100 bg-orange-50/60">
+          <div class="w-11 h-11 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+            <i class="pi pi-th-large text-xl"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-slate-800">Printer Dapur (Kitchen)</h2>
+            <p class="text-sm text-slate-400">Printer khusus struk pesanan ke dapur. Kosongkan jika sama dengan printer kasir.</p>
+          </div>
+          <div class="ml-auto">
+            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border"
+              :class="kitchenForm.address
+                ? 'bg-orange-50 text-orange-600 border-orange-100'
+                : 'bg-slate-50 text-slate-400 border-slate-100'"
+            >
+              {{ kitchenForm.address ? 'Custom Dapur' : 'Ikut Printer Kasir' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="p-6 space-y-5">
+          <!-- Info Alert -->
+          <div class="flex items-start gap-3 p-4 rounded-2xl bg-orange-50 border border-orange-100 text-sm text-orange-800">
+            <i class="pi pi-info-circle text-orange-500 mt-0.5 shrink-0"></i>
+            <div>
+              Isi kolom ini <strong>hanya jika</strong> printer dapur berbeda dengan printer kasir.
+              Jika dikosongkan, struk dapur akan dicetak ke printer kasir secara otomatis.
+            </div>
+          </div>
+
+          <!-- Kitchen Printer Fields -->
+          <div class="grid gap-4 md:grid-cols-2">
+            <div class="flex flex-col gap-2">
+              <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Tipe Koneksi Dapur</label>
+              <Select
+                v-model="kitchenForm.connection_type"
+                :options="connectionTypes"
+                optionLabel="label"
+                optionValue="value"
+                class="w-full !rounded-xl !bg-slate-50 !border-slate-200"
+                pt:input:class="!p-3"
+                placeholder="Kosongkan jika sama dengan kasir"
+                showClear
+              />
+            </div>
+
+            <div class="flex flex-col gap-2">
+              <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Alamat / Nama Printer Dapur</label>
+              <InputText
+                v-model="kitchenForm.address"
+                class="!rounded-xl !bg-slate-50 !border-slate-200"
+                placeholder="Kosongkan jika sama dengan kasir"
+              />
+            </div>
+          </div>
+
+          <div v-if="kitchenForm.connection_type === 'network'" class="grid gap-4 md:grid-cols-2">
+            <div class="flex flex-col gap-2">
+              <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Port Dapur</label>
+              <InputNumber
+                v-model="kitchenForm.port"
+                :min="1"
+                :max="65535"
+                class="w-full"
+                pt:input:class="!rounded-xl !bg-slate-50 !p-3 !border-slate-200"
+              />
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex flex-wrap gap-3 pt-1">
+            <Button
+              label="Simpan Printer Dapur"
+              icon="pi pi-check"
+              class="!rounded-xl !px-8 h-11 font-bold !bg-orange-500 !border-none shadow-sm shadow-orange-100"
+              :loading="savingKitchen"
+              @click="saveKitchen"
+            />
+            <Button
+              label="Test Print Dapur"
+              icon="pi pi-send"
+              severity="secondary"
+              outlined
+              class="!rounded-xl !px-6 h-11 font-bold"
+              :loading="testingKitchen"
+              @click="testPrinter('kitchen')"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SERVER DEFAULTS INFO ===== -->
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="flex items-center gap-4 px-6 py-5 border-b border-slate-100 bg-sky-50/60">
+          <div class="w-11 h-11 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center shrink-0">
+            <i class="pi pi-server text-xl"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-slate-800">Konfigurasi Default Server</h2>
+            <p class="text-sm text-slate-400">Nilai dari <code class="bg-sky-100 px-1.5 py-0.5 rounded text-xs font-mono">config/printer.php</code> yang digunakan saat mode default aktif.</p>
+          </div>
+        </div>
+
+        <div class="p-6 space-y-4">
+          <div class="grid md:grid-cols-3 gap-4">
+            <div class="p-4 rounded-2xl border border-slate-100 bg-slate-50 space-y-1">
+              <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Tipe Koneksi</div>
+              <div class="font-bold text-slate-800">{{ defaults.connection_type || '-' }}</div>
+            </div>
+            <div class="p-4 rounded-2xl border border-slate-100 bg-slate-50 space-y-1">
+              <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Alamat / Nama</div>
+              <div class="font-bold text-slate-800">{{ defaults.address || '-' }}</div>
+            </div>
+            <div class="p-4 rounded-2xl border border-slate-100 bg-slate-50 space-y-1">
+              <div class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Port</div>
+              <div class="font-bold text-slate-800">{{ defaults.port || '-' }}</div>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-amber-50 border border-amber-100 text-sm text-amber-800 flex items-start gap-3">
+            <i class="pi pi-lightbulb text-amber-500 mt-0.5 shrink-0"></i>
+            <div>
+              <strong>Printer Windows:</strong> isi nama printer persis seperti yang terdaftar di mesin server (contoh: <code class="bg-amber-100 px-1 rounded text-xs">POS-80</code>).
+              <br>
+              <strong>Printer Network:</strong> isi IP address printer dan nomor port-nya (contoh: <code class="bg-amber-100 px-1 rounded text-xs">192.168.1.50</code> port <code class="bg-amber-100 px-1 rounded text-xs">9100</code>).
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </AppPage>
 </template>
@@ -151,7 +305,6 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from 'primevue/usetoast';
 import AppPage from '@/components/layout/AppPage.vue';
-import Card from 'primevue/card';
 import Button from 'primevue/button';
 import Checkbox from 'primevue/checkbox';
 import InputNumber from 'primevue/inputnumber';
@@ -163,6 +316,8 @@ const { t: $t } = useI18n();
 const toast = useToast();
 const saving = ref(false);
 const testing = ref(false);
+const testingKitchen = ref(false);
+const savingKitchen = ref(false);
 const scanning = ref(false);
 const selectedDetectedPrinter = ref(null);
 const detectedPrinters = ref([]);
@@ -176,6 +331,12 @@ const connectionTypes = [
 const form = reactive({
   use_default: true,
   connection_type: 'windows',
+  address: '',
+  port: 9100,
+});
+
+const kitchenForm = reactive({
+  connection_type: null,
   address: '',
   port: 9100,
 });
@@ -208,6 +369,10 @@ async function load() {
     form.address = data.address || '';
     form.port = data.port || 9100;
 
+    kitchenForm.connection_type = data.kitchen_connection_type || null;
+    kitchenForm.address = data.kitchen_address || '';
+    kitchenForm.port = data.kitchen_port || 9100;
+
     defaults.connection_type = data.defaults?.connection_type || 'windows';
     defaults.address = data.defaults?.address || '';
     defaults.port = data.defaults?.port || 9100;
@@ -232,17 +397,12 @@ async function scanPrinters() {
     const printers = response.data.data || [];
 
     detectedPrinters.value = printers.map((printer) => ({
-      label: `${printer.name}${printer.share_name ? ` (Share: ${printer.share_name})` : ' (Belum di-share)'}${printer.is_default ? ' (Default)' : ''}${printer.port_name ? ` - ${printer.port_name}` : ''}`,
+      label: `${printer.name}${printer.share_name ? ` (Share: ${printer.share_name})` : ' (Belum di-share)'}${printer.is_default ? ' ★' : ''}${printer.port_name ? ` — ${printer.port_name}` : ''}`,
       value: printer.share_name || printer.name,
     }));
 
     if (!detectedPrinters.value.length) {
-      toast.add({
-        severity: 'warn',
-        summary: 'Printer',
-        detail: 'Tidak ada printer Windows dengan status siap yang terdeteksi.',
-        life: 3000,
-      });
+      toast.add({ severity: 'warn', summary: 'Printer', detail: 'Tidak ada printer Windows dengan status siap yang terdeteksi.', life: 3000 });
       return;
     }
 
@@ -256,10 +416,7 @@ async function scanPrinters() {
       const defaultPrinter = printers.find((printer) => printer.is_default) || printers[0];
       selectedDetectedPrinter.value = defaultPrinter?.share_name || defaultPrinter?.name || null;
       applyDetectedPrinter();
-      return;
     }
-
-    selectedDetectedPrinter.value = null;
   } catch (error) {
     const detail = error?.response?.data?.message || 'Gagal membaca printer dari Windows.';
     toast.add({ severity: 'error', summary: 'Gagal', detail, life: 3500 });
@@ -269,7 +426,6 @@ async function scanPrinters() {
 }
 
 async function save() {
-  // Validasi data sebelum save
   if (!form.use_default) {
     if (!form.connection_type) {
       toast.add({ severity: 'warn', summary: 'Validasi', detail: 'Tipe koneksi harus dipilih.', life: 3000 });
@@ -277,10 +433,6 @@ async function save() {
     }
     if (!form.address) {
       toast.add({ severity: 'warn', summary: 'Validasi', detail: 'Alamat/Nama printer harus diisi.', life: 3000 });
-      return;
-    }
-    if (form.connection_type === 'network' && !form.port) {
-      toast.add({ severity: 'warn', summary: 'Validasi', detail: 'Port harus diisi untuk printer network.', life: 3000 });
       return;
     }
   }
@@ -293,10 +445,8 @@ async function save() {
       address: form.use_default ? null : form.address,
       port: form.use_default ? null : (form.connection_type === 'network' ? form.port : null),
     };
-
     await tenantApi.updatePrinter(payload);
-
-    toast.add({ severity: 'success', summary: '✓ Tersimpan', detail: 'Pengaturan printer berhasil diperbarui.', life: 2500 });
+    toast.add({ severity: 'success', summary: '✓ Tersimpan', detail: 'Pengaturan printer kasir berhasil diperbarui.', life: 2500 });
     await load();
   } catch (error) {
     const detail = error?.response?.data?.message || 'Gagal menyimpan pengaturan printer.';
@@ -306,22 +456,40 @@ async function save() {
   }
 }
 
-async function testPrinter() {
-  testing.value = true;
+async function saveKitchen() {
+  savingKitchen.value = true;
   try {
-    await tenantApi.testPrinter();
-    toast.add({ severity: 'success', summary: 'Test Print', detail: 'Perintah test print berhasil dikirim.', life: 3000 });
+    await tenantApi.updateKitchenPrinter({
+      kitchen_connection_type: kitchenForm.connection_type || null,
+      kitchen_address: kitchenForm.address || null,
+      kitchen_port: kitchenForm.connection_type === 'network' ? kitchenForm.port : null,
+    });
+    toast.add({ severity: 'success', summary: '✓ Tersimpan', detail: 'Pengaturan printer dapur berhasil diperbarui.', life: 2500 });
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Gagal', detail: error?.response?.data?.message || 'Gagal menyimpan printer dapur.', life: 3000 });
+  } finally {
+    savingKitchen.value = false;
+  }
+}
+
+async function testPrinter(type = 'cashier') {
+  const isKitchen = type === 'kitchen';
+  if (isKitchen) testingKitchen.value = true;
+  else testing.value = true;
+  try {
+    await tenantApi.testPrinter(type);
+    toast.add({ severity: 'success', summary: 'Test Print', detail: `Perintah test print ${isKitchen ? 'dapur' : 'kasir'} berhasil dikirim.`, life: 3000 });
   } catch (error) {
     const detail = error?.response?.data?.message || 'Test print gagal.';
     toast.add({ severity: 'error', summary: 'Gagal', detail, life: 3500 });
   } finally {
-    testing.value = false;
+    if (isKitchen) testingKitchen.value = false;
+    else testing.value = false;
   }
 }
 
 onMounted(async () => {
   await load();
-
   if (!form.use_default && form.connection_type === 'windows') {
     scanPrinters();
   }

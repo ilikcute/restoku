@@ -38,7 +38,8 @@ class ShiftController extends BaseApiController
             ->first();
 
         if ($shift) {
-            $isExpired = $shift->start_time->format('Y-m-d') < now()->format('Y-m-d');
+            // Shift dianggap expired jika sudah buka lebih dari 24 jam
+            $isExpired = $shift->start_time->diffInHours(now()) > 24;
             $shift->is_expired = $isExpired;
 
             return $this->successResponse(new ShiftResource($shift));

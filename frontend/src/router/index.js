@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { shiftApi } from '@/api/sales';
 const roleAll = ['admin', 'manager', 'cashier'];
 const roleAdminManager = ['admin', 'manager'];
 const roleAdmin = ['admin'];
@@ -118,6 +119,23 @@ router.beforeEach(async (to) => {
     if (permissions !== null && !permissions.includes(to.meta.permission)) {
       if (to.name !== 'dashboard') {
         return { name: 'dashboard' };
+      }
+    }
+  }
+
+  // Guard: Kasir harus punya shift aktif sebelum masuk POS
+  if (to.name === 'pos' && authStore.isAuthenticated) {
+    const user = authStore.user;
+    const isCashier = user?.roles?.includes('cashier') || user?.attributes?.roles?.includes('cashier');
+    if (isCashier) {
+      try {
+        const res = await shiftApi.getCurrent();
+        const shift = res?.data?.data;
+        if (!shift || shift.is_expired) {
+          return { name: 'shifts' };
+        }
+      } catch (e) {
+        // Jika gagal fetch (offline), biarkan masuk — POS punya mode offline
       }
     }
   }

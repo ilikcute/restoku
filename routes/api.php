@@ -131,6 +131,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('/settings/tenant', [TenantController::class, 'update']);
             Route::get('/settings/printer', [TenantController::class, 'showPrinterSettings']);
             Route::put('/settings/printer', [TenantController::class, 'updatePrinterSettings']);
+            Route::put('/settings/printer/kitchen', [TenantController::class, 'updateKitchenPrinterSettings']);
             Route::post('/settings/printer/test', [TenantController::class, 'testPrinter']);
             Route::get('/settings/printer/scan', [TenantController::class, 'scanReadyPrinters']);
         });

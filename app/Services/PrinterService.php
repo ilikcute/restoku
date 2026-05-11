@@ -36,16 +36,22 @@ class PrinterService
             /* Header - Tenant Identity */
             $this->printer->setJustification(Printer::JUSTIFY_CENTER);
 
-            // Logo
+            // Logo — resize ke max 300px agar tidak memenuhi struk
             $logoPath = null;
             if ($order->tenant->logo) {
                 $logoPath = storage_path('app/public/'.$order->tenant->logo);
             }
             if ($logoPath && file_exists($logoPath)) {
                 try {
-                    $logo = EscposImage::load($logoPath, false);
+                    $resized = $this->resizeLogoForReceipt($logoPath, 300);
+                    $src = $resized ?: $logoPath;
+                    $logo = EscposImage::load($src, false);
                     $this->printer->bitImage($logo);
+                    if ($resized) {
+                        @unlink($resized);
+                    }
                 } catch (Exception $e) {
+                    \Log::warning('Logo print failed: '.$e->getMessage());
                 }
             }
 
@@ -61,25 +67,19 @@ class PrinterService
             }
             $this->printer->text("--------------------------------\n");
 
-            /* Transaction Identity Section */
+            /* Transaction Identity Section — tiap field di baris terpisah */
             $this->printer->setJustification(Printer::JUSTIFY_LEFT);
-            $this->printer->text($this->formatTwoColumns('Bill No', ': '.$order->order_number, 32)."\n");
-            $this->printer->text($this->formatTwoColumns('Name', ': '.($order->customer_name ?? '-'), 32)."\n");
-
-            // Date & Shift on same line
-            $dateStr = 'Date   : '.$order->created_at->format('d/m/Y');
-            $shiftStr = 'Shift : '.($order->shift->name ?? ($order->shift_id ? 'Shift #'.$order->shift_id : 'NIGHT'));
-            $this->printer->text($this->formatTwoColumns($dateStr, $shiftStr, 32)."\n");
-
-            // Table No & Cashier on same line
-            $tableStr = 'Table No: '.($order->table_number ?? '-');
-            $cashierStr = 'Cashier: '.($order->user->name ?? 'User');
-            $this->printer->text($this->formatTwoColumns($tableStr, $cashierStr, 32)."\n");
+            $this->printer->text($this->formatTwoColumns('Bill No ', ': '.$order->order_number, 32)."\n");
+            $this->printer->text($this->formatTwoColumns('Name    ', ': '.($order->customer_name ?? '-'), 32)."\n");
+            $this->printer->text($this->formatTwoColumns('Date    ', ': '.$order->created_at->format('d/m/Y'), 32)."\n");
+            $this->printer->text($this->formatTwoColumns('Shift   ', ': '.($order->shift->name ?? ($order->shift_id ? 'Shift #'.$order->shift_id : 'NIGHT')), 32)."\n");
+            $this->printer->text($this->formatTwoColumns('Table   ', ': '.($order->table_number ?? '-'), 32)."\n");
+            $this->printer->text($this->formatTwoColumns('Cashier ', ': '.($order->user->name ?? 'User'), 32)."\n");
 
             $this->printer->text("--------------------------------\n");
 
             /* Table Header */
-            $this->printer->text("QTY  DESCRIPTION  DISC(%)  TOTAL\n");
+            $this->printer->text("QTY  NAMA PRODUK              TOTAL\n");
             $this->printer->text("--------------------------------\n");
 
             /* Items Grouped by Category */
@@ -93,13 +93,23 @@ class PrinterService
 
                 foreach ($items as $item) {
                     $qty = str_pad($item->quantity, 3);
-                    $name = substr($item->product_name, 0, 16);
-                    $disc = str_pad(number_format($item->discount_amount > 0 ? ($item->discount_amount / ($item->price * $item->quantity) * 100) : 0, 0), 2, ' ', STR_PAD_LEFT);
+                    $name = mb_substr($item->product_name, 0, 22); // 22 char — lebih panjang
                     $total = number_format($item->subtotal, 0, ',', '.');
 
-                    // QTY  NAME  DISC  TOTAL
-                    $line = $qty.' '.str_pad($name, 16).' '.$disc.'% '.str_pad($total, 7, ' ', STR_PAD_LEFT);
+                    // Format: "1   Nasi Goreng Special       25.000"
+                    $line = $qty.' '.str_pad($name, 22).' '.str_pad($total, 6, ' ', STR_PAD_LEFT);
                     $this->printer->text($line."\n");
+
+                    // Tampilkan diskon jika ada
+                    if ($item->discount_amount > 0) {
+                        $discPct = number_format($item->discount_amount / ($item->price * $item->quantity) * 100, 0);
+                        $this->printer->text("     Diskon: {$discPct}%\n");
+                    }
+
+                    // Tampilkan notes jika ada
+                    if ($item->notes) {
+                        $this->printer->text("     *{$item->notes}\n");
+                    }
 
                     $categorySubtotal += $item->subtotal;
                 }
@@ -118,9 +128,12 @@ class PrinterService
             $this->printer->text($this->formatTwoColumns('ROUNDING', number_format($order->rounding, 0, ',', '.'), 32)."\n");
 
             $this->printer->text("\n");
-            $this->printer->selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
-            $this->printer->text($this->formatTwoColumns('Grand Total', number_format($order->total_amount, 0, ',', '.'), 32)."\n");
+            $this->printer->setJustification(Printer::JUSTIFY_CENTER);
+            $this->printer->selectPrintMode(Printer::MODE_DOUBLE_WIDTH | Printer::MODE_DOUBLE_HEIGHT);
+            $this->printer->text("Grand Total\n");
+            $this->printer->text(number_format($order->total_amount, 0, ',', '.')."\n");
             $this->printer->selectPrintMode();
+            $this->printer->setJustification(Printer::JUSTIFY_LEFT);
 
             $this->printer->text("--------------------------------\n");
             $this->printer->text($this->formatTwoColumns('Total Paid', number_format($order->paid_amount, 0, ',', '.'), 32)."\n");
@@ -162,7 +175,8 @@ class PrinterService
     {
         try {
             $order->load(['items', 'tenant']);
-            $this->initialize($order->tenant);
+            // Gunakan printer dapur jika dikonfigurasi, fallback ke printer utama
+            $this->initializeKitchen($order->tenant);
             if (! $this->printer) {
                 return false;
             }
@@ -227,15 +241,15 @@ class PrinterService
             $this->printer->text(($tenant->name ?? 'Restoku')."\n");
             $this->printer->text("--------------------------------\n");
             $this->printer->setJustification(Printer::JUSTIFY_LEFT);
-            $this->printer->text("Tipe    : ".$settings['connection_type']."\n");
-            $this->printer->text("Alamat  : ".$settings['address']."\n");
+            $this->printer->text('Tipe    : '.$settings['connection_type']."\n");
+            $this->printer->text('Alamat  : '.$settings['address']."\n");
 
             if ($settings['connection_type'] === 'network') {
-                $this->printer->text("Port    : ".$settings['port']."\n");
+                $this->printer->text('Port    : '.$settings['port']."\n");
             }
 
-            $this->printer->text("Waktu   : ".now()->format('d/m/Y H:i:s')."\n");
-            $this->printer->text("User    : ".($userName ?: 'System')."\n");
+            $this->printer->text('Waktu   : '.now()->format('d/m/Y H:i:s')."\n");
+            $this->printer->text('User    : '.($userName ?: 'System')."\n");
             $this->printer->text("--------------------------------\n");
             $this->printer->setJustification(Printer::JUSTIFY_CENTER);
             $this->printer->text("Jika struk ini keluar,\nkonfigurasi printer sudah benar.\n\n");
@@ -246,6 +260,52 @@ class PrinterService
         } catch (Exception $e) {
             $this->lastError = $this->formatPrinterExceptionMessage($e);
             \Log::error('Test printing failed: '.$e->getMessage());
+
+            return false;
+        }
+    }
+
+    public function printKitchenTestPage(Tenant $tenant, ?string $userName = null): bool
+    {
+        try {
+            $this->lastError = null;
+            $this->initializeKitchen($tenant);
+
+            if (! $this->printer) {
+                $this->lastError ??= 'Printer dapur tidak dapat diinisialisasi.';
+
+                return false;
+            }
+
+            $this->printer->setJustification(Printer::JUSTIFY_CENTER);
+            $this->printer->selectPrintMode(Printer::MODE_DOUBLE_WIDTH | Printer::MODE_DOUBLE_HEIGHT);
+            $this->printer->text("TEST PRINTER DAPUR\n");
+            $this->printer->selectPrintMode();
+            $this->printer->text("--------------------------------\n");
+            $this->printer->setJustification(Printer::JUSTIFY_LEFT);
+            $this->printer->text('No: TEST-'.now()->format('His')."\n");
+            $this->printer->text('Meja: 01'."\n");
+            $this->printer->text('Waktu: '.now()->format('H:i:s')."\n");
+            $this->printer->text("--------------------------------\n");
+
+            $this->printer->selectPrintMode(Printer::MODE_DOUBLE_WIDTH);
+            $this->printer->text("1 x Nasi Goreng Special\n");
+            $this->printer->text("2 x Ayam Goreng\n");
+            $this->printer->selectPrintMode();
+
+            $this->printer->text("\n");
+            $this->printer->text("--------------------------------\n");
+            $this->printer->setJustification(Printer::JUSTIFY_CENTER);
+            $this->printer->text("Jika struk ini keluar,\nprinter dapur sudah benar.\n");
+            $this->printer->text('User: '.($userName ?: 'System')."\n\n");
+
+            $this->printer->cut();
+            $this->printer->close();
+
+            return true;
+        } catch (Exception $e) {
+            $this->lastError = $this->formatPrinterExceptionMessage($e);
+            \Log::error('Kitchen test printing failed: '.$e->getMessage());
 
             return false;
         }
@@ -332,6 +392,97 @@ POWERSHELL,
         }
 
         return $this->scanWindowsPrintersFromRegistry();
+    }
+
+    /**
+     * Resize logo image to max width for receipt printing.
+     * Returns path to resized temp file, or null if GD not available / resize fails.
+     */
+    protected function resizeLogoForReceipt(string $sourcePath, int $maxWidth = 300): ?string
+    {
+        if (! function_exists('imagecreatefromstring')) {
+            return null; // GD not installed
+        }
+
+        try {
+            $imageData = file_get_contents($sourcePath);
+            $src = imagecreatefromstring($imageData);
+            if (! $src) {
+                return null;
+            }
+
+            $srcW = imagesx($src);
+            $srcH = imagesy($src);
+
+            if ($srcW <= $maxWidth) {
+                imagedestroy($src);
+
+                return null; // No resize needed
+            }
+
+            $ratio = $maxWidth / $srcW;
+            $newW = $maxWidth;
+            $newH = (int) ($srcH * $ratio);
+
+            $dst = imagecreatetruecolor($newW, $newH);
+            imagecopyresampled($dst, $src, 0, 0, 0, 0, $newW, $newH, $srcW, $srcH);
+
+            $tmpPath = sys_get_temp_dir().'/receipt_logo_'.uniqid().'.png';
+            imagepng($dst, $tmpPath);
+            imagedestroy($src);
+            imagedestroy($dst);
+
+            return $tmpPath;
+        } catch (Exception $e) {
+            \Log::warning('Logo resize failed: '.$e->getMessage());
+
+            return null;
+        }
+    }
+
+    /**
+     * Initialize kitchen printer.
+     * Uses kitchen_printer_* settings if configured, otherwise falls back to main printer.
+     */
+    protected function initializeKitchen(?Tenant $tenant = null): void
+    {
+        $this->lastError = null;
+
+        // Check if a separate kitchen printer is configured
+        $kitchenAddress = $tenant->kitchen_printer_address ?? null;
+
+        if (! $kitchenAddress) {
+            // No separate kitchen printer — use main printer
+            $this->initialize($tenant);
+
+            return;
+        }
+
+        $connectionType = $tenant->kitchen_printer_connection_type ?? 'windows';
+        $port = (int) ($tenant->kitchen_printer_port ?? 9100);
+
+        try {
+            switch ($connectionType) {
+                case 'network':
+                    $this->connector = new NetworkPrintConnector($kitchenAddress, $port);
+                    break;
+                case 'windows':
+                    $this->connector = new WindowsPrintConnector($kitchenAddress);
+                    break;
+                case 'file':
+                    $this->connector = new FilePrintConnector($kitchenAddress);
+                    break;
+                default:
+                    throw new Exception("Unsupported kitchen printer type: $connectionType");
+            }
+
+            $this->printer = new Printer($this->connector);
+        } catch (Exception $e) {
+            $this->lastError = $this->formatPrinterExceptionMessage($e);
+            \Log::error('Kitchen printer initialization failed: '.$e->getMessage());
+            // Fallback ke printer utama
+            $this->initialize($tenant);
+        }
     }
 
     /**

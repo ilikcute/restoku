@@ -5,6 +5,7 @@ export const tenantApi = {
   update: (data) => axios.post('/settings/tenant', data),
   getPrinter: () => axios.get('/settings/printer'),
   updatePrinter: (data) => axios.put('/settings/printer', data),
-  testPrinter: () => axios.post('/settings/printer/test'),
+  updateKitchenPrinter: (data) => axios.put('/settings/printer/kitchen', data),
+  testPrinter: (type = 'cashier') => axios.post('/settings/printer/test', { type }),
   scanReadyPrinters: () => axios.get('/settings/printer/scan'),
 };

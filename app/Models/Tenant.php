@@ -24,6 +24,9 @@ class Tenant extends Model
         'printer_connection_type',
         'printer_address',
         'printer_port',
+        'kitchen_printer_connection_type',
+        'kitchen_printer_address',
+        'kitchen_printer_port',
         'is_active',
     ];
 
@@ -31,6 +34,7 @@ class Tenant extends Model
         'is_active' => 'boolean',
         'printer_use_default' => 'boolean',
         'printer_port' => 'integer',
+        'kitchen_printer_port' => 'integer',
     ];
 
     /**

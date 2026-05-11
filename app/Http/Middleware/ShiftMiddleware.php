@@ -2,10 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Shift;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use App\Models\Shift;
 
 class ShiftMiddleware
 {
@@ -22,7 +22,6 @@ class ShiftMiddleware
         $activeShift = Shift::where('user_id', $user->id)
             ->where('tenant_id', $user->tenant_id)
             ->where('status', 'open')
-            ->whereDate('start_time', today())   // Optional: shift hanya 1 hari
             ->first();
 
         if (! $activeShift) {
