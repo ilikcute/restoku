@@ -9,10 +9,11 @@ use Illuminate\Support\Facades\DB;
 
 class UserRepository implements UserRepositoryInterface
 {
-    public function getAll(?string $search, ?int $limit, bool $execute)
+    public function getAllByTenant(int $tenantId, ?string $search = null, ?int $perPage = null)
     {
-        $query = User::query();
-        
+        $query = User::with(['roles', 'permissions'])
+            ->where('tenant_id', $tenantId);
+
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -22,45 +23,30 @@ class UserRepository implements UserRepositoryInterface
 
         $query->orderBy('created_at', 'desc');
 
-        if ($limit) {
-            $query->take($limit);
+        if ($perPage) {
+            return $query->paginate($perPage);
         }
 
-        if ($execute) {
-            return $query->get();
-        }
-
-        return $query;
+        return $query->get();
     }
 
-    public function getAllPaginated(?string $search, ?int $rowPerPage)
+    public function findById(string $id, array $with = [])
     {
-        $query = $this->getAll(
-            $search,
-            $rowPerPage,
-            false
-        );
-
-        return $query->paginate($rowPerPage);
-    }
-
-    public function getById(string $id)
-    {
-        return User::where('id', $id)->first();
+        return User::with($with)->where('id', $id)->first();
     }
 
     public function create(array $data)
     {
         DB::beginTransaction();
         try {
-            $user = new User;
-            $user->name = $data['name'];
-            $user->email = $data['email'];
-            $user->password = bcrypt($data['password']);
-            $user->save();
+            $user = User::create($data);
 
             if (isset($data['roles'])) {
                 $user->syncRoles($data['roles']);
+            }
+
+            if (isset($data['permissions'])) {
+                $user->syncPermissions($data['permissions']);
             }
 
             DB::commit();
@@ -77,17 +63,14 @@ class UserRepository implements UserRepositoryInterface
         DB::beginTransaction();
         try {
             $user = User::findOrFail($id);
-            $user->name = $data['name'] ?? $user->name;
-            $user->email = $data['email'] ?? $user->email;
-            
-            if (isset($data['password']) && ! empty($data['password'])) {
-                $user->password = bcrypt($data['password']);
-            }
-            
-            $user->save();
+            $user->update($data);
 
             if (isset($data['roles'])) {
                 $user->syncRoles($data['roles']);
+            }
+
+            if (isset($data['permissions'])) {
+                $user->syncPermissions($data['permissions']);
             }
 
             DB::commit();

@@ -45,7 +45,7 @@ class UserResource extends JsonResource
                 ],
             ],
             'links' => [
-                'self' => route('api.v1.auth.me'),
+                'self' => route('api.v1.users.show', $this),
             ],
         ];
     }
