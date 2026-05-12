@@ -92,8 +92,7 @@
         <thead>
             <tr>
                 <th width="10%">QTY</th>
-                <th width="40%">DESCRIPTION</th>
-                <th width="20%" class="text-right">DISC(%)</th>
+                <th width="60%">DESCRIPTION</th>
                 <th width="30%" class="text-right">TOTAL</th>
             </tr>
         </thead>
@@ -124,22 +123,27 @@
                             {{ $item->quantity }}
                         @endif
                     </td>
-                    <td width="40%">{{ $item->product_name }}</td>
-                    <td width="20%" class="text-right">{{ $item->discount_amount > 0 ? number_format(($item->discount_amount / ($item->price * $item->quantity) * 100), 0) : '0' }}%</td>
+                    <td width="60%">
+                        {{ $item->product_name }}
+                        @if($item->discount_amount > 0)
+                            <br>
+                            <span style="font-size: 9px; font-weight: normal; font-style: italic;">(Potongan: -{{ number_format($item->discount_amount, 0, ',', '.') }})</span>
+                        @endif
+                    </td>
                     <td width="30%" class="text-right">
                         @if($isReturned)
-                            <span style="text-decoration: line-through; color: #666;">{{ number_format($item->subtotal, 0, ',', '.') }}</span><br>
+                            <span style="text-decoration: line-through; color: #666;">{{ number_format($item->price * $item->quantity, 0, ',', '.') }}</span><br>
                             <span style="color: #e11d48;">-{{ number_format($item->return_amount, 0, ',', '.') }}</span><br>
-                            <span style="font-weight: black;">{{ number_format($item->subtotal - $item->return_amount, 0, ',', '.') }}</span>
+                            <span style="font-weight: black;">{{ number_format(($item->price * $item->quantity) - $item->return_amount, 0, ',', '.') }}</span>
                         @else
-                            {{ number_format($item->subtotal, 0, ',', '.') }}
+                            {{ number_format($item->price * $item->quantity, 0, ',', '.') }}
                         @endif
                     </td>
                 </tr>
                 @php $catSubtotal += ($item->subtotal - $item->return_amount); @endphp
             @endforeach
             <tr class="font-bold">
-                <td colspan="3" class="text-right" style="padding-top: 4px;">TOTAL {{ $categoryName }}</td>
+                <td colspan="2" class="text-right" style="padding-top: 4px;">TOTAL {{ $categoryName }}</td>
                 <td class="text-right" style="padding-top: 4px;">{{ number_format($catSubtotal, 0, ',', '.') }}</td>
             </tr>
         </table>
@@ -148,9 +152,15 @@
 
     <div class="totals-section">
         <div class="total-row">
-            <span>SUB TOTAL</span>
+            <span>SUB TOTAL (GROSS)</span>
             <span>{{ number_format($order->subtotal, 0, ',', '.') }}</span>
         </div>
+        @if($order->discount_amount > 0)
+        <div class="total-row">
+            <span>TOTAL DISKON</span>
+            <span>-{{ number_format($order->discount_amount, 0, ',', '.') }}</span>
+        </div>
+        @endif
         <div class="total-row">
             <span>SERVICE</span>
             <span>{{ number_format($order->service_charge, 0, ',', '.') }}</span>

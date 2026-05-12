@@ -223,8 +223,12 @@
                         </h3>
                         <div class="space-y-2.5">
                             <div class="flex justify-between text-sm text-slate-600">
-                                <span>{{ $t("pos.subtotal") }}</span>
-                                <span class="font-medium">Rp {{ money(cartSubtotal) }}</span>
+                                <span>{{ $t("pos.subtotal") }} (Gross)</span>
+                                <span class="font-medium">Rp {{ money(cartGrossSubtotal) }}</span>
+                            </div>
+                            <div v-if="cartPromotionDiscount > 0" class="flex justify-between text-sm text-red-500">
+                                <span>Total Diskon</span>
+                                <span class="font-medium">-Rp {{ money(cartPromotionDiscount) }}</span>
                             </div>
                             <div v-if="cartServiceCharge > 0" class="flex justify-between text-sm text-slate-600">
                                 <span>{{ $t("pos.service_charge") }}</span>
@@ -555,7 +559,7 @@ import { useToast } from "primevue/usetoast";
 import { useAuthStore } from "@/stores/auth";
 import echo from "@/echo";
 import { financeApi } from "@/api/finance";
-import { productApi, categoryApi, customerApi } from "@/api/master";
+import { productApi, categoryApi, customerApi, promotionApi } from "@/api/master";
 import { orderApi, shiftApi } from "@/api/sales";
 import {
     db,
@@ -591,6 +595,7 @@ const isSyncing = ref(false);
 const query = ref("");
 const selectedCategoryId = ref(null);
 const selectedCustomer = ref(null);
+const promotions = ref([]);
 
 const orderTypes = computed(() => [
     { label: "Makan Ditempat/Bungkus", value: "regular" },
@@ -726,26 +731,109 @@ function changePage(page) {
     loadProducts();
 }
 
-function itemPrice(item) {
+function itemGrossPrice(item) {
     let price = item.price;
-    let discount = item.discount_amount || 0;
-
     if (orderType.value === "ojol") {
         price = item.ojol_price > 0 ? item.ojol_price : item.price;
-        discount = item.ojol_discount || 0;
     } else if (orderType.value === "wholesale") {
         price = item.wholesale_price > 0 ? item.wholesale_price : item.price;
-        discount = item.wholesale_discount || 0;
     }
-
-    return price - discount;
+    return price;
 }
 
-const cartSubtotal = computed(() => {
+function itemProductDiscount(item) {
+    if (orderType.value === "ojol") {
+        return item.ojol_discount || 0;
+    } else if (orderType.value === "wholesale") {
+        return item.wholesale_discount || 0;
+    }
+    return item.discount_amount || 0;
+}
+
+function getAppliedPromotion(item, grossSubtotal) {
+    const price = itemGrossPrice(item);
+    const qty = item.qty || 1;
+    
+    let stackableDiscountTotal = 0;
+    let stackableId = null;
+    let nonStackablePromos = [];
+
+    promotions.value.forEach(promo => {
+        if (promo.type === 'announcement') return;
+        if (promo.min_purchase > 0 && grossSubtotal < promo.min_purchase) return;
+        
+        let isApplicable = false;
+        if (promo.applicable_type === 'all') {
+            isApplicable = true;
+        } else if (promo.applicable_type === 'products' && (promo.product_ids || []).includes(item.id)) {
+            isApplicable = true;
+        } else if (promo.applicable_type === 'categories' && (promo.category_ids || []).includes(item.category_id)) {
+            isApplicable = true;
+        }
+        
+        if (isApplicable) {
+            let totalVal = 0;
+            if (promo.type === 'discount_percentage') {
+                totalVal = (price * (promo.discount_value / 100)) * qty;
+            } else if (promo.type === 'discount_fixed') {
+                totalVal = promo.is_multiple ? (promo.discount_value * qty) : promo.discount_value;
+            }
+
+            if (promo.is_stackable) {
+                stackableDiscountTotal += totalVal;
+                if (!stackableId) stackableId = promo.id;
+            } else {
+                nonStackablePromos.push({ id: promo.id, value: totalVal });
+            }
+        }
+    });
+
+    // Pick best from non-stackable (Compare TOTAL value)
+    let bestNonStackable = { id: null, value: 0 };
+    nonStackablePromos.forEach(p => {
+        if (p.value > bestNonStackable.value) {
+            bestNonStackable = p;
+        }
+    });
+    
+    return { 
+        discount: bestNonStackable.value + stackableDiscountTotal, 
+        id: bestNonStackable.id || stackableId 
+    };
+}
+
+function calculateItemPromotionDiscount(item, grossSubtotal) {
+    const totalLineDiscount = getAppliedPromotion(item, grossSubtotal).discount;
+    return totalLineDiscount / (item.qty || 1);
+}
+
+function itemPrice(item) {
+    const gross = itemGrossPrice(item);
+    const productDisc = itemProductDiscount(item);
+    const promoLineDiscount = getAppliedPromotion(item, cartGrossSubtotal.value).discount;
+    const unitPromoDiscount = promoLineDiscount / (item.qty || 1);
+    
+    return Math.max(0, gross - productDisc - unitPromoDiscount);
+}
+
+const cartGrossSubtotal = computed(() => {
     return cart.value.reduce(
-        (sum, item) => sum + itemPrice(item) * item.qty,
+        (sum, item) => sum + itemGrossPrice(item) * item.qty,
         0,
     );
+});
+
+const cartPromotionDiscount = computed(() => {
+    const gross = cartGrossSubtotal.value;
+    return cart.value.reduce((sum, item) => {
+        const productDisc = itemProductDiscount(item);
+        const promoDisc = calculateItemPromotionDiscount(item, gross);
+        return sum + (productDisc + promoDisc) * item.qty;
+    }, 0);
+});
+
+const cartSubtotal = computed(() => {
+    return cartGrossSubtotal.value - cartPromotionDiscount.value;
 });
 
 const cartServiceCharge = computed(() => {
@@ -946,13 +1034,19 @@ async function checkout() {
         account_id: accountId.value,
         table_number: tableNumber.value,
         order_type: orderType.value,
-        items: cart.value.map((item) => ({
-            product_id: item.id,
-            quantity: item.qty,
-            price: itemPrice(item),
-            discount_amount: item.discount_amount || 0,
-            notes: "",
-        })),
+        items: cart.value.map((item) => {
+            const gross = itemGrossPrice(item);
+            const productDisc = itemProductDiscount(item);
+            const promo = getAppliedPromotion(item, cartGrossSubtotal.value);
+            return {
+                product_id: item.id,
+                quantity: item.qty,
+                price: gross,
+                discount_amount: (productDisc * item.qty) + promo.discount,
+                promotion_id: promo.id,
+                notes: item.notes || "",
+            };
+        }),
         paid_amount: paidAmount.value,
         payment_method: paymentMethod.value,
         notes: "",
@@ -1110,17 +1204,19 @@ function sendWhatsApp() {
 async function bootstrap() {
     try {
         if (isOnline.value) {
-            const [categoryRes, accountRes, customerRes, allProductsRes] =
+            const [categoryRes, accountRes, customerRes, allProductsRes, promotionRes] =
                 await Promise.all([
                     categoryApi.getAll(),
                     financeApi.getAccounts(),
                     customerApi.getAll(),
                     productApi.getAll({ per_page: 1000, is_active: 1 }), // Ambil banyak untuk cache
+                    promotionApi.getAll({ is_active: 1 }),
                 ]);
 
             categories.value = categoryRes?.data?.data || [];
             accounts.value = accountRes?.data?.data || [];
             customers.value = customerRes?.data?.data || [];
+            promotions.value = promotionRes?.data?.data || [];
 
             // Sync ke IndexedDB
             await syncCategoriesToLocal(categories.value);

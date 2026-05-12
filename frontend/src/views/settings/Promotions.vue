@@ -31,6 +31,10 @@
                       {{ formatDiscount(slotProps.data) }}
                     </span>
                   </div>
+                  <div class="flex items-center gap-1 mt-1.5">
+                    <Tag v-if="slotProps.data.is_multiple" value="Kelipatan" severity="secondary" class="!text-[8px] !bg-slate-100 !text-slate-500 !border-slate-200 !px-1.5 !py-0.5" />
+                    <Tag v-if="slotProps.data.is_stackable" value="Stackable" severity="info" class="!text-[8px] !bg-blue-50 !text-blue-500 !border-blue-100 !px-1.5 !py-0.5" />
+                  </div>
                 </div>
               </template>
             </Column>
@@ -132,6 +136,18 @@
                     <Checkbox id="is_active" v-model="item.is_active" :binary="true" />
                     <label for="is_active" class="text-sm font-bold cursor-pointer" :class="item.is_active ? 'text-emerald-700' : 'text-slate-500'">Aktif</label>
                   </div>
+                </div>
+              </div>
+
+              <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Konfigurasi Lanjutan</p>
+                <div class="flex items-center gap-3">
+                  <Checkbox id="is_multiple" v-model="item.is_multiple" :binary="true" />
+                  <label for="is_multiple" class="text-xs font-bold text-slate-600 cursor-pointer">Berlaku Kelipatan (Qty)</label>
+                </div>
+                <div class="flex items-center gap-3">
+                  <Checkbox id="is_stackable" v-model="item.is_stackable" :binary="true" />
+                  <label for="is_stackable" class="text-xs font-bold text-slate-600 cursor-pointer">Dapat Ditumpuk (Promo Lain)</label>
                 </div>
               </div>
 
@@ -267,7 +283,9 @@ function openNew() {
     discount_value: 0,
     min_purchase: 0,
     product_ids: [],
-    category_ids: []
+    category_ids: [],
+    is_multiple: true,
+    is_stackable: false
   };
   submitted.value = false;
   itemDialog.value = true;

@@ -22,6 +22,7 @@ class OrderItem extends Model
         'notes',
         'discount_amount',
         'tax_amount',
+        'service_charge',
         'subtotal',
     ];
 
@@ -33,5 +34,11 @@ class OrderItem extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function promotions()
+    {
+        return $this->belongsToMany(Promotion::class, 'order_item_promotions')
+            ->withPivot('discount_amount');
     }
 }

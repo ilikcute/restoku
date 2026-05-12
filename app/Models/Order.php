@@ -74,4 +74,10 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    public function promotions()
+    {
+        return $this->belongsToMany(Promotion::class, 'order_promotions')
+            ->withPivot('discount_amount');
+    }
 }

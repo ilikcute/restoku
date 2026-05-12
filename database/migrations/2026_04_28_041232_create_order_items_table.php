@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('notes')->nullable();
             $table->decimal('discount_amount', 15, 2)->default(0);
             $table->decimal('tax_amount', 15, 2)->default(0);
+            $table->decimal('service_charge', 15, 2)->default(0);
             $table->decimal('subtotal', 15, 2);
             $table->timestamps();
             $table->softDeletes();

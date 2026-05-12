@@ -553,7 +553,9 @@ class DemoDataSeeder extends Seeder
                 'discount_value' => 10,
                 'applicable_type' => 'all',
                 'is_active' => true,
-                'priority' => 1
+                'priority' => 1,
+                'is_multiple' => true,
+                'is_stackable' => true
             ]
         );
 
@@ -565,7 +567,9 @@ class DemoDataSeeder extends Seeder
                 'discount_value' => 5000,
                 'applicable_type' => 'products',
                 'is_active' => true,
-                'priority' => 2
+                'priority' => 2,
+                'is_multiple' => false,
+                'is_stackable' => false
             ]
         );
         $promoFood->products()->sync([$products[0]->id]);
@@ -578,7 +582,9 @@ class DemoDataSeeder extends Seeder
                 'discount_value' => 15,
                 'applicable_type' => 'categories',
                 'is_active' => true,
-                'priority' => 3
+                'priority' => 3,
+                'is_multiple' => true,
+                'is_stackable' => false
             ]
         );
         $promoDrink->categories()->sync([$categories['Minuman']->id]);
@@ -594,12 +600,12 @@ class DemoDataSeeder extends Seeder
         ]);
 
         // B. Create an Order
-        $orderItems = [
+        $orderItemsData = [
             ['product_id' => $products[0]->id, 'quantity' => 2, 'price' => $products[0]->price, 'notes' => 'Pedas'],
             ['product_id' => $products[2]->id, 'quantity' => 2, 'price' => $products[2]->price, 'notes' => 'Dingin'],
         ];
 
-        $totals = $orderService->calculateOrderTotals($orderItems, 'regular');
+        $totals = $orderService->calculateOrderTotals($orderItemsData, 'regular', $tenant->id);
 
         $order = Order::create([
             'tenant_id' => $tenant->id,
@@ -618,7 +624,19 @@ class DemoDataSeeder extends Seeder
             'status' => 'completed',
         ]);
 
-        $order->items()->createMany($totals['items']);
+        foreach ($totals['items'] as $itemData) {
+            $appliedPromos = $itemData['applied_promotions'] ?? [];
+            unset($itemData['applied_promotions']);
+            
+            $orderItem = $order->items()->create($itemData);
+            
+            foreach ($appliedPromos as $promo) {
+                $orderItem->promotions()->attach($promo['promotion_id'], [
+                    'discount_amount' => $promo['discount_amount']
+                ]);
+            }
+        }
+
         $inventoryService->adjustStockFromOrder($order, $cashier->id, $account->id);
         $shift->increment('total_sales', $order->total_amount);
 

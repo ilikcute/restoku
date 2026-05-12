@@ -112,14 +112,15 @@ class OrderService
 
             ['price' => $price, 'discount' => $discount] = self::resolveProductPrice($product, $orderType);
 
-            // Cek Promosi khusus produk ini (Item-based)
-            $itemPromotionDiscount = 0;
+            // Hitung Promosi (Pilih yang terbaik berdasarkan TOTAL POTONGAN BARIS)
+            $nonStackablePromos = [];
+            $stackablePromosApplied = [];
+            $stackableDiscountTotal = 0;
+
             foreach ($promotions as $promo) {
                 if ($promo->type === 'announcement') {
                     continue;
                 }
-
-                // Cek syarat minimal belanja
                 if ($promo->min_purchase > 0 && $baseSubtotal < $promo->min_purchase) {
                     continue;
                 }
@@ -133,22 +134,62 @@ class OrderService
                     $isApplicable = true;
                 }
 
-                if ($isApplicable && $promo->type === 'discount_percentage') {
-                    $itemPromotionDiscount += ($price * ($promo->discount_value / 100));
-                } elseif ($isApplicable && $promo->type === 'discount_fixed') {
-                    $itemPromotionDiscount += $promo->discount_value;
+                if ($isApplicable) {
+                    $totalVal = 0;
+                    if ($promo->type === 'discount_percentage') {
+                        $totalVal = ($price * ($promo->discount_value / 100)) * $item['quantity'];
+                    } elseif ($promo->type === 'discount_fixed') {
+                        $totalVal = $promo->is_multiple
+                            ? ($promo->discount_value * $item['quantity'])
+                            : (float) $promo->discount_value;
+                    }
+
+                    if ($promo->is_stackable) {
+                        $stackablePromosApplied[] = ['id' => $promo->id, 'amount' => $totalVal];
+                        $stackableDiscountTotal += $totalVal;
+                    } else {
+                        $nonStackablePromos[] = ['id' => $promo->id, 'value' => $totalVal];
+                    }
                 }
             }
 
-            // Total diskon per item (diskon produk bawaan + diskon promo)
-            $totalItemDiscount = max(0, min($price, $discount + $itemPromotionDiscount));
-            $itemNetPrice = max(0, $price - $totalItemDiscount);
-            $itemSubtotal = $itemNetPrice * $item['quantity'];
+            // Cari diskon terbaik dari non-stackable (Bandingkan nilai TOTAL)
+            $bestNonStackable = ['id' => null, 'value' => 0];
+            foreach ($nonStackablePromos as $p) {
+                if ($p['value'] > $bestNonStackable['value']) {
+                    $bestNonStackable = $p;
+                }
+            }
+
+            $linePromotionDiscount = $bestNonStackable['value'] + $stackableDiscountTotal;
+
+            // Kumpulkan semua ID promo yang diaplikasikan untuk audit
+            $appliedPromotions = [];
+            if ($bestNonStackable['id']) {
+                $appliedPromotions[] = [
+                    'promotion_id' => $bestNonStackable['id'],
+                    'discount_amount' => $bestNonStackable['value'],
+                ];
+            }
+            foreach ($stackablePromosApplied as $sp) {
+                $appliedPromotions[] = [
+                    'promotion_id' => $sp['id'],
+                    'discount_amount' => $sp['amount'],
+                ];
+            }
+
+            // TOTAL DISKON UNTUK SELURUH BARIS INI
+            $unitProductDiscount = $discount;
+            $lineGrossTotal = $price * $item['quantity'];
+            $lineTotalDiscount = ($unitProductDiscount * $item['quantity']) + $linePromotionDiscount;
+            $lineTotalDiscount = min($lineGrossTotal, $lineTotalDiscount); // Cap agar tidak melebihi harga
+
+            $itemSubtotal = $lineGrossTotal - $lineTotalDiscount;
             $itemTax = floor($itemSubtotal * ($product->tax_rate / 100));
             $itemService = floor($itemSubtotal * ($product->service_charge_rate / 100));
 
             $subtotal += $itemSubtotal;
-            $discountTotal += $totalItemDiscount * $item['quantity'];
+            $discountTotal += $lineTotalDiscount;
             $taxTotal += (float) $itemTax;
             $serviceTotal += (float) $itemService;
 
@@ -159,9 +200,11 @@ class OrderService
                 'notes' => $item['notes'] ?? null,
                 'price' => $price,
                 'cost_price' => (float) $product->cost_price,
-                'discount_amount' => $totalItemDiscount,
+                'discount_amount' => $lineTotalDiscount,
                 'tax_amount' => $itemTax,
+                'service_charge' => $itemService,
                 'subtotal' => $itemSubtotal,
+                'applied_promotions' => $appliedPromotions,
             ];
         }
 
@@ -182,6 +225,7 @@ class OrderService
             'grand_total_before_rounding' => $grandTotalBeforeRounding,
             'rounding' => $rounding,
             'grand_total' => $grandTotal,
+            'promotion_id' => $processedItems[0]['promotion_id'] ?? null, // Simpan jika ada (sementara ambil item pertama jika global)
         ];
     }
 

@@ -23,12 +23,16 @@ class Promotion extends Model
         'start_date',
         'end_date',
         'priority',
+        'is_stackable',
+        'is_multiple',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'start_date' => 'date',
         'end_date' => 'date',
+        'is_stackable' => 'boolean',
+        'is_multiple' => 'boolean',
         'priority' => 'integer',
         'discount_value' => 'float',
         'min_purchase' => 'float',
@@ -50,6 +54,18 @@ class Promotion extends Model
     public function categories()
     {
         return $this->belongsToMany(Category::class, 'promotion_category');
+    }
+
+    public function orders()
+    {
+        return $this->belongsToMany(Order::class, 'order_promotions')
+            ->withPivot('discount_amount');
+    }
+
+    public function orderItems()
+    {
+        return $this->belongsToMany(OrderItem::class, 'order_item_promotions')
+            ->withPivot('discount_amount');
     }
 
     /**

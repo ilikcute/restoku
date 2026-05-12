@@ -30,6 +30,8 @@ class PromotionResource extends JsonResource
             'category_ids' => $this->whenLoaded('categories', function () {
                 return $this->categories->pluck('id');
             }),
+            'is_stackable' => (bool) $this->is_stackable,
+            'is_multiple' => (bool) $this->is_multiple,
             'is_active' => $this->is_active,
             'start_date' => $this->start_date?->format('Y-m-d'),
             'end_date' => $this->end_date?->format('Y-m-d'),

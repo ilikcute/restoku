@@ -112,7 +112,20 @@ class OrderRepository implements OrderRepositoryInterface
                     'notes' => $validated['notes'] ?? null,
                 ]);
 
-                $order->items()->createMany($totals['items']);
+                // Simpan items dan promosi masing-masing item
+                foreach ($totals['items'] as $itemData) {
+                    $appliedPromos = $itemData['applied_promotions'] ?? [];
+                    unset($itemData['applied_promotions']);
+
+                    $orderItem = $order->items()->create($itemData);
+
+                    // Simpan ke pivot order_item_promotions
+                    foreach ($appliedPromos as $promo) {
+                        $orderItem->promotions()->attach($promo['promotion_id'], [
+                            'discount_amount' => $promo['discount_amount'],
+                        ]);
+                    }
+                }
 
                 $this->inventoryService->adjustStockFromOrder($order, $userId, $validated['account_id']);
 

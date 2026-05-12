@@ -99,17 +99,17 @@ class PrinterService
                     $qty = str_pad($item->quantity, 3, ' ', STR_PAD_RIGHT);
                     $name = mb_substr($item->product_name, 0, 18); // 18 karakter max
                     $namePad = str_pad($name, 18, ' ', STR_PAD_RIGHT);
-                    $total = number_format($item->subtotal, 0, ',', '.');
+                    $grossTotal = $item->price * $item->quantity;
+                    $total = number_format($grossTotal, 0, ',', '.');
                     $totalPad = str_pad($total, 9, ' ', STR_PAD_LEFT);
 
                     // Gabungan pastikan pas 32 karakter
                     $line = $qty.' '.$namePad.' '.$totalPad;
                     $this->printer->text($line."\n");
 
-                    // Tampilkan diskon jika ada
+                    // Tampilkan potongan jika ada
                     if ($item->discount_amount > 0) {
-                        $discPct = number_format($item->discount_amount / ($item->price * $item->quantity) * 100, 0);
-                        $this->printer->text(str_pad("     Diskon: {$discPct}%", 32, ' ', STR_PAD_RIGHT)."\n");
+                        $this->printer->text(str_pad('     (Potongan: -'.number_format($item->discount_amount, 0, ',', '.').')', 32, ' ', STR_PAD_RIGHT)."\n");
                     }
 
                     // Tampilkan notes jika ada
@@ -117,7 +117,7 @@ class PrinterService
                         $this->printer->text(str_pad("     *{$item->notes}", 32, ' ', STR_PAD_RIGHT)."\n");
                     }
 
-                    $categorySubtotal += $item->subtotal;
+                    $categorySubtotal += ($item->subtotal - ($item->return_amount ?? 0));
                 }
 
                 // Category Total line
@@ -128,7 +128,10 @@ class PrinterService
             }
 
             /* Footer Summary */
-            $this->printer->text($this->formatTwoColumns('SUB TOTAL', number_format($order->subtotal, 0, ',', '.'), 32)."\n");
+            $this->printer->text($this->formatTwoColumns('SUB TOTAL (GROSS)', number_format($order->subtotal, 0, ',', '.'), 32)."\n");
+            if ($order->discount_amount > 0) {
+                $this->printer->text($this->formatTwoColumns('TOTAL DISKON', '-'.number_format($order->discount_amount, 0, ',', '.'), 32)."\n");
+            }
             $this->printer->text($this->formatTwoColumns('SERVICE', number_format($order->service_charge, 0, ',', '.'), 32)."\n");
             $this->printer->text($this->formatTwoColumns('TAX', number_format($order->tax_amount, 0, ',', '.'), 32)."\n");
             $this->printer->text($this->formatTwoColumns('ROUNDING', number_format($order->rounding, 0, ',', '.'), 32)."\n");
