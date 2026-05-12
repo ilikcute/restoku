@@ -1,28 +1,14 @@
 <template>
-    <div
-        class="fixed inset-0 z-[100] bg-gray-50 flex flex-col h-screen overflow-hidden text-gray-800"
-    >
+    <div class="fixed inset-0 z-[100] bg-gray-50 flex flex-col h-screen overflow-hidden text-gray-800">
         <!-- Header -->
         <header
-            class="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 shadow-sm shrink-0"
-        >
+            class="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 shadow-sm shrink-0">
             <div class="flex items-center gap-4">
-                <Button
-                    icon="pi pi-arrow-left"
-                    text
-                    rounded
-                    aria-label="Back to Dashboard"
-                    @click="$router.push('/')"
-                />
+                <Button icon="pi pi-arrow-left" text rounded aria-label="Back to Dashboard"
+                    @click="$router.push('/')" />
                 <div class="flex items-center gap-3">
-                    <img
-                        v-if="tenant.logo_url"
-                        :src="tenant.logo_url"
-                        class="h-8 w-8 object-contain rounded"
-                    />
-                    <h1
-                        class="text-xl font-black text-slate-900 tracking-tight"
-                    >
+                    <img v-if="tenant.logo_url" :src="tenant.logo_url" class="h-8 w-8 object-contain rounded" />
+                    <h1 class="text-xl font-black text-slate-900 tracking-tight">
                         {{ tenant.name || "Restoku POS" }}
                     </h1>
                 </div>
@@ -32,50 +18,26 @@
                     <div class="text-sm font-bold text-slate-900">
                         {{ currentTime }}
                     </div>
-                    <div
-                        class="text-[10px] text-slate-500 uppercase font-medium tracking-tighter"
-                    >
+                    <div class="text-[10px] text-slate-500 uppercase font-medium tracking-tighter">
                         {{ currentDate }}
                     </div>
                 </div>
                 <div class="flex items-center gap-2 mr-2">
                     <!-- Connection Status -->
-                    <Tag
-                        v-if="!isOnline"
-                        value="OFFLINE"
-                        severity="danger"
-                        icon="pi pi-wifi"
-                        class="text-[10px]"
-                    />
+                    <Tag v-if="!isOnline" value="OFFLINE" severity="danger" icon="pi pi-wifi" class="text-[10px]" />
 
                     <!-- Sync Status -->
-                    <Button
-                        v-if="pendingSyncCount > 0"
-                        :label="
-                            isSyncing
-                                ? 'Syncing...'
-                                : `Pending: ${pendingSyncCount}`
-                        "
-                        :icon="
-                            isSyncing
-                                ? 'pi pi-spin pi-refresh'
-                                : 'pi pi-cloud-upload'
-                        "
-                        severity="warn"
-                        size="small"
-                        text
-                        @click="syncOfflineOrders"
-                        :disabled="!isOnline || isSyncing"
-                    />
+                    <Button v-if="pendingSyncCount > 0" :label="isSyncing
+                        ? 'Syncing...'
+                        : `Pending: ${pendingSyncCount}`
+                        " :icon="isSyncing
+                            ? 'pi pi-spin pi-refresh'
+                            : 'pi pi-cloud-upload'
+                            " severity="warn" size="small" text @click="syncOfflineOrders"
+                        :disabled="!isOnline || isSyncing" />
                 </div>
-                <Button
-                    icon="pi pi-external-link"
-                    label="Layar Pelanggan"
-                    severity="secondary"
-                    size="small"
-                    outlined
-                    @click="openCustomerDisplay"
-                />
+                <Button icon="pi pi-external-link" label="Layar Pelanggan" severity="secondary" size="small" outlined
+                    @click="openCustomerDisplay" />
             </div>
         </header>
 
@@ -85,40 +47,26 @@
             <div class="flex flex-col flex-1 min-w-0 p-4 bg-gray-50/50">
                 <!-- Search Bar -->
                 <div class="mb-2 shrink-0">
-                    <InputText
-                        v-model="query"
-                        class="w-full"
-                        :placeholder="$t('pos.search_item')"
-                    />
+                    <InputText v-model="query" class="w-full" :placeholder="$t('pos.search_item')" />
                 </div>
 
                 <!-- Category Tabs — horizontal scroll, fits roughly 4.5 items to show it's scrollable -->
                 <div class="shrink-0 mb-4 max-w-full overflow-hidden">
-                    <div
-                        class="flex gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth"
-                    >
+                    <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar scroll-smooth">
                         <button
                             class="shrink-0 basis-[calc(22%)] min-w-[110px] px-2 py-2.5 rounded-xl text-xs font-bold border transition-all duration-200 whitespace-nowrap shadow-sm uppercase tracking-wider"
-                            :class="
-                                selectedCategoryId === null
-                                    ? 'bg-primary-600 text-white border-primary-600 shadow-primary-200'
-                                    : 'bg-white text-gray-600 border-gray-200 hover:border-primary-400 hover:text-primary-600'
-                            "
-                            @click="selectedCategoryId = null"
-                        >
+                            :class="selectedCategoryId === null
+                                ? 'bg-primary-600 text-white border-primary-600 shadow-primary-200'
+                                : 'bg-white text-gray-600 border-gray-200 hover:border-primary-400 hover:text-primary-600'
+                                " @click="selectedCategoryId = null">
                             {{ $t("pos.all_categories") }}
                         </button>
-                        <button
-                            v-for="cat in categories"
-                            :key="cat.id"
+                        <button v-for="cat in categories" :key="cat.id"
                             class="shrink-0 basis-[calc(22%)] min-w-[110px] px-2 py-2.5 rounded-xl text-xs font-bold border transition-all duration-200 whitespace-nowrap shadow-sm uppercase tracking-wider"
-                            :class="
-                                selectedCategoryId === cat.id
-                                    ? 'bg-primary-600 text-white border-primary-600 shadow-primary-200'
-                                    : 'bg-white text-gray-600 border-gray-200 hover:border-primary-400 hover:text-primary-600'
-                            "
-                            @click="selectedCategoryId = cat.id"
-                        >
+                            :class="selectedCategoryId === cat.id
+                                ? 'bg-primary-600 text-white border-primary-600 shadow-primary-200'
+                                : 'bg-white text-gray-600 border-gray-200 hover:border-primary-400 hover:text-primary-600'
+                                " @click="selectedCategoryId = cat.id">
                             {{ cat.name }}
                         </button>
                     </div>
@@ -127,157 +75,88 @@
                 <!-- Product Grid -->
                 <div class="flex-1 overflow-y-auto no-scrollbar">
                     <!-- Loading Skeleton -->
-                    <div
-                        v-if="loadingProducts"
-                        class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 p-1"
-                    >
-                        <div
-                            v-for="n in 10"
-                            :key="n"
-                            class="bg-white border border-gray-100 rounded-2xl overflow-hidden animate-pulse"
-                        >
+                    <div v-if="loadingProducts"
+                        class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 p-1">
+                        <div v-for="n in 10" :key="n"
+                            class="bg-white border border-gray-100 rounded-2xl overflow-hidden animate-pulse">
                             <div class="aspect-square bg-gray-200"></div>
                             <div class="p-3 space-y-2">
-                                <div
-                                    class="h-3 bg-gray-200 rounded w-3/4"
-                                ></div>
-                                <div
-                                    class="h-3 bg-gray-200 rounded w-1/2"
-                                ></div>
+                                <div class="h-3 bg-gray-200 rounded w-3/4"></div>
+                                <div class="h-3 bg-gray-200 rounded w-1/2"></div>
                             </div>
                         </div>
                     </div>
 
-                    <div
-                        v-else
-                        class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 p-1"
-                    >
-                        <div
-                            v-if="!products.length"
-                            class="col-span-full flex flex-col items-center justify-center py-16 text-gray-400"
-                        >
-                            <i
-                                class="pi pi-search text-5xl mb-3 opacity-40"
-                            ></i>
+                    <div v-else
+                        class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 p-1">
+                        <div v-if="!products.length"
+                            class="col-span-full flex flex-col items-center justify-center py-16 text-gray-400">
+                            <i class="pi pi-search text-5xl mb-3 opacity-40"></i>
                             <p>{{ $t("pos.empty_cart") }}</p>
                         </div>
-                        <div
-                            v-for="product in products"
-                            :key="product.id"
+                        <div v-for="product in products" :key="product.id"
                             class="relative flex flex-col overflow-hidden transition-shadow bg-white border border-gray-200 rounded-2xl hover:shadow-md cursor-pointer group"
-                            @click="addToCart(product)"
-                        >
-                            <div
-                                class="aspect-square bg-gray-100 flex items-center justify-center p-4"
-                            >
-                                <img
-                                    v-if="product.image_url"
-                                    :src="product.image_url"
-                                    class="object-cover w-full h-full rounded-xl"
-                                />
-                                <i
-                                    v-else
-                                    class="text-4xl text-gray-300 pi pi-image"
-                                ></i>
+                            @click="addToCart(product)">
+                            <div class="aspect-square bg-gray-100 flex items-center justify-center p-4">
+                                <img v-if="product.image_url" :src="product.image_url"
+                                    class="object-cover w-full h-full rounded-xl" />
+                                <i v-else class="text-4xl text-gray-300 pi pi-image"></i>
                                 <div
-                                    class="absolute top-2 right-2 bg-primary-500 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
+                                    class="absolute top-2 right-2 bg-primary-500 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                     <i class="pi pi-plus text-sm"></i>
                                 </div>
                             </div>
                             <div class="p-3 pt-2">
-                                <div
-                                    class="text-[10px] text-gray-400 font-mono truncate"
-                                    v-if="product.code"
-                                >
+                                <div class="text-[10px] text-gray-400 font-mono truncate" v-if="product.code">
                                     {{ product.code }}
                                 </div>
                                 <div class="text-sm font-semibold truncate">
                                     {{ product.name }}
                                 </div>
-                                <div
-                                    class="flex items-center justify-between mt-1"
-                                >
-                                    <span class="text-primary-600 font-bold"
-                                        >Rp {{ money(product.price) }}</span
-                                    >
+                                <div class="flex items-center justify-between mt-1">
+                                    <span class="text-primary-600 font-bold">Rp {{ money(product.price) }}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Pagination -->
-                    <div
-                        v-if="totalProducts > perPage"
-                        class="flex items-center justify-center gap-2 py-4 border-t border-gray-100 mt-2"
-                    >
-                        <Button
-                            icon="pi pi-chevron-left"
-                            text
-                            rounded
-                            severity="secondary"
-                            :disabled="currentPage <= 1"
-                            @click="changePage(currentPage - 1)"
-                        />
-                        <span class="text-sm text-gray-600 px-2"
-                            >{{ currentPage }} / {{ totalPages }}</span
-                        >
-                        <Button
-                            icon="pi pi-chevron-right"
-                            text
-                            rounded
-                            severity="secondary"
-                            :disabled="currentPage >= totalPages"
-                            @click="changePage(currentPage + 1)"
-                        />
+                    <div v-if="totalProducts > perPage"
+                        class="flex items-center justify-center gap-2 py-4 border-t border-gray-100 mt-2">
+                        <Button icon="pi pi-chevron-left" text rounded severity="secondary" :disabled="currentPage <= 1"
+                            @click="changePage(currentPage - 1)" />
+                        <span class="text-sm text-gray-600 px-2">{{ currentPage }} / {{ totalPages }}</span>
+                        <Button icon="pi pi-chevron-right" text rounded severity="secondary"
+                            :disabled="currentPage >= totalPages" @click="changePage(currentPage + 1)" />
                     </div>
                 </div>
             </div>
 
             <!-- Right Pane: Cart Sidebar -->
             <div
-                class="flex flex-col w-96 bg-white border-l border-gray-200 shrink-0 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] z-10"
-            >
+                class="flex flex-col w-96 bg-white border-l border-gray-200 shrink-0 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] z-10">
                 <!-- Cart Header -->
-                <div
-                    class="px-4 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50"
-                >
+                <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                     <h2 class="text-lg font-bold">
                         {{ $t("pos.cart_items") }}
                     </h2>
                     <div class="flex gap-2">
-                        <Button
-                            icon="pi pi-qrcode"
-                            severity="info"
-                            rounded
-                            text
-                            @click="promptPendingOrder"
-                            v-tooltip="'Load Self-Order QR'"
-                        />
-                        <span
-                            class="text-xs font-semibold px-2 py-1 bg-primary-100 text-primary-700 rounded-full"
-                            >{{ cart.length }} items</span
-                        >
+                        <Button icon="pi pi-qrcode" severity="info" rounded text @click="promptPendingOrder"
+                            v-tooltip="'Load Self-Order QR'" />
+                        <span class="text-xs font-semibold px-2 py-1 bg-primary-100 text-primary-700 rounded-full">{{
+                            cart.length }} items</span>
                     </div>
                 </div>
 
                 <!-- Cart Items -->
                 <div class="flex-1 p-2 overflow-y-auto">
-                    <div
-                        v-if="!cart.length"
-                        class="flex flex-col items-center justify-center h-full text-gray-400"
-                    >
-                        <i
-                            class="pi pi-shopping-cart text-5xl mb-4 opacity-50"
-                        ></i>
+                    <div v-if="!cart.length" class="flex flex-col items-center justify-center h-full text-gray-400">
+                        <i class="pi pi-shopping-cart text-5xl mb-4 opacity-50"></i>
                         <p>{{ $t("pos.empty_cart") }}</p>
                     </div>
 
-                    <div
-                        v-for="item in cart"
-                        :key="item.id"
-                        class="flex items-center gap-3 p-2 mb-2 bg-white border border-gray-100 rounded-xl shadow-sm"
-                    >
+                    <div v-for="item in cart" :key="item.id"
+                        class="flex items-center gap-3 p-2 mb-2 bg-white border border-gray-100 rounded-xl shadow-sm">
                         <div class="flex-1 min-w-0">
                             <div class="font-medium text-sm truncate">
                                 {{ item.name }}
@@ -285,46 +164,21 @@
                             <div class="text-xs text-gray-500">
                                 Rp {{ money(itemPrice(item)) }}
                             </div>
-                            <div
-                                v-if="item.notes"
-                                class="text-[10px] text-orange-600 font-medium italic mt-0.5"
-                            >
+                            <div v-if="item.notes" class="text-[10px] text-orange-600 font-medium italic mt-0.5">
                                 Note: {{ item.notes }}
                             </div>
-                            <button
-                                @click="editItemNote(item)"
-                                class="text-[9px] text-primary-600 underline"
-                            >
+                            <button @click="editItemNote(item)" class="text-[9px] text-primary-600 underline">
                                 Add Note
                             </button>
                         </div>
                         <div class="flex items-center gap-2">
-                            <Button
-                                icon="pi pi-minus"
-                                severity="secondary"
-                                rounded
-                                outlined
-                                size="small"
-                                class="w-6 h-6 p-0 flex items-center justify-center"
-                                @click="decreaseQty(item)"
-                            />
-                            <span
-                                class="w-6 text-center text-sm font-semibold"
-                                >{{ item.qty }}</span
-                            >
-                            <Button
-                                icon="pi pi-plus"
-                                severity="secondary"
-                                rounded
-                                outlined
-                                size="small"
-                                class="w-6 h-6 p-0 flex items-center justify-center"
-                                @click="addToCart(item)"
-                            />
+                            <Button icon="pi pi-minus" severity="secondary" rounded outlined size="small"
+                                class="w-6 h-6 p-0 flex items-center justify-center" @click="decreaseQty(item)" />
+                            <span class="w-6 text-center text-sm font-semibold">{{ item.qty }}</span>
+                            <Button icon="pi pi-plus" severity="secondary" rounded outlined size="small"
+                                class="w-6 h-6 p-0 flex items-center justify-center" @click="addToCart(item)" />
                         </div>
-                        <div
-                            class="font-bold text-sm text-right w-20 text-primary-600"
-                        >
+                        <div class="font-bold text-sm text-right w-20 text-primary-600">
                             Rp {{ money(item.qty * itemPrice(item)) }}
                         </div>
                     </div>
@@ -337,18 +191,11 @@
                             <span class="text-sm font-medium text-gray-600">{{
                                 $t("pos.order_type")
                             }}</span>
-                            <Select
-                                v-model="orderType"
-                                :options="orderTypes"
-                                optionLabel="label"
-                                optionValue="value"
-                                class="w-36 text-sm"
-                            />
+                            <Select v-model="orderType" :options="orderTypes" optionLabel="label" optionValue="value"
+                                class="w-36 text-sm" />
                         </div>
                     </div>
-                    <div
-                        class="flex justify-between items-center mb-1 text-gray-500 text-sm"
-                    >
+                    <div class="flex justify-between items-center mb-1 text-gray-500 text-sm">
                         <span>{{ $t("pos.subtotal") }}</span>
                         <span>Rp {{ money(cartSubtotal) }}</span>
                     </div>
@@ -356,75 +203,41 @@
                         <span class="text-gray-600 font-medium">{{
                             $t("pos.total")
                         }}</span>
-                        <span class="text-2xl font-bold text-primary-600"
-                            >Rp {{ money(cartTotal) }}</span
-                        >
+                        <span class="text-2xl font-bold text-primary-600">Rp {{ money(cartTotal) }}</span>
                     </div>
-                    <Button
-                        :label="$t('pos.proceed')"
-                        icon="pi pi-arrow-right"
-                        class="w-full h-12 text-lg font-bold"
-                        :disabled="!cart.length"
-                        @click="showPayment = true"
-                    />
+                    <Button :label="$t('pos.proceed')" icon="pi pi-arrow-right" class="w-full h-12 text-lg font-bold"
+                        :disabled="!cart.length" @click="showPayment = true" />
                 </div>
             </div>
         </div>
 
         <!-- Payment Modal -->
-        <Dialog
-            v-model:visible="showPayment"
-            :header="$t('checkout.process_payment')"
-            modal
-            class="w-[900px] overflow-hidden"
-            :pt="{ content: { class: 'p-0 overflow-hidden' } }"
-        >
+        <Dialog v-model:visible="showPayment" :header="$t('checkout.process_payment')" modal
+            class="w-[900px] overflow-hidden" :pt="{ content: { class: 'p-0 overflow-hidden' } }">
             <div class="flex h-[500px] max-h-[90vh] overflow-hidden">
                 <!-- Left Side: Summary & Meta (40%) -->
-                <div
-                    class="w-[38%] bg-slate-50 p-4 border-r border-gray-100 flex flex-col gap-3 overflow-hidden"
-                >
+                <div class="w-[38%] bg-slate-50 p-4 border-r border-gray-100 flex flex-col gap-3 overflow-hidden">
                     <div>
-                        <h3
-                            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3"
-                        >
+                        <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
                             Ringkasan & Detail
                         </h3>
                         <div class="space-y-2.5">
-                            <div
-                                class="flex justify-between text-sm text-slate-600"
-                            >
+                            <div class="flex justify-between text-sm text-slate-600">
                                 <span>{{ $t("pos.subtotal") }}</span>
-                                <span class="font-medium"
-                                    >Rp {{ money(cartSubtotal) }}</span
-                                >
+                                <span class="font-medium">Rp {{ money(cartSubtotal) }}</span>
                             </div>
-                            <div
-                                v-if="cartServiceCharge > 0"
-                                class="flex justify-between text-sm text-slate-600"
-                            >
+                            <div v-if="cartServiceCharge > 0" class="flex justify-between text-sm text-slate-600">
                                 <span>{{ $t("pos.service_charge") }}</span>
-                                <span class="font-medium"
-                                    >Rp {{ money(cartServiceCharge) }}</span
-                                >
+                                <span class="font-medium">Rp {{ money(cartServiceCharge) }}</span>
                             </div>
-                            <div
-                                v-if="cartTax > 0"
-                                class="flex justify-between text-sm text-slate-600"
-                            >
+                            <div v-if="cartTax > 0" class="flex justify-between text-sm text-slate-600">
                                 <span>{{ $t("pos.tax") }}</span>
-                                <span class="font-medium"
-                                    >Rp {{ money(cartTax) }}</span
-                                >
+                                <span class="font-medium">Rp {{ money(cartTax) }}</span>
                             </div>
-                            <div
-                                v-if="cartRounding !== 0"
-                                class="flex justify-between text-sm text-slate-600 text-amber-600"
-                            >
+                            <div v-if="cartRounding !== 0"
+                                class="flex justify-between text-sm text-slate-600 text-amber-600">
                                 <span>{{ $t("pos.rounding") }}</span>
-                                <span class="font-medium"
-                                    >Rp {{ money(cartRounding) }}</span
-                                >
+                                <span class="font-medium">Rp {{ money(cartRounding) }}</span>
                             </div>
                         </div>
                     </div>
@@ -433,71 +246,36 @@
                     <div class="space-y-2.5 pt-3 border-t border-slate-200">
                         <!-- Row 1: Table -->
                         <div>
-                            <label
-                                class="text-[9px] font-bold text-slate-500 uppercase block mb-1"
-                                >Nomor Meja</label
-                            >
-                            <InputText
-                                v-model="tableNumber"
-                                class="w-full h-9 text-sm font-bold border-slate-300"
-                                placeholder="Contoh: 01, A1, dll"
-                            />
+                            <label class="text-[9px] font-bold text-slate-500 uppercase block mb-1">Nomor Meja</label>
+                            <InputText v-model="tableNumber" class="w-full h-9 text-sm font-bold border-slate-300"
+                                placeholder="Contoh: 01, A1, dll" />
                         </div>
 
                         <!-- Row 2: Customer -->
                         <div>
-                            <label
-                                class="text-[9px] font-bold text-slate-500 uppercase block mb-1"
-                                >{{ $t("checkout.customer") }}</label
-                            >
+                            <label class="text-[9px] font-bold text-slate-500 uppercase block mb-1">{{
+                                $t("checkout.customer") }}</label>
                             <div class="flex gap-2">
-                                <Select
-                                    v-model="selectedCustomer"
-                                    :options="customers"
-                                    filter
-                                    optionLabel="name"
-                                    :placeholder="
-                                        $t('checkout.select_customer')
-                                    "
-                                    class="flex-1 h-9 text-xs"
-                                    showClear
-                                />
-                                <Button
-                                    icon="pi pi-plus"
-                                    severity="secondary"
-                                    outlined
-                                    class="h-9 w-9 p-0"
-                                    @click="showAddCustomer = true"
-                                />
+                                <Select v-model="selectedCustomer" :options="customers" filter optionLabel="name"
+                                    :placeholder="$t('checkout.select_customer')
+                                        " class="flex-1 h-9 text-xs" showClear />
+                                <Button icon="pi pi-plus" severity="secondary" outlined class="h-9 w-9 p-0"
+                                    @click="showAddCustomer = true" />
                             </div>
                         </div>
 
                         <!-- Row 3: Account -->
                         <div>
-                            <label
-                                class="text-[9px] font-bold text-slate-500 uppercase block mb-1"
-                                >{{ $t("checkout.financial_account") }}</label
-                            >
-                            <Select
-                                v-model="accountId"
-                                :options="accounts"
-                                optionLabel="name"
-                                optionValue="id"
-                                class="w-full h-9 text-xs"
-                            />
+                            <label class="text-[9px] font-bold text-slate-500 uppercase block mb-1">{{
+                                $t("checkout.financial_account") }}</label>
+                            <Select v-model="accountId" :options="accounts" optionLabel="name" optionValue="id"
+                                class="w-full h-9 text-xs" />
                         </div>
                     </div>
 
-                    <div
-                        class="mt-auto bg-white p-4 rounded-2xl border-2 border-primary-500 shadow-sm text-center"
-                    >
-                        <span
-                            class="text-[10px] font-bold text-primary-600 uppercase block mb-0.5"
-                            >Total Tagihan</span
-                        >
-                        <div
-                            class="text-3xl font-black text-primary-700 tracking-tighter"
-                        >
+                    <div class="mt-auto bg-white p-4 rounded-2xl border-2 border-primary-500 shadow-sm text-center">
+                        <span class="text-[10px] font-bold text-primary-600 uppercase block mb-0.5">Total Tagihan</span>
+                        <div class="text-3xl font-black text-primary-700 tracking-tighter">
                             Rp {{ money(cartTotal) }}
                         </div>
                     </div>
@@ -508,68 +286,43 @@
                     <div class="flex-1 space-y-4">
                         <!-- Payment Method -->
                         <div class="space-y-1.5">
-                            <label
-                                class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block"
-                                >{{ $t("checkout.payment_method") }}</label
-                            >
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">{{
+                                $t("checkout.payment_method") }}</label>
                             <div class="grid grid-cols-4 gap-2">
-                                <button
-                                    v-for="method in paymentMethods"
-                                    :key="method.value"
+                                <button v-for="method in paymentMethods" :key="method.value"
                                     class="h-10 rounded-xl font-bold text-[11px] transition-all duration-200 flex items-center justify-center border-2 px-2"
-                                    :class="
-                                        paymentMethod === method.value
-                                            ? 'bg-primary-50 text-primary-700 border-primary-500 shadow-sm'
-                                            : 'bg-white text-slate-500 border-slate-100 hover:border-slate-200'
-                                    "
-                                    @click="paymentMethod = method.value"
-                                >
+                                    :class="paymentMethod === method.value
+                                        ? 'bg-primary-50 text-primary-700 border-primary-500 shadow-sm'
+                                        : 'bg-white text-slate-500 border-slate-100 hover:border-slate-200'
+                                        " @click="paymentMethod = method.value">
                                     {{ method.label }}
                                 </button>
                             </div>
                         </div>
 
                         <!-- Cash Input Area -->
-                        <div
-                            v-if="paymentMethod === 'cash'"
-                            class="space-y-3 animate-in fade-in zoom-in-95 duration-200"
-                        >
-                            <div
-                                class="bg-slate-50 p-3 rounded-2xl border border-slate-100"
-                            >
-                                <label
-                                    class="text-[10px] font-bold text-slate-500 uppercase block mb-1"
-                                    >Tunai Diterima (Cash In)</label
-                                >
-                                <InputNumber
-                                    v-model="paidAmount"
-                                    class="w-full h-10"
-                                    mode="decimal"
-                                    :min="0"
-                                    autofocus
+                        <div v-if="paymentMethod === 'cash'"
+                            class="space-y-3 animate-in fade-in zoom-in-95 duration-200">
+                            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                                <label class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Tunai Diterima
+                                    (Cash In)</label>
+                                <InputNumber v-model="paidAmount" class="w-full h-10" mode="decimal" :min="0" autofocus
                                     fluid
-                                    inputClass="text-2xl font-black text-right text-slate-800 bg-transparent border-none"
-                                />
+                                    inputClass="text-2xl font-black text-right text-slate-800 bg-transparent border-none" />
                             </div>
 
                             <div class="grid grid-cols-4 gap-1.5">
-                                <button
-                                    v-for="denom in quickCashDenominations"
-                                    :key="denom"
+                                <button v-for="denom in quickCashDenominations" :key="denom"
                                     class="py-2 text-[11px] font-black rounded-lg border-2 transition-all duration-150 shadow-sm"
-                                    :class="
-                                        paidAmount === denom
-                                            ? 'bg-emerald-500 text-white border-emerald-500'
-                                            : 'bg-white text-slate-600 border-slate-100 hover:border-emerald-300'
-                                    "
-                                    @click="paidAmount = denom"
-                                >
+                                    :class="paidAmount === denom
+                                        ? 'bg-emerald-500 text-white border-emerald-500'
+                                        : 'bg-white text-slate-600 border-slate-100 hover:border-emerald-300'
+                                        " @click="paidAmount = denom">
                                     {{ money(denom) }}
                                 </button>
                                 <button
                                     class="py-2 text-[11px] font-black rounded-lg border-2 border-primary-100 bg-primary-50 text-primary-700 hover:border-primary-400 transition-all duration-150"
-                                    @click="paidAmount = cartTotal"
-                                >
+                                    @click="paidAmount = cartTotal">
                                     UANG PAS
                                 </button>
                             </div>
@@ -578,44 +331,24 @@
 
                     <!-- Footer: Change & Confirm -->
                     <div class="pt-4 border-t border-slate-100 space-y-3">
-                        <div
-                            v-if="paymentMethod === 'cash'"
-                            class="px-4 py-2.5 bg-slate-900 rounded-xl flex justify-between items-center shadow-xl"
-                        >
-                            <span
-                                class="text-slate-400 font-bold uppercase text-[9px] tracking-widest"
-                                >{{ $t("checkout.change_due") }}</span
-                            >
-                            <span
-                                class="text-xl font-black"
-                                :class="
-                                    changeAmount >= 0
-                                        ? 'text-emerald-400'
-                                        : 'text-red-400'
-                                "
-                            >
+                        <div v-if="paymentMethod === 'cash'"
+                            class="px-4 py-2.5 bg-slate-900 rounded-xl flex justify-between items-center shadow-xl">
+                            <span class="text-slate-400 font-bold uppercase text-[9px] tracking-widest">{{
+                                $t("checkout.change_due") }}</span>
+                            <span class="text-xl font-black" :class="changeAmount >= 0
+                                ? 'text-emerald-400'
+                                : 'text-red-400'
+                                ">
                                 Rp {{ money(Math.max(0, changeAmount)) }}
                             </span>
                         </div>
 
                         <div class="flex gap-2">
-                            <Button
-                                :label="$t('common.cancel')"
-                                severity="secondary"
-                                text
-                                class="flex-1 h-11 font-bold text-sm"
-                                @click="showPayment = false"
-                            />
-                            <Button
-                                :label="$t('checkout.confirm_payment')"
-                                icon="pi pi-check"
-                                class="flex-[2] h-11 text-base font-black shadow-lg"
-                                :loading="saving"
-                                :disabled="
-                                    paymentMethod === 'cash' && changeAmount < 0
-                                "
-                                @click="checkout"
-                            />
+                            <Button :label="$t('common.cancel')" severity="secondary" text
+                                class="flex-1 h-11 font-bold text-sm" @click="showPayment = false" />
+                            <Button :label="$t('checkout.confirm_payment')" icon="pi pi-check"
+                                class="flex-[2] h-11 text-base font-black shadow-lg" :loading="saving" :disabled="paymentMethod === 'cash' && changeAmount < 0
+                                    " @click="checkout" />
                         </div>
                     </div>
                 </div>
@@ -623,13 +356,8 @@
         </Dialog>
 
         <!-- Receipt Modal -->
-        <Dialog
-            v-model:visible="showReceipt"
-            :header="$t('checkout.success_title')"
-            modal
-            :closable="false"
-            class="w-[400px]"
-        >
+        <Dialog v-model:visible="showReceipt" :header="$t('checkout.success_title')" modal :closable="false"
+            class="w-[400px]">
             <div class="text-center pt-4">
                 <i class="pi pi-check-circle text-green-500 text-6xl mb-4"></i>
                 <h2 class="text-xl font-bold mb-2">
@@ -640,88 +368,53 @@
                     successfully.
                 </p>
 
-                <div
-                    class="bg-gray-50 p-4 rounded-xl text-left text-sm font-mono mb-6 space-y-1"
-                >
+                <div class="bg-gray-50 p-4 rounded-xl text-left text-sm font-mono mb-6 space-y-1">
                     <div class="flex justify-between">
                         <span>{{ $t("pos.subtotal") }}:</span>
                         <span>Rp {{ money(lastOrder?.subtotal) }}</span>
                     </div>
-                    <div
-                        v-if="lastOrder?.discount_amount > 0"
-                        class="flex justify-between text-red-500"
-                    >
+                    <div v-if="lastOrder?.discount_amount > 0" class="flex justify-between text-red-500">
                         <span>Diskon:</span>
                         <span>-Rp {{ money(lastOrder?.discount_amount) }}</span>
                     </div>
-                    <div
-                        v-if="lastOrder?.service_charge > 0"
-                        class="flex justify-between"
-                    >
+                    <div v-if="lastOrder?.service_charge > 0" class="flex justify-between">
                         <span>{{ $t("pos.service_charge") }}:</span>
                         <span>Rp {{ money(lastOrder?.service_charge) }}</span>
                     </div>
-                    <div
-                        v-if="lastOrder?.tax_amount > 0"
-                        class="flex justify-between"
-                    >
+                    <div v-if="lastOrder?.tax_amount > 0" class="flex justify-between">
                         <span>{{ $t("pos.tax") }}:</span>
                         <span>Rp {{ money(lastOrder?.tax_amount) }}</span>
                     </div>
-                    <div
-                        v-if="lastOrder?.rounding != 0"
-                        class="flex justify-between"
-                    >
+                    <div v-if="lastOrder?.rounding != 0" class="flex justify-between">
                         <span>{{ $t("pos.rounding") }}:</span>
                         <span>Rp {{ money(lastOrder?.rounding) }}</span>
                     </div>
-                    <div
-                        class="flex justify-between border-t border-gray-200 mt-2 pt-2 font-bold text-lg"
-                    >
+                    <div class="flex justify-between border-t border-gray-200 mt-2 pt-2 font-bold text-lg">
                         <span>{{ $t("pos.total") }}:</span>
                         <span>Rp {{ money(lastOrder?.total_amount) }}</span>
                     </div>
-                    <div
-                        class="flex justify-between mt-2 pt-2 border-t border-gray-200"
-                    >
+                    <div class="flex justify-between mt-2 pt-2 border-t border-gray-200">
                         <span>{{ $t("checkout.cash_given") }}:</span>
                         <span>Rp {{ money(lastOrder?.paid_amount) }}</span>
                     </div>
-                    <div
-                        v-if="lastOrder?.payment_method === 'cash'"
-                        class="flex justify-between font-bold text-green-600"
-                    >
+                    <div v-if="lastOrder?.payment_method === 'cash'"
+                        class="flex justify-between font-bold text-green-600">
                         <span>{{ $t("checkout.change_due") }}:</span>
                         <span>Rp {{ money(lastOrder?.change_amount) }}</span>
                     </div>
                 </div>
 
                 <div class="flex flex-col gap-2">
-                    <Button
-                        :label="$t('checkout.print_receipt')"
-                        icon="pi pi-print"
-                        @click="printReceipt"
-                    />
-                    <Button
-                        :label="$t('checkout.send_wa')"
-                        icon="pi pi-whatsapp"
-                        severity="success"
-                        @click="sendWhatsApp"
-                    />
-                    <Button
-                        :label="$t('checkout.new_order')"
-                        severity="secondary"
-                        class="mt-2"
-                        @click="resetPOS"
-                    />
+                    <Button :label="$t('checkout.print_receipt')" icon="pi pi-print" @click="printReceipt" />
+                    <Button :label="$t('checkout.send_wa')" icon="pi pi-whatsapp" severity="success"
+                        @click="sendWhatsApp" />
+                    <Button :label="$t('checkout.new_order')" severity="secondary" class="mt-2" @click="resetPOS" />
                 </div>
             </div>
         </Dialog>
         <!-- Printable Receipt (Hidden from screen, visible on print) -->
-        <div
-            id="printable-receipt"
-            class="print-block bg-white text-black p-4 font-mono text-sm max-w-[300px] mx-auto hidden"
-        >
+        <div id="printable-receipt"
+            class="print-block bg-white text-black p-4 font-mono text-sm max-w-[300px] mx-auto hidden">
             <div class="text-center font-bold text-lg mb-2">RESTOKU</div>
             <div class="text-center text-xs mb-4">
                 <div>Receipt: {{ lastOrder?.order_number }}</div>
@@ -737,16 +430,10 @@
 
             <div class="border-t border-dashed border-black my-2"></div>
 
-            <div
-                v-for="item in lastOrder?.items"
-                :key="item.id"
-                class="mb-2 text-xs"
-            >
+            <div v-for="item in lastOrder?.items" :key="item.id" class="mb-2 text-xs">
                 <div>{{ item.product_name || item.product?.name }}</div>
                 <div class="flex justify-between">
-                    <span
-                        >{{ item.quantity }} x Rp {{ money(item.price) }}</span
-                    >
+                    <span>{{ item.quantity }} x Rp {{ money(item.price) }}</span>
                     <span>Rp {{ money(item.subtotal) }}</span>
                 </div>
             </div>
@@ -758,31 +445,19 @@
                     <span>Subtotal:</span>
                     <span>Rp {{ money(lastOrder?.subtotal) }}</span>
                 </div>
-                <div
-                    v-if="lastOrder?.discount_amount > 0"
-                    class="flex justify-between"
-                >
+                <div v-if="lastOrder?.discount_amount > 0" class="flex justify-between">
                     <span>Discount:</span>
                     <span>-Rp {{ money(lastOrder?.discount_amount) }}</span>
                 </div>
-                <div
-                    v-if="lastOrder?.service_charge > 0"
-                    class="flex justify-between"
-                >
+                <div v-if="lastOrder?.service_charge > 0" class="flex justify-between">
                     <span>Service:</span>
                     <span>Rp {{ money(lastOrder?.service_charge) }}</span>
                 </div>
-                <div
-                    v-if="lastOrder?.tax_amount > 0"
-                    class="flex justify-between"
-                >
+                <div v-if="lastOrder?.tax_amount > 0" class="flex justify-between">
                     <span>Tax (PPN):</span>
                     <span>Rp {{ money(lastOrder?.tax_amount) }}</span>
                 </div>
-                <div
-                    v-if="lastOrder?.rounding != 0"
-                    class="flex justify-between"
-                >
+                <div v-if="lastOrder?.rounding != 0" class="flex justify-between">
                     <span>Rounding:</span>
                     <span>Rp {{ money(lastOrder?.rounding) }}</span>
                 </div>
@@ -798,10 +473,7 @@
                     <span>Paid ({{ lastOrder?.payment_method }}):</span>
                     <span>Rp {{ money(lastOrder?.paid_amount) }}</span>
                 </div>
-                <div
-                    v-if="lastOrder?.payment_method === 'cash'"
-                    class="flex justify-between font-bold"
-                >
+                <div v-if="lastOrder?.payment_method === 'cash'" class="flex justify-between font-bold">
                     <span>Change:</span>
                     <span>Rp {{ money(lastOrder?.change_amount) }}</span>
                 </div>
@@ -814,60 +486,32 @@
         </div>
 
         <!-- Quick Add Customer Dialog -->
-        <Dialog
-            v-model:visible="showAddCustomer"
-            :header="`${$t('common.add')} ${$t('checkout.customer')}`"
-            modal
-            class="w-[350px]"
-        >
+        <Dialog v-model:visible="showAddCustomer" :header="`${$t('common.add')} ${$t('checkout.customer')}`" modal
+            class="w-[350px]">
             <div class="space-y-4 pt-2">
                 <div class="space-y-2">
                     <label class="text-sm font-medium">{{
                         $t("common.name")
                     }}</label>
-                    <InputText
-                        v-model="newCustomer.name"
-                        class="w-full"
-                        :placeholder="`${$t('common.add')} ${$t('common.name')}`"
-                    />
+                    <InputText v-model="newCustomer.name" class="w-full"
+                        :placeholder="`${$t('common.add')} ${$t('common.name')}`" />
                 </div>
                 <div class="space-y-2">
                     <label class="text-sm font-medium">Telepon</label>
-                    <InputText
-                        v-model="newCustomer.phone"
-                        class="w-full"
-                        placeholder="No. Telepon"
-                    />
+                    <InputText v-model="newCustomer.phone" class="w-full" placeholder="No. Telepon" />
                 </div>
             </div>
             <template #footer>
-                <Button
-                    :label="$t('common.cancel')"
-                    severity="secondary"
-                    text
-                    @click="showAddCustomer = false"
-                />
-                <Button
-                    :label="$t('common.save')"
-                    icon="pi pi-check"
-                    :loading="savingCustomer"
-                    @click="quickAddCustomer"
-                />
+                <Button :label="$t('common.cancel')" severity="secondary" text @click="showAddCustomer = false" />
+                <Button :label="$t('common.save')" icon="pi pi-check" :loading="savingCustomer"
+                    @click="quickAddCustomer" />
             </template>
         </Dialog>
 
         <!-- Shift Notice Dialog -->
-        <Dialog
-            v-model:visible="showShiftNotice"
-            header="Shift Belum Dibuka"
-            modal
-            :closable="false"
-            class="w-[400px]"
-        >
+        <Dialog v-model:visible="showShiftNotice" header="Shift Belum Dibuka" modal :closable="false" class="w-[400px]">
             <div class="flex flex-col items-center py-4 text-center">
-                <div
-                    class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-4"
-                >
+                <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-4">
                     <i class="pi pi-exclamation-triangle text-3xl"></i>
                 </div>
                 <h3 class="text-lg font-bold mb-2">
@@ -877,10 +521,7 @@
                             : "Shift Dibutuhkan"
                     }}
                 </h3>
-                <p
-                    class="text-gray-600 mb-6"
-                    v-if="activeShift && activeShift.is_expired"
-                >
+                <p class="text-gray-600 mb-6" v-if="activeShift && activeShift.is_expired">
                     Shift Anda dari tanggal
                     <strong>{{
                         new Date(activeShift.start_time).toLocaleDateString(
@@ -895,22 +536,12 @@
                     melakukan transaksi penjualan di POS.
                 </p>
                 <div class="flex gap-3 w-full">
-                    <Button
-                        label="Kembali ke Dashboard"
-                        severity="secondary"
-                        class="flex-1"
-                        @click="$router.push('/')"
-                    />
-                    <Button
-                        :label="
-                            activeShift && activeShift.is_expired
-                                ? 'Tutup Shift & Kelola'
-                                : 'Buka Shift Sekarang'
-                        "
-                        severity="primary"
-                        class="flex-1"
-                        @click="$router.push('/sales/shifts')"
-                    />
+                    <Button label="Kembali ke Dashboard" severity="secondary" class="flex-1"
+                        @click="$router.push('/')" />
+                    <Button :label="activeShift && activeShift.is_expired
+                        ? 'Tutup Shift & Kelola'
+                        : 'Buka Shift Sekarang'
+                        " severity="primary" class="flex-1" @click="$router.push('/sales/shifts')" />
                 </div>
             </div>
         </Dialog>
@@ -984,7 +615,7 @@ const paidAmount = ref(0);
 
 const showPayment = ref(false);
 const showReceipt = ref(false);
-const idempotencyKey = ref("");
+const idempotencyKey = ref(uuidv4());
 
 // Quick cash denominations — disesuaikan dengan pecahan umum Rupiah
 const quickCashDenominations = [
@@ -993,7 +624,7 @@ const quickCashDenominations = [
     20000,
     50000,
     100000,
-    50000 * 2,
+    50000 * 3,
     100000 * 2,
     100000 * 5,
 ];
@@ -1183,7 +814,7 @@ watch(cartTotal, syncToCustomerDisplay);
 watch(showPayment, (val) => {
     if (val) {
         // Generate fresh UUID setiap kali modal dibuka — key baru = percobaan bayar baru
-        idempotencyKey.value = crypto.randomUUID();
+        idempotencyKey.value = uuidv4();
         if (customerDisplayChannel) {
             customerDisplayChannel.postMessage({ type: "payment_start" });
         }
@@ -1244,12 +875,18 @@ async function loadPendingOrder(token) {
         // We'll merge to be safe, but with full details from the API.
 
         for (const item of pendingOrder.items) {
-            // items now contain full product details from backend
-            const cartItem = { ...item };
-            const existing = cart.value.find((i) => i.id === item.id);
+            // Map OrderItem structure to Product structure used in cart
+            const cartItem = {
+                ...item,
+                id: item.product_id, // Use product_id as the unique identifier in cart
+                qty: item.quantity,   // Standardize field name to 'qty'
+                notes: item.notes || ""
+            };
 
-            if (existing && existing.notes === item.notes) {
-                existing.qty += item.qty;
+            const existing = cart.value.find((i) => i.id === cartItem.id);
+
+            if (existing && existing.notes === cartItem.notes) {
+                existing.qty += cartItem.qty;
             } else {
                 cart.value.push(cartItem);
             }
@@ -1304,7 +941,7 @@ async function checkout() {
     saving.value = true;
 
     const payload = {
-        idempotency_key: idempotencyKey.value || uuidv4(),
+        idempotency_key: idempotencyKey.value,
         customer_id: selectedCustomer.value?.id || null,
         account_id: accountId.value,
         table_number: tableNumber.value,
@@ -1598,10 +1235,12 @@ onUnmounted(() => {
     body * {
         visibility: hidden;
     }
+
     #printable-receipt,
     #printable-receipt * {
         visibility: visible;
     }
+
     #printable-receipt {
         display: block !important;
         position: absolute;
@@ -1612,13 +1251,16 @@ onUnmounted(() => {
         padding: 10px;
     }
 }
+
 .print-block {
     display: none;
 }
+
 /* Hide scrollbar for Chrome, Safari and Opera */
 .no-scrollbar::-webkit-scrollbar {
     display: none;
 }
+
 /* Hide scrollbar for IE, Edge and Firefox */
 .no-scrollbar {
     -ms-overflow-style: none;

@@ -144,13 +144,13 @@ class OrderService
             $totalItemDiscount = max(0, min($price, $discount + $itemPromotionDiscount));
             $itemNetPrice = max(0, $price - $totalItemDiscount);
             $itemSubtotal = $itemNetPrice * $item['quantity'];
-            $itemTax = $itemSubtotal * ($product->tax_rate / 100);
-            $itemService = $itemSubtotal * ($product->service_charge_rate / 100);
+            $itemTax = floor($itemSubtotal * ($product->tax_rate / 100));
+            $itemService = floor($itemSubtotal * ($product->service_charge_rate / 100));
 
             $subtotal += $itemSubtotal;
             $discountTotal += $totalItemDiscount * $item['quantity'];
-            $taxTotal += $itemTax;
-            $serviceTotal += $itemService;
+            $taxTotal += (float) $itemTax;
+            $serviceTotal += (float) $itemService;
 
             $processedItems[] = [
                 'product_id' => $product->id,

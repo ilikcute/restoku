@@ -43,6 +43,8 @@ class StoreOrderRequest extends FormRequest
                 Rule::exists('products', 'id')->where('tenant_id', $tenantId),
             ],
             'items.*.quantity' => 'required|numeric|min:0.01',
+            'items.*.price' => 'nullable|numeric',
+            'items.*.discount_amount' => 'nullable|numeric',
             'items.*.notes' => 'nullable|string|max:255',
             'payment_method' => 'required|string',
             'order_type' => 'nullable|in:regular,ojol,wholesale',

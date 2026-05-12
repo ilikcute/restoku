@@ -140,9 +140,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::put('/profile', [ProfileController::class, 'update']);
             Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
         });
+        Route::get('/permissions', [UserController::class, 'permissions'])->middleware('permission:manage-users|manage-roles');
+        Route::get('/roles/list', [UserController::class, 'roles'])->middleware('permission:manage-users|manage-roles');
+
+        Route::middleware('permission:manage-roles')->group(function () {
+            Route::apiResource('roles', \App\Http\Controllers\Api\RoleController::class);
+        });
+
         Route::middleware('permission:manage-users')->group(function () {
-            Route::get('/roles', [UserController::class, 'roles']);
-            Route::get('/permissions', [UserController::class, 'permissions']);
             Route::apiResource('users', UserController::class);
         });
 

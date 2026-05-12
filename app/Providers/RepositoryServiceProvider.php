@@ -23,6 +23,7 @@ use App\Interfaces\SupplierRepositoryInterface;
 use App\Interfaces\TenantRepositoryInterface;
 use App\Interfaces\UnitRepositoryInterface;
 use App\Interfaces\UserRepositoryInterface;
+use App\Interfaces\RoleRepositoryInterface;
 use App\Repositories\AuthRepository;
 use App\Repositories\CategoryRepository;
 use App\Repositories\CustomerRepository;
@@ -44,6 +45,7 @@ use App\Repositories\SupplierRepository;
 use App\Repositories\TenantRepository;
 use App\Repositories\UnitRepository;
 use App\Repositories\UserRepository;
+use App\Repositories\RoleRepository;
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -71,6 +73,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(DashboardRepositoryInterface::class, DashboardRepository::class);
         $this->app->bind(PromotionRepositoryInterface::class, PromotionRepository::class);
         $this->app->bind(TenantRepositoryInterface::class, TenantRepository::class);
+        $this->app->bind(RoleRepositoryInterface::class, RoleRepository::class);
     }
 
     /**

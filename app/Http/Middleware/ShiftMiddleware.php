@@ -13,18 +13,18 @@ class ShiftMiddleware
     {
         $user = $request->user();
 
-        // Admin & Manager boleh akses tanpa shift (misalnya buat laporan)
-        if ($user->hasRole(['admin', 'manager'])) {
-            return $next($request);
-        }
-
-        // Cashier harus punya shift aktif
+        // Cari shift aktif (untuk semua role)
         $activeShift = Shift::where('user_id', $user->id)
             ->where('tenant_id', $user->tenant_id)
             ->where('status', 'open')
             ->first();
 
-        if (! $activeShift) {
+        if ($activeShift) {
+            $request->attributes->set('current_shift', $activeShift);
+        }
+
+        // Jika bukan admin/manager, wajib punya shift aktif
+        if (! $user->hasRole(['admin', 'manager']) && ! $activeShift) {
             return response()->json([
                 'success' => false,
                 'message' => 'Anda belum membuka shift hari ini. Silakan buka shift terlebih dahulu.',

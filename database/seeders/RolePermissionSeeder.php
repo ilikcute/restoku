@@ -74,8 +74,10 @@ class RolePermissionSeeder extends Seeder
             'view-settings',
             'manage-users',
             'manage-roles',
+            'manage-roles-permissions',
             'view-profile',
             'edit-profile',
+            'sync-dpkad',
         ];
 
         foreach ($permissions as $permission) {
@@ -85,7 +87,7 @@ class RolePermissionSeeder extends Seeder
         // ==================== ROLES ====================
         // Admin - Full Access
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
-        $adminRole->syncPermissions($permissions);
+        $adminRole->syncPermissions(Permission::all());
 
         // Manager
         $managerRole = Role::firstOrCreate(['name' => 'manager']);
@@ -112,15 +114,12 @@ class RolePermissionSeeder extends Seeder
             'edit-profile',
         ]);
 
-        // Cashier - Paling terbatas
+        // Cashier - Terbatas sesuai permintaan terakhir
         $cashierRole = Role::firstOrCreate(['name' => 'cashier']);
         $cashierRole->syncPermissions([
             'view-dashboard',
-            'view-pos',
-            'create-order',
-            'view-orders',
-            'view-profile',
-            'edit-profile',
+            'view-master-data',
+            'view-products',
         ]);
 
         $this->command->info('✅ Role & Permission berhasil dibuat!');
