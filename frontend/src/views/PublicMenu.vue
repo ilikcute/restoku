@@ -4,7 +4,7 @@
     <header class="bg-primary-600 text-white p-4 sticky top-0 z-10 shadow-md">
       <div class="flex justify-between items-center">
         <h1 class="text-xl font-bold">Restoku Digital Menu</h1>
-        <div class="bg-primary-500 px-3 py-1 rounded-full text-xs font-bold">
+        <div class="bg-primary-500/50 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm border border-white/20">
           Table: {{ tableNumber || '-' }}
         </div>
       </div>
@@ -154,18 +154,23 @@ const saving = ref(false);
 const orderToken = ref('');
 const customerName = ref('');
 const tableNumber = ref('');
+const tenantId = ref(null);
 
 onMounted(() => {
-  // Get table number from URL query if exists (?table=5)
+  // Get tenant_id and table number from URL query (?tenant_id=2&table=5)
   const urlParams = new URLSearchParams(window.location.search);
+  tenantId.value = urlParams.get('tenant_id') || '2'; // Default to 2 based on DB data
   tableNumber.value = urlParams.get('table') || '';
   loadMenu();
 });
 
 async function loadMenu() {
   try {
-    const response = await publicApi.getMenu();
-    products.value = response.data.data;
+    const response = await publicApi.getMenu({ tenant_id: tenantId.value });
+    // Handle nested data: { data: { data: [] } } from Resource Collection
+    const resultData = response.data.data;
+    products.value = Array.isArray(resultData) ? resultData : (resultData.data || []);
+    
     const cats = [...new Set(products.value.map(p => p.category?.name))].filter(Boolean);
     categories.value = ['Semua', ...cats];
   } catch (error) {
@@ -266,7 +271,7 @@ async function submitOrder() {
   saving.value = true;
   try {
     const payload = {
-      tenant_id: 1, // Default for now, should be dynamic
+      tenant_id: tenantId.value,
       customer_name: customerName.value,
       table_number: tableNumber.value,
       items: cart.value.map(i => ({

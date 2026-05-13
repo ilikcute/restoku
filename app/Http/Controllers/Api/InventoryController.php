@@ -25,18 +25,35 @@ class InventoryController extends BaseApiController
      */
     public function stockLevels(Request $request)
     {
-        $products = $this->inventoryRepository->getStockLevels(
-            $request->user()->tenant_id,
-            $request->category_id,
-            $request->q
-        );
-
-        return $this->successResponse([
-            'data' => ProductStockResource::collection($products),
-            'total_stock' => $products->sum(function ($p) {
-                return $p->stock ? $p->stock->current_stock : 0;
-            }),
+        \Log::info('Fetching stock levels', [
+            'tenant_id' => $request->user()->tenant_id,
+            'category_id' => $request->category_id
         ]);
+
+        try {
+            $products = $this->inventoryRepository->getStockLevels(
+                $request->user()->tenant_id,
+                $request->category_id,
+                $request->q
+            );
+
+            \Log::info('Products fetched', ['count' => $products->count()]);
+
+            $totalStock = $products->sum(function ($p) {
+                return $p->stock ? $p->stock->current_stock : 0;
+            });
+
+            return $this->successResponse([
+                'data' => ProductStockResource::collection($products),
+                'total_stock' => $totalStock,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Stock levels error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
     }
 
     /**

@@ -19,13 +19,23 @@ class PublicMenuController extends BaseApiController
     /**
      * Get list of products for public menu
      */
-    public function products()
+    public function products(Request $request)
     {
-        $validated = request()->validate([
-            'tenant_id' => 'required|integer|exists:tenants,id',
-        ]);
+        $tenantId = $request->query('tenant_id');
 
-        $products = $this->publicMenuRepository->getActiveProducts($validated['tenant_id']);
+        // Gunakan auth('sanctum')->user() karena rute ini berada di luar middleware auth:sanctum
+        $user = auth('sanctum')->user();
+
+        // Jika tidak ada tenant_id di query, coba ambil dari user yang login
+        if (! $tenantId && $user) {
+            $tenantId = $user->tenant_id;
+        }
+
+        if (! $tenantId) {
+            $tenantId = 2; // Fallback ke tenant 2 berdasarkan data di DB
+        }
+
+        $products = $this->publicMenuRepository->getActiveProducts((int) $tenantId);
 
         return $this->successResponse(ProductResource::collection($products));
     }

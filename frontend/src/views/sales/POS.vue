@@ -966,8 +966,8 @@ async function loadPendingOrder(token) {
             // Map OrderItem structure to Product structure used in cart
             const cartItem = {
                 ...item,
-                id: item.product_id, // Use product_id as the unique identifier in cart
-                qty: item.quantity,   // Standardize field name to 'qty'
+                id: item.id,      // API returns 'id' for the product
+                qty: item.qty,    // API returns 'qty'
                 notes: item.notes || ""
             };
 

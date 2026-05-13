@@ -8,6 +8,6 @@ const publicInstance = axios.create({
 });
 
 export const publicApi = {
-  getMenu: () => publicInstance.get('/catalog'),
+  getMenu: (params) => publicInstance.get('/catalog', { params }),
   createOrder: (data) => publicInstance.post('/save-order', data)
 };

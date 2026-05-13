@@ -29,5 +29,12 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
+
+        // Auto-assign tenant_id to activity logs
+        \Spatie\Activitylog\Models\Activity::creating(function ($activity) {
+            if (auth()->check()) {
+                $activity->tenant_id = auth()->user()->tenant_id;
+            }
+        });
     }
 }

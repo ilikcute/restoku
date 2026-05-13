@@ -37,16 +37,15 @@ class SecureHeaders
         $response->headers->remove('X-Powered-By');
         $response->headers->remove('Server');
 
-        // Content Security Policy — permisif untuk SPA Vue.js + PrimeVue + CDN font
-        // Sesuaikan 'script-src' dan 'style-src' jika ada pelanggaran di browser console
+        // Content Security Policy — diperlonggar untuk mendukung pemuatan gambar dari storage
         $response->headers->set(
             'Content-Security-Policy',
-            "default-src 'self'; ".
+            "default-src 'self' 'unsafe-inline'; ".
             "script-src 'self' 'unsafe-inline' 'unsafe-eval'; ".
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; ".
             "font-src 'self' https://fonts.gstatic.com data:; ".
-            "img-src 'self' data: blob: https:; ".
-            "connect-src 'self' ws: wss:; ".
+            "img-src 'self' data: blob: http: https: *; ".
+            "connect-src 'self' ws: wss: http: https:; ".
             "frame-ancestors 'self';"
         );
 
