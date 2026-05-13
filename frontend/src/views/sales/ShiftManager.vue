@@ -4,7 +4,7 @@
       
       <!-- Current Shift Status -->
       <div class="lg:col-span-1 space-y-6">
-        <Card class="border-none shadow-sm overflow-hidden">
+        <Card class="shift-manager-card border-none shadow-sm overflow-hidden">
           <template #header>
             <div :class="shiftStore.activeShift ? 'bg-emerald-600' : 'bg-slate-700'" class="p-4 flex justify-between items-center transition-colors duration-500">
               <h3 class="text-white font-bold flex items-center gap-2">
@@ -49,7 +49,7 @@
                       mode="currency" 
                       currency="IDR" 
                       locale="id-ID" 
-                      class="w-full"
+                      class="shift-manager-input w-full"
                       inputClass="text-2xl font-black text-slate-900 h-14 text-center bg-slate-50 border-slate-200 focus:border-primary-500"
                       placeholder="Rp 0"
                     />
@@ -85,7 +85,7 @@
                   mode="currency" 
                   currency="IDR" 
                   locale="id-ID" 
-                  class="w-full"
+                  class="shift-manager-input w-full"
                   inputClass="text-3xl font-black text-center h-16 bg-slate-50 rounded-xl"
                   autofocus
                 />
@@ -147,7 +147,7 @@
         </div>
 
         <!-- History Table -->
-        <Card class="border-none shadow-sm h-full">
+        <Card class="shift-manager-card border-none shadow-sm h-full">
           <template #header>
             <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
               <h3 class="font-bold text-slate-800 flex items-center gap-2">
@@ -449,14 +449,15 @@ onMounted(async () => {
 });
 </script>
 
-<style scoped>
-:deep(.p-inputnumber-input) {
-  text-align: center;
+<style>
+/* Global styles for ShiftManager to avoid build issues with :deep() */
+.shift-manager-card .p-card-body {
+  padding: 0 !important;
 }
-:deep(.p-card-body) {
-  padding: 0;
+.shift-manager-card .p-card-content {
+  padding: 1.5rem !important;
 }
-:deep(.p-card-content) {
-  padding: 1.5rem;
+.shift-manager-input .p-inputnumber-input {
+  text-align: center !important;
 }
 </style>

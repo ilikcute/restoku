@@ -351,20 +351,4 @@ onMounted(() => {
 
 <style scoped>
 @reference "@/style.css";
-
-.p-datatable-modern :deep(.p-datatable-thead > tr > th) {
-  @apply bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] border-none py-4;
-}
-
-.p-datatable-modern :deep(.p-datatable-tbody > tr) {
-  @apply transition-colors duration-200 border-b border-slate-50;
-}
-
-.p-datatable-modern :deep(.p-datatable-tbody > tr:hover) {
-  @apply bg-slate-50/50;
-}
-
-.p-datatable-modern :deep(.p-datatable-tbody > tr > td) {
-  @apply py-4 border-none;
-}
 </style>
