@@ -360,13 +360,24 @@ function remove(row) {
         header: $t("common.confirm"),
         acceptClass: "p-button-danger",
         accept: async () => {
-            await props.deleter(row.id);
-            toast.add({
-                severity: "success",
-                summary: $t("common.delete"),
-                life: 2000,
-            });
-            load();
+            try {
+                await props.deleter(row.id);
+                toast.add({
+                    severity: "success",
+                    summary: $t("common.delete"),
+                    detail: $t("common.delete_success", "Data berhasil dihapus"),
+                    life: 2000,
+                });
+                load();
+            } catch (error) {
+                console.error("Delete Error:", error);
+                toast.add({
+                    severity: "error",
+                    summary: $t("common.delete"),
+                    detail: error.response?.data?.message || "Gagal menghapus data",
+                    life: 5000,
+                });
+            }
         },
     });
 }

@@ -35,3 +35,10 @@ export const roleApi = {
   update: (id, data) => api.put(`/roles/${id}`, data),
   delete: (id) => api.delete(`/roles/${id}`)
 };
+
+export const databaseApi = {
+  export: () => api.get('/database/export', { responseType: 'blob' }),
+  import: (formData) => api.post('/database/import', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+};

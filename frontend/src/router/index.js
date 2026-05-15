@@ -79,7 +79,8 @@ const router = createRouter({
         { path: 'settings/printer', name: 'printer-settings', component: () => import('@/views/settings/PrinterSettings.vue'), meta: { auth: true, permission: 'view-business-profile' } },
         { path: 'settings/users', name: 'users', component: () => import('@/views/settings/Users.vue'), meta: { auth: true, permission: 'manage-users' } },
         { path: 'settings/roles', name: 'roles', component: () => import('@/views/settings/Roles.vue'), meta: { auth: true, permission: 'manage-roles' } },
-        { path: 'settings/promotions', name: 'promotions', component: () => import('@/views/settings/Promotions.vue'), meta: { auth: true, permission: 'view-promotions' } }
+        { path: 'settings/promotions', name: 'promotions', component: () => import('@/views/settings/Promotions.vue'), meta: { auth: true, permission: 'view-promotions' } },
+        { path: 'settings/database', name: 'database', component: () => import('@/views/settings/Database.vue'), meta: { auth: true, permission: 'manage-tenant-settings' } }
       ]
     },
     {

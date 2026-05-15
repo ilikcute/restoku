@@ -83,6 +83,7 @@
         "purchase_return_report": "Riwayat Retur Pembelian",
         "users": "Pengguna",
         "promotions": "Promosi (Running Text)",
+        "database": "Backup & Restore",
         "tax_report": "Laporan Pajak",
         "audit_trail": "Audit Trail (Log)",
         "logout": "Keluar"
@@ -319,9 +320,8 @@
         "roles": "Manajemen Peran",
         "add_role": "Tambah Peran",
         "edit_role": "Ubah Peran",
-        "role": "Peran",
-        "permissions": "Hak Akses Tambahan",
         "user": "Pengguna",
+        "database": "Backup & Restore Database",
         "language": "Bahasa",
         "select_language": "Pilih Bahasa Aplikasi",
         "language_desc": "Pilih bahasa yang ingin Anda gunakan untuk antarmuka aplikasi."

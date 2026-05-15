@@ -208,7 +208,8 @@ const menuGroups = [
       { to: '/settings/printer', icon: 'pi pi-print', label: 'sidebar.printer_settings', permission: 'view-business-profile' },
       { to: '/settings/users', icon: 'pi pi-users', label: 'sidebar.users', permission: 'manage-users' },
       { to: '/settings/roles', icon: 'pi pi-lock', label: 'settings.roles', permission: 'manage-roles' },
-      { to: '/settings/promotions', icon: 'pi pi-megaphone', label: 'sidebar.promotions', permission: 'view-promotions' }
+      { to: '/settings/promotions', icon: 'pi pi-megaphone', label: 'sidebar.promotions', permission: 'view-promotions' },
+      { to: '/settings/database', icon: 'pi pi-database', label: 'sidebar.database', permission: 'manage-tenant-settings' }
     ]
   }
 ];

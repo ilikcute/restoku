@@ -9,7 +9,12 @@ export const productApi = {
   getAll: (params) => api.get('/products', { params }),
   getById: (id) => api.get(`/products/${id}`),
   getNextCode: () => api.get('/products/next-code'),
+  downloadTemplate: () => api.get('/products/template', { responseType: 'blob' }),
+  export: () => api.get('/products/export', { responseType: 'blob' }),
   create: (data) => api.post('/products', data),
+  import: (formData) => api.post('/products/import', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
   update: (id, data) => {
     if (data instanceof FormData) {
       data.append('_method', 'PUT');

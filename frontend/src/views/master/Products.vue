@@ -1,7 +1,22 @@
 <template>
   <AppPage :title="$t('sidebar.products')" :subtitle="$t('product.manage_desc', 'Kelola daftar produk, harga, dan stok inventaris Anda di sini.')" :breadcrumb="[$t('common.master_data'), $t('sidebar.products')]">
     <template #actions>
-      <Button :label="`${$t('common.add')} ${$t('sidebar.products')}`" icon="pi pi-plus" class="!rounded-2xl !px-6 !bg-emerald-600 !border-none shadow-lg shadow-emerald-200/50" @click="openCreate" />
+      <div class="flex gap-2">
+        <Button label="Template" icon="pi pi-download" severity="info" text
+          class="!rounded-2xl !px-4" 
+          @click="downloadTemplate" />
+        <Button label="Export" icon="pi pi-file-excel" severity="success" text
+          class="!rounded-2xl !px-4" 
+          @click="exportProducts" />
+        <Button label="Import" icon="pi pi-upload" severity="secondary" 
+          class="!rounded-2xl !px-6 !bg-white !border-slate-200 !text-slate-600 shadow-sm" 
+          @click="$refs.fileInput.click()" :loading="importing" />
+        <input type="file" ref="fileInput" class="hidden" accept=".xlsx,.xls,.csv" @change="handleImport" />
+        
+        <Button :label="`${$t('common.add')} ${$t('sidebar.products')}`" icon="pi pi-plus" 
+          class="!rounded-2xl !px-6 !bg-emerald-600 !border-none shadow-lg shadow-emerald-200/50" 
+          @click="openCreate" />
+      </div>
     </template>
 
     <div class="space-y-6">
@@ -92,6 +107,8 @@ const showDialogOpen = ref(false);
 const dialogTitle = ref('');
 const selectedProduct = ref(null);
 const selectedProductForEdit = ref(null);
+const importing = ref(false);
+const fileInput = ref(null);
 
 // Data
 const products = ref([]);
@@ -157,6 +174,83 @@ function openShow(item) {
 }
 
 // --- API Calls ---
+async function handleImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  importing.value = true;
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await productApi.import(formData);
+    const result = response.data.data;
+    
+    toast.add({
+      severity: 'success',
+      summary: 'Import Berhasil',
+      detail: `${result.success_count} produk berhasil di-import.`,
+      life: 5000
+    });
+
+    if (result.errors && result.errors.length > 0) {
+      toast.add({
+        severity: 'warn',
+        summary: 'Beberapa baris bermasalah',
+        detail: `Cek konsol untuk detail error.`,
+        life: 5000
+      });
+      console.warn('Import Errors:', result.errors);
+    }
+
+    loadProducts();
+  } catch (error) {
+    console.error('Import Error:', error);
+    toast.add({
+      severity: 'error',
+      summary: 'Import Gagal',
+      detail: error.response?.data?.message || 'Terjadi kesalahan saat mengunggah file.',
+      life: 5000
+    });
+  } finally {
+    importing.value = false;
+    if (fileInput.value) fileInput.value.value = '';
+  }
+}
+
+async function downloadTemplate() {
+  try {
+    const response = await productApi.downloadTemplate();
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'template_import_produk.xlsx');
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (error) {
+    console.error('Download Error:', error);
+    toast.add({ severity: 'error', summary: 'Gagal Download Template', life: 3000 });
+  }
+}
+
+async function exportProducts() {
+  try {
+    const response = await productApi.export();
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `export_produk_${new Date().toISOString().split('T')[0]}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    toast.add({ severity: 'success', summary: 'Export Berhasil', life: 3000 });
+  } catch (error) {
+    console.error('Export Error:', error);
+    toast.add({ severity: 'error', summary: 'Gagal Export Produk', life: 3000 });
+  }
+}
+
 async function initPage() {
   loading.value = true;
   try {

@@ -83,6 +83,7 @@
         "purchase_return_report": "Purchase Return History",
         "users": "Users",
         "promotions": "Marquee Promotions",
+        "database": "Backup & Restore",
         "tax_report": "Tax Report",
         "audit_trail": "Audit Trail (Logs)",
         "logout": "Logout"
@@ -305,6 +306,7 @@
         "role": "Role",
         "permissions": "Additional Permissions",
         "user": "User",
+        "database": "Backup & Restore Database",
         "language": "Language",
         "select_language": "Select Application Language",
         "language_desc": "Select the language you want to use for the application interface."
