@@ -10,7 +10,14 @@ class CategorySeeder extends Seeder
 {
     public function run(): void
     {
-        $tenant = Tenant::where('slug', 'restoku-pos-demo')->first();
-        Category::factory(6)->create(['tenant_id' => $tenant->id]);
+        $tenant = Tenant::where('slug', 'tokoredjeki')->first();
+        
+        foreach (['FOOD', 'CIGARET', 'BEVERAGES'] as $name) {
+            Category::factory()->create([
+                'tenant_id' => $tenant->id,
+                'name' => $name,
+                'slug' => \Illuminate\Support\Str::slug($name)
+            ]);
+        }
     }
 }

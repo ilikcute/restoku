@@ -163,27 +163,27 @@ class DemoDataSeeder extends Seeder
 
         // 2. Tenant
         $tenant = Tenant::updateOrCreate(
-            ['slug' => 'restoku-demo'],
-            ['name' => 'Restoku Demo']
+            ['slug' => 'tokoredjeki'],
+            ['name' => 'Toko Redjeki']
         );
 
         // 3. Users
         $password = Hash::make('password');
         $admin = User::updateOrCreate(
-            ['email' => 'admin@restoku.id'],
-            ['tenant_id' => $tenant->id, 'name' => 'Admin Restoku', 'password' => $password, 'role' => 'admin']
+            ['email' => 'admin@tokoredjeki.id'],
+            ['tenant_id' => $tenant->id, 'name' => 'Admin Redjeki', 'password' => $password, 'role' => 'admin']
         );
         $admin->assignRole('admin');
 
         $manager = User::updateOrCreate(
-            ['email' => 'manager@restoku.id'],
-            ['tenant_id' => $tenant->id, 'name' => 'Manager Restoku', 'password' => $password, 'role' => 'manager']
+            ['email' => 'manager@tokoredjeki.id'],
+            ['tenant_id' => $tenant->id, 'name' => 'Manager Redjeki', 'password' => $password, 'role' => 'manager']
         );
         $manager->assignRole('manager');
 
         $cashier = User::updateOrCreate(
-            ['email' => 'cashier@restoku.id'],
-            ['tenant_id' => $tenant->id, 'name' => 'Cashier Restoku', 'password' => $password, 'role' => 'cashier']
+            ['email' => 'kasir@tokoredjeki.id'],
+            ['tenant_id' => $tenant->id, 'name' => 'Kasir Redjeki', 'password' => $password, 'role' => 'cashier']
         );
         $cashier->assignRole('cashier');
 
@@ -215,86 +215,82 @@ class DemoDataSeeder extends Seeder
         $categories = Category::where('tenant_id', $tenant->id)->get()->keyBy('name');
 
         $productsData = [
-            // Makanan
             [
-                'name' => 'Nasi Goreng Special',
-                'short_name' => 'Nasi Goreng',
-                'price' => 25000,
-                'cost' => 15000,
+                'name' => 'ANGGUR HIJAU',
+                'short_name' => 'Anggur Hijau',
+                'price' => 50000,
+                'cost' => 35000,
                 'code' => '10000001',
                 'category' => 'Makanan',
-                'barcode' => '8991234567001',
-                'brand' => 'Restoku Kitchen',
-                'description' => 'Nasi goreng dengan telur, sayuran segar, dan bumbu pilihan. Hidangan favorit untuk sarapan maupun makan siang.',
-                'ojol_price' => 27000,
-                'wholesale_price' => 20000,
-                'ojol_discount' => 2000,
-                'wholesale_discount' => 5000,
-                'image' => 'products/nasi-goreng-special.jpg'
+                'brand' => 'Toko Redjeki',
+                'description' => 'Anggur Hijau segar kualitas pilihan.',
+                'image' => 'products/anggur-hijau.jpg'
             ],
             [
-                'name' => 'Mie Goreng Seafood',
-                'short_name' => 'Mie Goreng',
-                'price' => 30000,
-                'cost' => 18000,
+                'name' => 'USUS GORENG ORI',
+                'short_name' => 'Usus Goreng Ori',
+                'price' => 35000,
+                'cost' => 22200,
                 'code' => '10000002',
                 'category' => 'Makanan',
-                'barcode' => '8991234567002',
-                'brand' => 'Restoku Kitchen',
-                'description' => 'Mie goreng premium dengan udang, cumi, dan ikan. Cita rasa laut yang autentik dan lezat.',
-                'ojol_price' => 32000,
-                'wholesale_price' => 24000,
-                'ojol_discount' => 2000,
-                'wholesale_discount' => 6000,
-                'image' => 'products/mie-goreng-seafood.jpg'
+                'brand' => 'Toko Redjeki',
+                'description' => 'Usus Goreng Original renyah dan gurih.',
+                'image' => 'products/usus-goreng-ori.jpg'
             ],
             [
-                'name' => 'Ayam Bakar Madu',
-                'short_name' => 'Ayam Bakar',
+                'name' => 'USUS GORENG PEDAS',
+                'short_name' => 'Usus Goreng Pedas',
                 'price' => 35000,
-                'cost' => 20000,
+                'cost' => 22200,
                 'code' => '10000003',
                 'category' => 'Makanan',
-                'barcode' => '8991234567003',
-                'brand' => 'Restoku Kitchen',
-                'description' => 'Ayam bakar dengan lapisan madu alami, empuk dan berempah nikmat. Sempurna dengan nasi putih hangat.',
-                'ojol_price' => 37000,
-                'wholesale_price' => 28000,
-                'ojol_discount' => 2000,
-                'wholesale_discount' => 7000,
-                'image' => 'products/ayam-bakar-madu.jpg'
+                'brand' => 'Toko Redjeki',
+                'description' => 'Usus Goreng Pedas dengan bumbu pilihan.',
+                'image' => 'products/usus-goreng-pedas.jpg'
             ],
             [
-                'name' => 'Soto Ayam',
-                'short_name' => 'Soto Ayam',
-                'price' => 20000,
-                'cost' => 12000,
+                'name' => 'KERIPIK TEMPE',
+                'short_name' => 'Keripik Tempe',
+                'price' => 30000,
+                'cost' => 18600,
                 'code' => '10000004',
                 'category' => 'Makanan',
-                'barcode' => '8991234567004',
-                'brand' => 'Restoku Kitchen',
-                'description' => 'Soto ayam tradisional dengan rempah pilihan dan kuning alami. Hangat dan menyehatkan untuk keluarga.',
-                'ojol_price' => 22000,
-                'wholesale_price' => 16000,
-                'ojol_discount' => 2000,
-                'wholesale_discount' => 4000,
-                'image' => 'products/soto-ayam.jpg'
+                'brand' => 'Toko Redjeki',
+                'description' => 'Keripik Tempe gurih dan renyah.',
+                'image' => 'products/keripik-tempe.jpg'
             ],
             [
-                'name' => 'Rendang Daging',
-                'short_name' => 'Rendang',
-                'price' => 40000,
-                'cost' => 25000,
+                'name' => 'BASRENG ORI',
+                'short_name' => 'Basreng Ori',
+                'price' => 35000,
+                'cost' => 21000,
                 'code' => '10000005',
                 'category' => 'Makanan',
-                'barcode' => '8991234567005',
-                'brand' => 'Restoku Kitchen',
-                'description' => 'Rendang daging Padang asli dengan santan dan rempah. Kaya rasa dan tekstur yang sempurna.',
-                'ojol_price' => 42000,
-                'wholesale_price' => 32000,
-                'ojol_discount' => 2000,
-                'wholesale_discount' => 8000,
-                'image' => 'products/rendang-daging.jpg'
+                'brand' => 'Toko Redjeki',
+                'description' => 'Bakso Goreng Original rasa mantap.',
+                'image' => 'products/basreng-ori.jpg'
+            ],
+            [
+                'name' => 'BASRENG PEDAS',
+                'short_name' => 'Basreng Pedas',
+                'price' => 35000,
+                'cost' => 21000,
+                'code' => '10000006',
+                'category' => 'Makanan',
+                'brand' => 'Toko Redjeki',
+                'description' => 'Bakso Goreng Pedas yang bikin ketagihan.',
+                'image' => 'products/basreng-pedas.jpg'
+            ],
+            [
+                'name' => 'MACARONI ORI',
+                'short_name' => 'Macaroni Ori',
+                'price' => 22000,
+                'cost' => 13080,
+                'code' => '10000007',
+                'category' => 'Makanan',
+                'brand' => 'Toko Redjeki',
+                'description' => 'Macaroni Original gurih renyah.',
+                'image' => 'products/macaroni-ori.jpg'
             ],
 
             // Minuman
@@ -510,24 +506,24 @@ class DemoDataSeeder extends Seeder
                     'name' => $p['name'],
                     'short_name' => $p['short_name'],
                     'slug' => Str::slug($p['name']),
-                    'barcode' => $p['barcode'],
-                    'description' => $p['description'],
-                    'price' => $p['price'],
-                    'cost_price' => $p['cost'],
-                    'ojol_price' => $p['ojol_price'],
-                    'ojol_discount' => $p['ojol_discount'],
-                    'wholesale_price' => $p['wholesale_price'],
-                    'wholesale_discount' => $p['wholesale_discount'],
-                    'brand_name' => $p['brand'],
-                    'image' => $p['image'],
+                    'barcode' => $p['barcode'] ?? null,
+                    'description' => $p['description'] ?? null,
+                    'price' => $p['price'] ?? 0,
+                    'cost_price' => $p['cost'] ?? 0,
+                    'ojol_price' => $p['ojol_price'] ?? 0,
+                    'ojol_discount' => $p['ojol_discount'] ?? 0,
+                    'wholesale_price' => $p['wholesale_price'] ?? 0,
+                    'wholesale_discount' => $p['wholesale_discount'] ?? 0,
+                    'brand_name' => $p['brand'] ?? null,
+                    'image' => $p['image'] ?? null,
                     'stock_type' => 'trackable',
                     'is_active' => true,
                     'minimum_stock' => 10,
                     'maximum_stock' => 200,
                     'reorder_quantity' => 50,
                     'safety_stock' => 20,
-                    'tax_rate' => 10,
-                    'service_charge_rate' => 0,
+                    'tax_rate' => 11,
+                    'service_charge_rate' => 10,
                 ]
             );
             $products[] = $product;

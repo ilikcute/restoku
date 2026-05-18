@@ -14,8 +14,8 @@ class TenantSeeder extends Seeder
     {
         // Buat Tenant Demo
         $tenant = Tenant::firstOrCreate(
-            ['slug' => 'restoku-pos-demo'],
-            ['name' => 'Restoku POS Demo']
+            ['slug' => 'tokoredjeki'],
+            ['name' => 'Toko Redjeki'],
         );
 
         // Setup Role & Permission terlebih dahulu
@@ -23,7 +23,7 @@ class TenantSeeder extends Seeder
 
         // ==================== USER DEFAULT ====================
         $admin = User::firstOrCreate(
-            ['email' => 'admin@restoku.id'],
+            ['email' => 'admin@tokoredjeki.id'],
             [
                 'tenant_id' => $tenant->id,
                 'name'      => 'Budi Santoso',
@@ -35,7 +35,7 @@ class TenantSeeder extends Seeder
         $admin->assignRole('admin');
 
         $manager = User::firstOrCreate(
-            ['email' => 'manager@restoku.id'],
+            ['email' => 'manager@tokoredjeki.id'],
             [
                 'tenant_id' => $tenant->id,
                 'name'      => 'Dewi Lestari',
@@ -47,7 +47,7 @@ class TenantSeeder extends Seeder
         $manager->assignRole('manager');
 
         $cashier = User::firstOrCreate(
-            ['email' => 'cashier@restoku.id'],
+            ['email' => 'kasir@tokoredjeki.id'],
             [
                 'tenant_id' => $tenant->id,
                 'name'      => 'Agus Setiawan',

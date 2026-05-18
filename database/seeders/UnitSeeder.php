@@ -10,7 +10,7 @@ class UnitSeeder extends Seeder
 {
     public function run(): void
     {
-        $tenant = Tenant::where('slug', 'restoku-pos-demo')->first();
+        $tenant = Tenant::where('slug', 'tokoredjeki')->first();
         if (!$tenant) {
             $tenant = Tenant::first();
         }

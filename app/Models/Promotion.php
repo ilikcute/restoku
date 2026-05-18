@@ -45,7 +45,7 @@ class Promotion extends Model
      */
     public function products()
     {
-        return $this->belongsToMany(Product::class, 'promotion_product');
+        return $this->belongsToMany(Product::class, 'promotion_products');
     }
 
     /**
@@ -53,7 +53,7 @@ class Promotion extends Model
      */
     public function categories()
     {
-        return $this->belongsToMany(Category::class, 'promotion_category');
+        return $this->belongsToMany(Category::class, 'promotion_categories');
     }
 
     public function orders()

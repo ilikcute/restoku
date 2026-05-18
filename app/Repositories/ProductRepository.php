@@ -24,7 +24,7 @@ class ProductRepository implements ProductRepositoryInterface
             $query->where('category_id', $categoryId);
         }
 
-        $query->latest();
+        $query->orderBy('code', 'asc');
 
         if ($perPage) {
             return $query->paginate($perPage);

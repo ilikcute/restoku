@@ -18,7 +18,7 @@ class CategoryFactory extends Factory
      */
     public function definition(): array
     {
-        $name = $this->faker->words(2, true);
+        $name = $this->faker->randomElement(['FOOD', 'CIGARET', 'BEVERAGES']);
         return [
             'tenant_id' => Tenant::factory(),
             'name' => $name,

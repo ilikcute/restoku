@@ -17,7 +17,8 @@ class ProductController extends BaseApiController
 {
     public function __construct(
         protected ImageService $imageService,
-        protected ProductRepositoryInterface $productRepository
+        protected ProductRepositoryInterface $productRepository,
+        protected \App\Services\ProductExportService $exportService
     ) {}
 
     public function index(Request $request)
@@ -112,5 +113,36 @@ class ProductController extends BaseApiController
         $nextCode = $this->productRepository->getNextCode($request->user()->tenant_id);
 
         return $this->successResponse(['next_code' => $nextCode]);
+    }
+
+    public function export(Request $request)
+    {
+        $writer = $this->exportService->export($request->user()->tenant_id);
+        
+        return response()->streamDownload(function() use ($writer) {
+            $writer->save('php://output');
+        }, 'products_export_' . date('Y-m-d') . '.xlsx');
+    }
+
+    public function downloadTemplate()
+    {
+        $writer = $this->exportService->downloadTemplate();
+        
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, 'template_import_produk.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
+    public function import(Request $request, \App\Services\ProductImportService $importService)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv,txt|max:2048',
+        ]);
+
+        $result = $importService->import($request->file('file'), $request->user()->tenant_id);
+
+        return $this->successResponse($result, 'Import process completed');
     }
 }

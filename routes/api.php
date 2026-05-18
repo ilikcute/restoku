@@ -74,6 +74,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             ->middleware('permission:view-units');
         Route::get('/products/next-code', [ProductController::class, 'getNextCode'])
             ->middleware('permission:view-products');
+        Route::get('/products/template', [ProductController::class, 'downloadTemplate'])
+            ->middleware('permission:view-products');
+        Route::get('/products/export', [ProductController::class, 'export'])
+            ->middleware('permission:view-products');
+        Route::post('/products/import', [ProductController::class, 'import'])
+            ->middleware('permission:create-products');
         Route::apiResource('products', ProductController::class)
             ->middleware('permission:view-products');
         Route::apiResource('suppliers', SupplierController::class)
@@ -175,5 +181,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             // DPKAD Sync
             Route::post('/sync-dpkad', [DpkadSyncController::class, 'sync']);
         });
+        // Database Backup & Restore
+        Route::get('/database/export', [\App\Http\Controllers\Api\DatabaseController::class, 'export'])
+            ->middleware('permission:manage-tenant-settings');
+        Route::post('/database/import', [\App\Http\Controllers\Api\DatabaseController::class, 'import'])
+            ->middleware('permission:manage-tenant-settings');
     });
 });
