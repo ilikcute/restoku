@@ -1,87 +1,168 @@
 <template>
   <aside :class="[
-    'fixed inset-y-0 left-0 z-50 flex flex-col transform bg-white shadow-xl lg:static lg:shadow-none lg:border-r lg:border-slate-200 transition-all duration-300',
-    modelValue ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+    'flex flex-col bg-white rounded-2xl shadow-sm border border-slate-100 transition-all duration-300 shrink-0 h-full overflow-hidden',
+    'hidden lg:flex',
     isCollapsed ? 'w-20' : 'w-64'
   ]">
     <!-- Logo Section -->
-    <div class="flex h-20 shrink-0 items-center justify-between px-4 pt-4">
+    <div class="flex h-16 shrink-0 items-center justify-between px-4 border-b border-slate-100">
       <div v-if="!isCollapsed" class="flex items-center gap-3 overflow-hidden">
-        <img :src="tenant.logo_url || '/images/logo-restoku.png'" alt="Restoku"
-          class="h-10 w-10 object-contain rounded-lg">
-        <div class="flex flex-col">
-          <span class="text-lg font-extrabold text-slate-900 tracking-tight leading-tight">{{ tenant.name || 'Restoku'
-            }}</span>
-          <span class="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Dashboard</span>
+        <div class="w-9 h-9 rounded-xl bg-orange-500 flex items-center justify-center shrink-0 shadow-sm">
+          <img
+            v-if="tenant.logo_url"
+            :src="tenant.logo_url"
+            alt="Logo"
+            class="w-7 h-7 object-contain rounded-lg"
+          />
+          <span v-else class="text-white font-black text-sm leading-none">
+            {{ (tenant.name || 'R').charAt(0).toUpperCase() }}
+          </span>
         </div>
+        <span class="text-base font-extrabold text-slate-800 tracking-tight leading-tight truncate">
+          {{ tenant.name || 'Restoku' }}
+        </span>
       </div>
-      <button @click="toggleSidebar" class="p-2 rounded-xl hover:bg-slate-100 text-slate-500 transition-colors mx-auto">
-        <i :class="['pi', isCollapsed ? 'pi-align-left' : 'pi-bars', 'text-xl']"></i>
+      <div v-else class="w-9 h-9 rounded-xl bg-orange-500 flex items-center justify-center mx-auto shadow-sm">
+        <span class="text-white font-black text-sm leading-none">
+          {{ (tenant.name || 'R').charAt(0).toUpperCase() }}
+        </span>
+      </div>
+      <button
+        v-if="!isCollapsed"
+        @click="toggleSidebar"
+        class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors shrink-0"
+      >
+        <i class="pi pi-bars text-base"></i>
       </button>
     </div>
 
     <!-- Navigation Section -->
-    <nav class="flex-1 space-y-2 overflow-y-auto px-4 py-6 mt-4 pb-24">
-      <div v-for="group in visibleGroups" :key="group.label" class="space-y-1">
+    <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-0.5">
+      <div v-for="group in visibleGroups" :key="group.label">
 
-        <!-- Group Header (Expandable) -->
-        <button v-if="group.label !== 'common.dashboard'" @click="toggleGroup(group.label)" :class="[
-          'w-full flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200',
-          isGroupOpen(group.label) ? 'text-slate-900 bg-slate-50' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50'
-        ]">
-          <div class="flex items-center gap-3 overflow-hidden">
-            <i :class="[group.icon || 'pi pi-folder', 'text-lg']"></i>
-            <span v-if="!isCollapsed" class="whitespace-nowrap uppercase tracking-wider text-[11px]">{{ $t(group.label)
-              }}</span>
+        <!-- Section Label (for non-dashboard groups) -->
+        <p
+          v-if="group.label !== 'common.dashboard' && !isCollapsed"
+          class="px-3 pt-4 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400"
+        >
+          {{ getSectionLabel(group.label) }}
+        </p>
+        <div v-else-if="group.label !== 'common.dashboard' && isCollapsed" class="pt-3 pb-1 flex justify-center">
+          <div class="h-px w-8 bg-slate-200"></div>
+        </div>
+
+        <!-- Dashboard Direct Link -->
+        <router-link
+          v-if="group.label === 'common.dashboard'"
+          to="/dashboard"
+          :class="[
+            'flex items-center gap-3 rounded-xl py-2.5 text-sm font-semibold transition-all duration-200',
+            isCollapsed ? 'justify-center px-0 mx-auto w-10 h-10' : 'px-3',
+            route.path === '/dashboard'
+              ? 'bg-orange-500 text-white shadow-sm'
+              : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+          ]"
+          @click="$emit('update:modelValue', false)"
+        >
+          <i class="pi pi-layout text-base shrink-0" />
+          <span v-if="!isCollapsed" class="whitespace-nowrap">{{ $t('common.overview') }}</span>
+
+          <!-- Tooltip collapsed -->
+          <div v-if="isCollapsed" class="absolute left-full ml-3 px-2.5 py-1.5 bg-slate-800 text-white text-xs font-semibold rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 pointer-events-none">
+            {{ $t('common.overview') }}
           </div>
-          <i v-if="!isCollapsed"
-            :class="['pi pi-chevron-down text-[10px] transition-transform duration-300', isGroupOpen(group.label) ? 'rotate-180' : '']"></i>
-        </button>
-
-        <!-- Direct Link (for Dashboard) -->
-        <router-link v-else to="/dashboard" :class="[
-          'flex items-center gap-4 rounded-xl py-3 px-4 text-sm font-semibold transition-all duration-200 group',
-          route.path === '/dashboard' ? 'bg-emerald-50 text-emerald-600 shadow-sm' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-        ]">
-          <i class="pi pi-home text-lg" />
-          <span v-if="!isCollapsed">{{ $t('common.overview') }}</span>
         </router-link>
 
-        <!-- Submenu Items -->
-        <div v-if="group.label === 'common.dashboard' || isGroupOpen(group.label)"
-          :class="['space-y-1 transition-all duration-300 overflow-hidden', group.label !== 'common.dashboard' && !isCollapsed ? 'pl-4 border-l-2 border-slate-100 ml-6 mt-1' : '']">
-          <template v-if="group.label !== 'common.dashboard'">
-            <component :is="item.external ? 'a' : 'router-link'" v-for="item in group.items" :key="item.to"
-              :to="item.external ? undefined : item.to" :href="item.external ? item.to : undefined"
-              :target="item.external ? '_blank' : undefined" :class="[
-                'flex items-center gap-4 rounded-xl py-2.5 text-sm font-medium transition-all duration-200 group relative',
-                isCollapsed ? 'justify-center px-0' : 'px-4',
-                !item.external && (route.path === item.to || route.path.startsWith(item.to + '/'))
-                  ? 'text-emerald-600 font-bold'
-                  : 'text-slate-500 hover:text-slate-900'
-              ]" @click="item.external ? null : $emit('update:modelValue', false)">
-              <i v-if="isCollapsed"
-                :class="[item.icon, 'text-lg transition-transform duration-200 group-hover:scale-110']" />
-              <span v-if="!isCollapsed" class="whitespace-nowrap">{{ $t(item.label) }}</span>
+        <!-- Group Toggle Button (for non-dashboard groups) -->
+        <button
+          v-if="group.label !== 'common.dashboard'"
+          @click="toggleGroup(group.label)"
+          :class="[
+            'w-full flex items-center gap-3 rounded-xl py-2.5 text-sm font-semibold transition-all duration-200',
+            isCollapsed ? 'justify-center px-0' : 'px-3 justify-between',
+            isGroupOpen(group.label) ? 'text-slate-800' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50'
+          ]"
+        >
+          <div class="flex items-center gap-3">
+            <i :class="[group.icon || 'pi pi-folder', 'text-base shrink-0']"></i>
+            <span v-if="!isCollapsed" class="whitespace-nowrap">{{ $t(group.label) }}</span>
+          </div>
+          <i
+            v-if="!isCollapsed"
+            :class="['pi pi-chevron-down text-[10px] transition-transform duration-300', isGroupOpen(group.label) ? 'rotate-180' : '']"
+          ></i>
+        </button>
 
-              <!-- Tooltip for collapsed state -->
-              <div v-if="isCollapsed"
-                class="absolute left-full ml-4 px-3 py-1.5 bg-slate-800 text-white text-xs font-bold rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 shadow-lg border border-slate-700 pointer-events-none">
-                {{ $t(item.label) }}
-              </div>
-            </component>
-          </template>
+        <!-- Submenu Items -->
+        <div
+          v-if="group.label !== 'common.dashboard' && isGroupOpen(group.label)"
+          :class="['space-y-0.5 mt-0.5', !isCollapsed ? 'pl-3' : '']"
+        >
+          <component
+            :is="item.external ? 'a' : 'router-link'"
+            v-for="item in group.items"
+            :key="item.to"
+            :to="item.external ? undefined : item.to"
+            :href="item.external ? item.to : undefined"
+            :target="item.external ? '_blank' : undefined"
+            :class="[
+              'flex items-center gap-3 rounded-xl py-2.5 text-sm font-medium transition-all duration-200 group relative',
+              isCollapsed ? 'justify-center px-0 w-10 h-10 mx-auto' : 'px-3',
+              !item.external && (route.path === item.to || route.path.startsWith(item.to + '/'))
+                ? 'bg-orange-500 text-white shadow-sm'
+                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+            ]"
+            @click="item.external ? null : $emit('update:modelValue', false)"
+          >
+            <i :class="[item.icon, 'text-base shrink-0']" />
+            <span v-if="!isCollapsed" class="whitespace-nowrap">{{ $t(item.label) }}</span>
+
+            <!-- Tooltip for collapsed state -->
+            <div
+              v-if="isCollapsed"
+              class="absolute left-full ml-3 px-2.5 py-1.5 bg-slate-800 text-white text-xs font-semibold rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 pointer-events-none"
+            >
+              {{ $t(item.label) }}
+            </div>
+          </component>
         </div>
       </div>
     </nav>
 
-    <!-- Footer Section -->
-    <div class="mt-auto p-4 text-xs text-slate-400 border-t border-slate-100 flex justify-center" v-if="isCollapsed">
-      <i class="pi pi-info-circle text-lg"></i>
-    </div>
-    <div class="mt-auto p-6 text-xs text-slate-400 border-t border-slate-100" v-else>
-      <p class="font-semibold text-slate-500 mb-1">Restoku POS v2.0</p>
-      <p>© 2026 All Rights Reserved</p>
+    <!-- Footer: User Card -->
+    <div class="shrink-0 border-t border-slate-100 p-3">
+      <div
+        v-if="!isCollapsed"
+        class="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
+      >
+        <img
+          :src="authStore.user?.attributes?.avatar_url || `https://ui-avatars.com/api/?name=${authStore.user?.attributes?.name || 'Admin'}&background=f97316&color=fff&size=64`"
+          alt="User"
+          class="w-9 h-9 rounded-full shrink-0 border-2 border-orange-100"
+        />
+        <div class="flex-1 overflow-hidden">
+          <p class="text-sm font-semibold text-slate-800 truncate leading-tight">
+            {{ authStore.user?.attributes?.name || 'Admin' }}
+          </p>
+          <p class="text-[11px] text-slate-400 capitalize leading-tight">
+            {{ authStore.user?.attributes?.role || 'Administrator' }}
+          </p>
+        </div>
+        <button
+          @click="toggleSidebar"
+          class="p-1 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors"
+        >
+          <i class="pi pi-ellipsis-v text-sm"></i>
+        </button>
+      </div>
+      <div v-else class="flex justify-center">
+        <img
+          :src="authStore.user?.attributes?.avatar_url || `https://ui-avatars.com/api/?name=${authStore.user?.attributes?.name || 'Admin'}&background=f97316&color=fff&size=64`"
+          alt="User"
+          class="w-9 h-9 rounded-full border-2 border-orange-100 cursor-pointer"
+          @click="toggleSidebar"
+        />
+      </div>
     </div>
   </aside>
 </template>
@@ -109,7 +190,7 @@ const openGroups = ref(new Set());
 const toggleSidebar = () => {
   isCollapsed.value = !isCollapsed.value;
   if (isCollapsed.value) {
-    openGroups.value.clear(); // Close all when collapsed
+    openGroups.value.clear();
   } else {
     autoExpandActiveGroup();
   }
@@ -117,22 +198,33 @@ const toggleSidebar = () => {
 
 const toggleGroup = (label) => {
   if (isCollapsed.value) {
-    isCollapsed.value = false; // Auto expand sidebar if group clicked
+    isCollapsed.value = false;
   }
 
   if (openGroups.value.has(label)) {
     openGroups.value.delete(label);
   } else {
-    // Optional: close other groups (Accordion style)
-    // openGroups.value.clear();
     openGroups.value.add(label);
   }
 };
 
 const isGroupOpen = (label) => openGroups.value.has(label);
 
+// Section label mapping for display
+const sectionLabelMap = {
+  'common.master_data': 'Master',
+  'common.inventory': 'Inventory',
+  'common.sales': 'Sales',
+  'common.purchasing': 'Purchasing',
+  'common.finance': 'Finance',
+  'common.reports': 'Reports',
+  'common.settings': 'Settings',
+};
+
+const getSectionLabel = (label) => sectionLabelMap[label] || label;
+
 const menuGroups = [
-  { label: 'common.dashboard', icon: 'pi pi-home', permission: 'view-dashboard', items: [{ to: '/dashboard', icon: 'pi pi-home', label: 'common.overview' }] },
+  { label: 'common.dashboard', icon: 'pi pi-layout', permission: 'view-dashboard', items: [{ to: '/dashboard', icon: 'pi pi-layout', label: 'common.overview' }] },
   {
     label: 'common.master_data', icon: 'pi pi-database',
     permission: 'view-master-data',
@@ -243,3 +335,13 @@ watch(() => route.path, () => {
   }
 });
 </script>
+
+<style scoped>
+nav::-webkit-scrollbar {
+  display: none;
+}
+nav {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+</style>
