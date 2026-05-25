@@ -6,7 +6,7 @@
         <img :src="getImageUrl(product.image)" class="w-48 h-48 object-cover rounded-lg shadow" />
       </div>
       <div class="flex justify-center" v-else>
-        <div class="w-48 h-48 bg-gray-200 rounded-lg shadow flex items-center justify-center text-gray-400">
+        <div class="w-48 h-48 bg-slate-200 rounded-lg shadow flex items-center justify-center text-slate-400">
           <i class="pi pi-image text-4xl"></i>
         </div>
       </div>

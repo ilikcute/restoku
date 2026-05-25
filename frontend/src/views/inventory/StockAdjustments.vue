@@ -14,7 +14,7 @@
         <div class="space-y-6">
             <!-- Data Table -->
             <div
-                class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+                class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
             >
                 <DataTable
                     :value="rows"
@@ -64,7 +64,7 @@
                             >
                                 Rp {{ formatNumber(data.total_loss_amount) }}
                             </span>
-                            <span v-else class="text-gray-400">-</span>
+                            <span v-else class="text-slate-400">-</span>
                         </template>
                     </Column>
                     <Column header="PIC" field="user.name" />
@@ -186,7 +186,7 @@
                         <Column
                             header="System"
                             field="recorded_stock"
-                            class="text-center text-gray-400"
+                            class="text-center text-slate-400"
                         />
                         <Column header="Fisik" class="text-center font-bold">
                             <template #body="{ data }">
@@ -207,7 +207,7 @@
                                             ? 'text-red-600 font-bold'
                                             : calculateDiff(data) > 0
                                               ? 'text-green-600 font-bold'
-                                              : 'text-gray-400'
+                                              : 'text-slate-400'
                                     "
                                 >
                                     {{ calculateDiff(data) > 0 ? "+" : ""
@@ -333,7 +333,7 @@
             <div v-if="selectedRow" class="space-y-4">
                 <div class="flex justify-between border-b pb-3">
                     <div>
-                        <p class="text-xs text-gray-500 uppercase font-bold">
+                        <p class="text-xs text-slate-500 uppercase font-bold">
                             Nomor Bukti
                         </p>
                         <p class="text-xl font-black text-primary-600">
@@ -341,7 +341,7 @@
                         </p>
                     </div>
                     <div class="text-right">
-                        <p class="text-xs text-gray-500 uppercase font-bold">
+                        <p class="text-xs text-slate-500 uppercase font-bold">
                             Tanggal
                         </p>
                         <p class="text-lg font-bold">
@@ -392,9 +392,9 @@
                 </DataTable>
 
                 <div
-                    class="bg-gray-50 p-4 rounded-xl flex justify-between items-center"
+                    class="bg-slate-50 p-4 rounded-xl flex justify-between items-center"
                 >
-                    <span class="font-bold text-gray-600"
+                    <span class="font-bold text-slate-600"
                         >Total Kerugian (Inventory Loss)</span
                     >
                     <span class="text-xl font-black text-red-600"

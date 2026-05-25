@@ -1,21 +1,18 @@
 <template>
-  <AppPage :title="$t('sidebar.products')" :subtitle="$t('product.manage_desc', 'Kelola daftar produk, harga, dan stok inventaris Anda di sini.')" :breadcrumb="[$t('common.master_data'), $t('sidebar.products')]">
+  <AppPage :title="$t('sidebar.products')" :breadcrumb="[$t('common.master_data'), $t('sidebar.products')]">
     <template #actions>
       <div class="flex gap-2">
-        <Button label="Template" icon="pi pi-download" severity="info" text
-          class="!rounded-2xl !px-4" 
+        <Button label="Template" icon="pi pi-download" severity="info" text class="!rounded-2xl !px-4"
           @click="downloadTemplate" />
-        <Button label="Export" icon="pi pi-file-excel" severity="success" text
-          class="!rounded-2xl !px-4" 
+        <Button label="Export" icon="pi pi-file-excel" severity="success" text class="!rounded-2xl !px-4"
           @click="exportProducts" />
-        <Button label="Import" icon="pi pi-upload" severity="secondary" 
-          class="!rounded-2xl !px-6 !bg-white !border-slate-200 !text-slate-600 shadow-sm" 
+        <Button label="Import" icon="pi pi-upload" severity="secondary"
+          class="!rounded-2xl !px-6 !bg-white !border-slate-200 !text-slate-600 shadow-sm"
           @click="$refs.fileInput.click()" :loading="importing" />
         <input type="file" ref="fileInput" class="hidden" accept=".xlsx,.xls,.csv" @change="handleImport" />
-        
-        <Button :label="`${$t('common.add')} ${$t('sidebar.products')}`" icon="pi pi-plus" 
-          class="!rounded-2xl !px-6 !bg-emerald-600 !border-none shadow-lg shadow-emerald-200/50" 
-          @click="openCreate" />
+
+        <Button :label="`${$t('common.add')} ${$t('sidebar.products')}`" icon="pi pi-plus"
+          class="!rounded-2xl !px-6 !bg-emerald-600 !border-none shadow-lg shadow-emerald-200/50" @click="openCreate" />
       </div>
     </template>
 
@@ -26,54 +23,60 @@
         <Select v-model="filters.unit_id" :options="units" optionLabel="name" optionValue="id"
           :placeholder="$t('common.unit')" showClear class="!rounded-xl" />
         <div class="md:col-span-2">
-          <InputText v-model="filters.q" :placeholder="`${$t('common.search_placeholder')} ${$t('sidebar.products')}...`" class="w-full !rounded-xl" />
+          <InputText v-model="filters.q"
+            :placeholder="`${$t('common.search_placeholder')} ${$t('sidebar.products')}...`"
+            class="w-full !rounded-xl" />
         </div>
       </div>
 
       <DataTable :value="products" lazy paginator :rows="rowsPerPage" v-model:first="first" :totalRecords="totalRecords"
-        :loading="loading" @page="onPage" class="p-datatable-modern">
-      <Column header="No" class="w-16 text-center">
-        <template #body="slotProps">
-          {{ slotProps.index + first + 1 }}
-        </template>
-      </Column>
-      <Column :header="$t('common.image')">
-        <template #body="{ data }">
-          <img v-if="data.image" :src="getImageUrl(data.image)" class="w-10 h-10 object-cover rounded shadow-sm" />
-          <div v-else class="w-10 h-10 bg-gray-100 rounded shadow-sm flex items-center justify-center text-gray-400">
-            <i class="pi pi-image text-lg"></i>
-          </div>
-        </template>
-      </Column>
-      <Column field="name" :header="$t('common.name')" />
-      <Column field="code" :header="$t('product.code')" />
-      <Column field="category.name" :header="$t('common.category')">
-        <template #body="{ data }">{{ data.category?.name }}</template>
-      </Column>
-      <Column field="unit.short_name" :header="$t('common.unit')">
-        <template #body="{ data }">{{ data.unit?.short_name }}</template>
-      </Column>
-      <Column field="price" :header="$t('common.price')">
-        <template #body="{ data }">Rp {{ money(data.price) }}</template>
-      </Column>
-      <Column :header="$t('common.stock')">
-        <template #body="{ data }">
-          <Tag :value="data.stock?.current_stock ?? 0" :severity="stockSeverity(data)" />
-        </template>
-      </Column>
-      <Column :header="$t('common.actions')">
-        <template #body="{ data }">
-          <Button icon="pi pi-eye" text rounded severity="info" @click="openShow(data)" />
-          <Button icon="pi pi-pencil" text rounded @click="openEdit(data)" />
-          <Button icon="pi pi-trash" text rounded severity="danger" @click="remove(data)" />
-        </template>
-      </Column>
-    </DataTable>
+        :loading="loading" @page="onPage" class="custom-table" :pt="{
+          wrapper: { class: 'border-none' }
+        }">
+        <Column header="No" class="w-16 text-center">
+          <template #body="slotProps">
+            {{ slotProps.index + first + 1 }}
+          </template>
+        </Column>
+        <Column :header="$t('common.image')">
+          <template #body="{ data }">
+            <img v-if="data.image" :src="getImageUrl(data.image)" class="w-10 h-10 object-cover rounded-full shadow-sm" />
+            <div v-else class="w-10 h-10 bg-slate-50 border border-slate-100 rounded-full shadow-sm flex items-center justify-center text-slate-400">
+              <i class="pi pi-image text-lg"></i>
+            </div>
+          </template>
+        </Column>
+        <Column field="name" :header="$t('common.name')" />
+        <Column field="code" :header="$t('product.code')" />
+        <Column field="category.name" :header="$t('common.category')">
+          <template #body="{ data }">{{ data.category?.name }}</template>
+        </Column>
+        <Column field="unit.short_name" :header="$t('common.unit')">
+          <template #body="{ data }">{{ data.unit?.short_name }}</template>
+        </Column>
+        <Column field="price" :header="$t('common.price')">
+          <template #body="{ data }">Rp {{ money(data.price) }}</template>
+        </Column>
+        <Column :header="$t('common.stock')">
+          <template #body="{ data }">
+            <Tag :value="data.stock?.current_stock ?? 0" :severity="stockSeverity(data)" />
+          </template>
+        </Column>
+        <Column :header="$t('common.actions')">
+          <template #body="{ data }">
+            <div class="flex items-center gap-1">
+              <Button icon="pi pi-eye" outlined class="!w-8 !h-8 !p-0 !text-slate-500 !border-slate-200 hover:!bg-slate-50" @click="openShow(data)" />
+              <Button icon="pi pi-pencil" outlined class="!w-8 !h-8 !p-0 !text-slate-500 !border-slate-200 hover:!bg-slate-50" @click="openEdit(data)" />
+              <Button icon="pi pi-trash" outlined class="!w-8 !h-8 !p-0 !text-red-500 !border-slate-200 hover:!bg-red-50" @click="remove(data)" />
+            </div>
+          </template>
+        </Column>
+      </DataTable>
 
-    <ProductFormModal v-model:visible="dialogOpen" :title="dialogTitle" :product="selectedProductForEdit"
-      :categories="categories" :suppliers="suppliers" :units="units" @saved="loadProducts" />
+      <ProductFormModal v-model:visible="dialogOpen" :title="dialogTitle" :product="selectedProductForEdit"
+        :categories="categories" :suppliers="suppliers" :units="units" @saved="loadProducts" />
 
-    <ProductDetailModal v-model:visible="showDialogOpen" :product="selectedProduct" />
+      <ProductDetailModal v-model:visible="showDialogOpen" :product="selectedProduct" />
     </div>
   </AppPage>
 </template>
@@ -185,7 +188,7 @@ async function handleImport(event) {
   try {
     const response = await productApi.import(formData);
     const result = response.data.data;
-    
+
     toast.add({
       severity: 'success',
       summary: 'Import Berhasil',
@@ -307,3 +310,64 @@ function remove(item) {
 // Inisialisasi halaman
 initPage();
 </script>
+
+<style scoped>
+:deep(.custom-table .p-datatable-thead > tr > th) {
+  background-color: transparent !important;
+  color: #64748b !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #f1f5f9 !important;
+  border-top: none !important;
+  padding: 1rem 0.5rem !important;
+}
+
+:deep(.custom-table .p-datatable-tbody > tr > td) {
+  border-bottom: 1px solid #f1f5f9 !important;
+  padding: 1rem 0.5rem !important;
+  color: #334155 !important;
+  font-size: 0.875rem !important;
+  font-weight: 500;
+}
+
+:deep(.custom-table .p-datatable-tbody > tr:hover) {
+  background-color: #f8fafc !important;
+}
+
+:deep(.custom-table .p-paginator) {
+  background-color: transparent !important;
+  border: none !important;
+  padding-top: 1.5rem !important;
+  justify-content: center !important;
+}
+
+:deep(.custom-table .p-paginator .p-paginator-pages .p-paginator-page.p-highlight) {
+  background-color: #3b82f6 !important;
+  color: white !important;
+  border-radius: 0.5rem !important;
+  border: none !important;
+}
+
+:deep(.custom-table .p-paginator .p-paginator-pages .p-paginator-page) {
+  border-radius: 0.5rem !important;
+  border: 1px solid #e2e8f0 !important;
+  margin: 0 0.25rem !important;
+  color: #64748b !important;
+  min-width: 2.5rem !important;
+  height: 2.5rem !important;
+}
+
+:deep(.custom-table .p-paginator .p-paginator-prev),
+:deep(.custom-table .p-paginator .p-paginator-next),
+:deep(.custom-table .p-paginator .p-paginator-first),
+:deep(.custom-table .p-paginator .p-paginator-last) {
+  border-radius: 0.5rem !important;
+  border: 1px solid #e2e8f0 !important;
+  margin: 0 0.25rem !important;
+  color: #64748b !important;
+  min-width: 2.5rem !important;
+  height: 2.5rem !important;
+}
+</style>

@@ -1,15 +1,12 @@
 <template>
-  <AppPage 
-    title="Rekening Kas" 
-    subtitle="Kelola akun bank, kas kecil, dan saldo keuangan operasional Restoku."
-    accent="emerald"
-    :breadcrumb="['Manajemen', 'Rekening']"
-  >
+  <AppPage title="Rekening Kas" :breadcrumb="['Manajemen', 'Rekening']">
     <template #actions>
-      <Button label="Tambah Rekening" icon="pi pi-plus" class="!rounded-2xl !px-6 !bg-emerald-600 !border-none shadow-lg shadow-emerald-200/50" @click="openDialog" />
+      <Button label="Tambah Rekening" icon="pi pi-plus"
+        class="!rounded-2xl !px-6 !bg-emerald-600 !border-none shadow-lg shadow-emerald-200/50" @click="openDialog" />
     </template>
 
-    <DataTable :value="rows" :loading="loading" paginator :rows="20" class="p-datatable-modern" responsiveLayout="scroll">
+    <DataTable :value="rows" :loading="loading" paginator :rows="20" class="p-datatable-modern"
+      responsiveLayout="scroll">
       <Column field="name" :header="$t('common.name')" style="width: 250px">
         <template #body="{ data }">
           <div class="flex items-center gap-3">
@@ -47,14 +44,19 @@
       <Column :exportable="false" style="width: 120px" header="Aksi">
         <template #body="slotProps">
           <div class="flex gap-2">
-            <Button icon="pi pi-pencil" text rounded severity="success" class="hover:bg-emerald-50" @click="editItem(slotProps.data)" v-tooltip.top="'Edit'" />
-            <Button icon="pi pi-trash" text rounded severity="danger" class="hover:bg-rose-50" @click="confirmDelete(slotProps.data)" v-tooltip.top="'Hapus'" />
+            <Button icon="pi pi-pencil" text rounded severity="success" class="hover:bg-emerald-50"
+              @click="editItem(slotProps.data)" v-tooltip.top="'Edit'" />
+            <Button icon="pi pi-trash" text rounded severity="danger" class="hover:bg-rose-50"
+              @click="confirmDelete(slotProps.data)" v-tooltip.top="'Hapus'" />
           </div>
         </template>
       </Column>
     </DataTable>
 
-    <Dialog v-model:visible="dialogOpen" :style="{width: '450px'}" :header="form.id ? 'Edit Rekening' : 'Tambah Rekening Baru'" :modal="true" class="p-fluid !rounded-3xl overflow-hidden shadow-2xl" pt:root:class="!rounded-3xl" pt:header:class="!bg-slate-50 !p-6 !border-b !border-slate-100" pt:content:class="!p-6">
+    <Dialog v-model:visible="dialogOpen" :style="{ width: '450px' }"
+      :header="form.id ? 'Edit Rekening' : 'Tambah Rekening Baru'" :modal="true"
+      class="p-fluid !rounded-3xl overflow-hidden shadow-2xl" pt:root:class="!rounded-3xl"
+      pt:header:class="!bg-slate-50 !p-6 !border-b !border-slate-100" pt:content:class="!p-6">
       <div class="space-y-6">
         <div class="flex items-start gap-4 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
           <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0">
@@ -62,40 +64,54 @@
           </div>
           <div>
             <p class="text-sm font-bold text-emerald-900">Informasi Rekening</p>
-            <p class="text-[11px] text-emerald-700/70 leading-relaxed font-medium">Rekening ini akan digunakan sebagai sumber dana atau penampung pendapatan dalam transaksi keuangan.</p>
+            <p class="text-[11px] text-emerald-700/70 leading-relaxed font-medium">Rekening ini akan digunakan sebagai
+              sumber dana atau penampung pendapatan dalam transaksi keuangan.</p>
           </div>
         </div>
 
         <div class="space-y-4">
           <div class="flex flex-col gap-2">
-            <label for="name" class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Nama Rekening / Kas</label>
-            <InputText id="name" v-model.trim="form.name" required="true" autofocus placeholder="Contoh: Kas Utama, Bank BCA, dll" class="!rounded-xl !bg-slate-50 !border-slate-100 focus:!ring-emerald-500 !p-3" />
+            <label for="name" class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Nama Rekening /
+              Kas</label>
+            <InputText id="name" v-model.trim="form.name" required="true" autofocus
+              placeholder="Contoh: Kas Utama, Bank BCA, dll"
+              class="!rounded-xl !bg-slate-50 !border-slate-100 focus:!ring-emerald-500 !p-3" />
           </div>
 
           <div class="flex flex-col gap-2">
-            <label for="account_number" class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Nomor Rekening (Opsional)</label>
-            <InputText id="account_number" v-model="form.account_number" placeholder="Nomor rekening atau identitas lainnya" class="!rounded-xl !bg-slate-50 !border-slate-100 focus:!ring-emerald-500 !p-3" />
+            <label for="account_number" class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Nomor
+              Rekening (Opsional)</label>
+            <InputText id="account_number" v-model="form.account_number"
+              placeholder="Nomor rekening atau identitas lainnya"
+              class="!rounded-xl !bg-slate-50 !border-slate-100 focus:!ring-emerald-500 !p-3" />
           </div>
 
           <div class="flex flex-col gap-2">
             <label for="balance" class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Saldo</label>
             <div class="relative">
               <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">Rp</span>
-              <InputNumber id="balance" v-model="form.balance" mode="decimal" :minFractionDigits="0" placeholder="0" class="!rounded-xl overflow-hidden !border-slate-100" pt:input:class="!bg-slate-50 !pl-10 !p-3 !font-bold" />
+              <InputNumber id="balance" v-model="form.balance" mode="decimal" :minFractionDigits="0" placeholder="0"
+                class="!rounded-xl overflow-hidden !border-slate-100"
+                pt:input:class="!bg-slate-50 !pl-10 !p-3 !font-bold" />
             </div>
           </div>
 
-          <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 transition-colors" :class="{'bg-emerald-50 border-emerald-100': form.is_active}">
+          <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 transition-colors"
+            :class="{ 'bg-emerald-50 border-emerald-100': form.is_active }">
             <Checkbox id="is_active" v-model="form.is_active" :binary="true" />
-            <label for="is_active" class="text-sm font-bold cursor-pointer" :class="form.is_active ? 'text-emerald-700' : 'text-slate-500'">Status Rekening Aktif</label>
+            <label for="is_active" class="text-sm font-bold cursor-pointer"
+              :class="form.is_active ? 'text-emerald-700' : 'text-slate-500'">Status Rekening Aktif</label>
           </div>
         </div>
       </div>
 
       <template #footer>
         <div class="flex gap-3 p-2">
-          <Button label="Batal" icon="pi pi-times" text class="!rounded-xl !text-slate-400 hover:!bg-slate-100" @click="dialogOpen = false" />
-          <Button label="Simpan Rekening" icon="pi pi-check" :loading="saving" class="!rounded-xl !bg-emerald-600 !border-none !px-8 h-12 font-bold shadow-lg shadow-emerald-100" @click="save" />
+          <Button label="Batal" icon="pi pi-times" text class="!rounded-xl !text-slate-400 hover:!bg-slate-100"
+            @click="dialogOpen = false" />
+          <Button label="Simpan Rekening" icon="pi pi-check" :loading="saving"
+            class="!rounded-xl !bg-emerald-600 !border-none !px-8 h-12 font-bold shadow-lg shadow-emerald-100"
+            @click="save" />
         </div>
       </template>
     </Dialog>
@@ -174,11 +190,11 @@ async function save() {
   saving.value = true;
   try {
     if (form.id) {
-        await financeApi.updateAccount(form.id, form);
-        toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Rekening diperbarui', life: 2000 });
+      await financeApi.updateAccount(form.id, form);
+      toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Rekening diperbarui', life: 2000 });
     } else {
-        await financeApi.createAccount(form);
-        toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Rekening ditambahkan', life: 2000 });
+      await financeApi.createAccount(form);
+      toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Rekening ditambahkan', life: 2000 });
     }
     dialogOpen.value = false;
     load();
@@ -190,15 +206,15 @@ async function save() {
 }
 
 async function confirmDelete(data) {
-    if (confirm(`Apakah Anda yakin ingin menghapus rekening "${data.name}"?`)) {
-        try {
-            await financeApi.deleteAccount(data.id);
-            toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Rekening dihapus', life: 2000 });
-            load();
-        } catch (error) {
-            toast.add({ severity: 'error', summary: 'Gagal', detail: error?.response?.data?.message || 'Gagal menghapus data', life: 3000 });
-        }
+  if (confirm(`Apakah Anda yakin ingin menghapus rekening "${data.name}"?`)) {
+    try {
+      await financeApi.deleteAccount(data.id);
+      toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Rekening dihapus', life: 2000 });
+      load();
+    } catch (error) {
+      toast.add({ severity: 'error', summary: 'Gagal', detail: error?.response?.data?.message || 'Gagal menghapus data', life: 3000 });
     }
+  }
 }
 
 onMounted(() => {

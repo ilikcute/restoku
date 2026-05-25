@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-screen bg-gray-100 font-sans text-slate-800 p-3 gap-3">
+  <div class="flex h-screen bg-slate-50 font-sans text-slate-800 p-2 gap-2">
     <!-- Mobile Overlay -->
     <div v-if="sidebarOpen" class="fixed inset-0 z-40 bg-black/50 lg:hidden" @click="sidebarOpen = false" />
 
@@ -7,7 +7,7 @@
     <AppSidebar v-model="sidebarOpen" />
 
     <!-- Main Area -->
-    <div class="flex flex-1 flex-col gap-3 overflow-hidden min-w-0">
+    <div class="flex flex-1 flex-col gap-2 overflow-hidden min-w-0">
       <!-- Header as Floating Card -->
       <AppHeader @toggle-sidebar="sidebarOpen = !sidebarOpen" />
 
@@ -42,6 +42,7 @@ onMounted(() => {
 main::-webkit-scrollbar {
   display: none;
 }
+
 main {
   scrollbar-width: none;
   -ms-overflow-style: none;

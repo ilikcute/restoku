@@ -3,46 +3,46 @@
     <div class="space-y-6">
       <!-- Summary Cards -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
           <div class="w-12 h-12 bg-primary-50 text-primary-600 rounded-xl flex items-center justify-center">
             <i class="pi pi-box text-2xl"></i>
           </div>
           <div>
-            <p class="text-sm text-gray-500 font-medium">{{ $t('inventory.total_tracked') }}</p>
-            <h3 class="text-2xl font-bold text-gray-800">{{ rows.length }}</h3>
+            <p class="text-sm text-slate-500 font-medium">{{ $t('inventory.total_tracked') }}</p>
+            <h3 class="text-2xl font-bold text-slate-800">{{ rows.length }}</h3>
           </div>
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
           <div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center">
             <i class="pi pi-database text-2xl"></i>
           </div>
           <div>
-            <p class="text-sm text-gray-500 font-medium">{{ $t('inventory.total_accumulation') }}</p>
-            <h3 class="text-2xl font-bold text-gray-800">{{ totalStock }}</h3>
+            <p class="text-sm text-slate-500 font-medium">{{ $t('inventory.total_accumulation') }}</p>
+            <h3 class="text-2xl font-bold text-slate-800">{{ totalStock }}</h3>
           </div>
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
           <div class="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center">
             <i class="pi pi-arrow-down text-2xl"></i>
           </div>
           <div>
-            <p class="text-sm text-gray-500 font-medium">{{ $t('inventory.low_stock_count') }}</p>
-            <h3 class="text-2xl font-bold text-gray-800">{{ lowStockCount }}</h3>
+            <p class="text-sm text-slate-500 font-medium">{{ $t('inventory.low_stock_count') }}</p>
+            <h3 class="text-2xl font-bold text-slate-800">{{ lowStockCount }}</h3>
           </div>
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
           <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center">
             <i class="pi pi-arrow-up text-2xl"></i>
           </div>
           <div>
-            <p class="text-sm text-gray-500 font-medium">{{ $t('inventory.overstock_count') }}</p>
-            <h3 class="text-2xl font-bold text-gray-800">{{ overStockCount }}</h3>
+            <p class="text-sm text-slate-500 font-medium">{{ $t('inventory.overstock_count') }}</p>
+            <h3 class="text-2xl font-bold text-slate-800">{{ overStockCount }}</h3>
           </div>
         </div>
       </div>
 
       <!-- Filters -->
-      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-wrap gap-4 items-center justify-between">
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap gap-4 items-center justify-between">
         <div class="flex flex-wrap gap-3 items-center">
           <div class="p-input-icon-left">
             <i class="pi pi-search" />
@@ -69,7 +69,7 @@
       </div>
 
       <!-- Data Table -->
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <DataTable 
           :value="filteredRows" 
           :loading="loading" 
@@ -82,7 +82,7 @@
           stripedRows
         >
           <template #empty>
-            <div class="text-center py-8 text-gray-400">
+            <div class="text-center py-8 text-slate-400">
               <i class="pi pi-inbox text-4xl mb-2"></i>
               <p>Data stok tidak ditemukan.</p>
             </div>
@@ -98,7 +98,7 @@
           
           <Column :header="$t('common.category')" field="category" sortable>
             <template #body="{ data }">
-              <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold uppercase tracking-wider">
+              <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold uppercase tracking-wider">
                 {{ data.category }}
               </span>
             </template>
@@ -108,14 +108,14 @@
           
           <Column :header="$t('inventory.current')" field="current_stock" sortable class="text-center">
             <template #body="{ data }">
-              <span class="text-lg font-bold" :class="data.is_low_stock ? 'text-red-600' : 'text-gray-800'">
+              <span class="text-lg font-bold" :class="data.is_low_stock ? 'text-red-600' : 'text-slate-800'">
                 {{ data.current_stock }}
               </span>
             </template>
           </Column>
           
-          <Column :header="$t('inventory.minimum')" field="minimum_stock" class="text-center text-gray-400" />
-          <Column :header="$t('inventory.maximum')" field="maximum_stock" class="text-center text-gray-400" />
+          <Column :header="$t('inventory.minimum')" field="minimum_stock" class="text-center text-slate-400" />
+          <Column :header="$t('inventory.maximum')" field="maximum_stock" class="text-center text-slate-400" />
           
           <Column header="Status" class="text-center">
             <template #body="{ data }">

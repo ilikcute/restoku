@@ -15,8 +15,8 @@
 
           <!-- Title -->
           <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">{{ $t('auth.login_title') }}</h1>
-            <p class="text-gray-600 mt-2 text-base leading-relaxed">
+            <h1 class="text-3xl font-bold text-slate-900">{{ $t('auth.login_title') }}</h1>
+            <p class="text-slate-600 mt-2 text-base leading-relaxed">
               {{ $t('auth.login_subtitle') }}
             </p>
           </div>
@@ -25,14 +25,14 @@
             <div class="space-y-5">
               <!-- Email -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ $t('auth.email') }}</label>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ $t('auth.email') }}</label>
                 <InputText v-model="form.email" type="email" placeholder="contoh@email.com" fluid autocomplete="email"
                   :invalid="!!authStore.error" />
               </div>
 
               <!-- Password -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1.5">{{ $t('auth.password') }}</label>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">{{ $t('auth.password') }}</label>
                 <Password v-model="form.password" :placeholder="$t('auth.password_placeholder')" fluid :feedback="false" toggleMask
                   autocomplete="current-password" :invalid="!!authStore.error" />
               </div>
@@ -41,7 +41,7 @@
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
                   <Checkbox v-model="form.remember" inputId="remember" :binary="true" />
-                  <label for="remember" class="text-sm text-gray-600 cursor-pointer">Ingat saya</label>
+                  <label for="remember" class="text-sm text-slate-600 cursor-pointer">Ingat saya</label>
                 </div>
                 <!-- Lupa Password (Optional) -->
                 <!-- <router-link to="/forgot-password" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium transition-colors">
@@ -71,9 +71,9 @@
 
           <!-- Divider -->
           <div class="flex items-center gap-4 my-8">
-            <div class="flex-1 h-px bg-gray-200"></div>
-            <span class="text-gray-400 text-sm font-medium px-3">{{ $t('auth.or') }}</span>
-            <div class="flex-1 h-px bg-gray-200"></div>
+            <div class="flex-1 h-px bg-slate-200"></div>
+            <span class="text-slate-400 text-sm font-medium px-3">{{ $t('auth.or') }}</span>
+            <div class="flex-1 h-px bg-slate-200"></div>
           </div>
 
           <!-- Google Login
@@ -86,7 +86,7 @@
 </Button> -->
 
           <!-- Register Link -->
-          <div class="text-center mt-8 text-gray-600 text-sm">
+          <div class="text-center mt-8 text-slate-600 text-sm">
             {{ $t('auth.no_account') }}
             <router-link to="/register" class="text-emerald-600 font-semibold hover:underline">
               {{ $t('auth.register_here') }}

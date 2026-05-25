@@ -24,10 +24,10 @@
       </Card>
     </div>
 
-    <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
-      <!-- Main Content Left (Chart & Table) -->
-      <div class="xl:col-span-2 space-y-6">
-        <Card class="!bg-white border !border-slate-100 shadow-sm !rounded-3xl">
+    <!-- Middle Section: Chart & Trending Menu side by side -->
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-3 mt-6">
+      <div class="xl:col-span-2">
+        <Card class="!bg-white border !border-slate-100 shadow-sm !rounded-3xl h-full">
           <template #title>
             <div class="flex items-center justify-between text-slate-800 px-2 pt-2">
               <div class="font-bold text-lg">{{ $t('dashboard.sales_revenue') }}</div>
@@ -35,64 +35,15 @@
             </div>
           </template>
           <template #content>
-            <div class="h-80">
+            <div class="h-64">
               <Chart type="bar" :data="chartData" :options="chartOptions" />
-            </div>
-          </template>
-        </Card>
-
-        <Card class="!bg-white border !border-slate-100 shadow-sm !rounded-3xl">
-          <template #title>
-            <div class="flex items-center justify-between text-slate-800 px-2 pt-2">
-              <div class="font-bold text-lg flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-red-500"></span> {{ $t('dashboard.live_order') }}
-              </div>
-              <Button label="Today" icon="pi pi-angle-down" iconPos="right" text
-                class="!text-slate-500 border border-slate-200 !rounded-xl !px-4 !py-2" />
-            </div>
-          </template>
-          <template #content>
-            <div class="pt-2">
-              <!-- Using lowStock data as a placeholder for Live Order table layout -->
-              <DataTable :value="dashboardStore.recentOrders" :loading="dashboardStore.loading"
-                class="p-datatable-sm !border-t !border-slate-100">
-                <Column field="order_number" :header="$t('dashboard.order_id')">
-                  <template #body="{ data }"><span class="font-bold text-slate-700">{{ data.order_number
-                      }}</span></template>
-                </Column>
-                <Column :header="$t('common.status')">
-                  <template #body="{ data }">
-                    <span
-                      :class="['px-3 py-1 text-xs font-bold rounded-lg', data.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-yellow-100 text-yellow-700']">
-                      {{ $t(`common.${data.status}`) }}
-                    </span>
-                  </template>
-                </Column>
-                <Column :header="$t('checkout.customer')">
-                  <template #body="{ data }">
-                    <span class="text-xs font-medium text-slate-600">{{ data.customer_name || $t('dashboard.walking_customer')
-                    }}</span>
-                  </template>
-                </Column>
-                <Column field="total_amount" :header="$t('dashboard.amount')">
-                  <template #body="{ data }"><span class="font-semibold text-slate-700">Rp {{ money(data.total_amount)
-                      }}</span></template>
-                </Column>
-                <Column :header="$t('dashboard.details')">
-                  <template #body="{ data }">
-                    <Button :label="$t('dashboard.details')" text class="!text-blue-600 !p-0"
-                      @click="router.push('/sales/orders/' + data.id)" />
-                  </template>
-                </Column>
-              </DataTable>
             </div>
           </template>
         </Card>
       </div>
 
-      <!-- Right Sidebar (Trending Menu) -->
-      <div class="space-y-6">
-        <Card class="!bg-white border !border-slate-100 shadow-sm !rounded-3xl">
+      <div class="xl:col-span-1">
+        <Card class="!bg-white border !border-slate-100 shadow-sm !rounded-3xl h-full flex flex-col">
           <template #title>
             <div class="flex items-center justify-between text-slate-800 px-2 pt-2">
               <div>
@@ -104,29 +55,24 @@
             </div>
           </template>
           <template #content>
-            <div class="pt-2 overflow-y-auto max-h-[600px] pr-2 custom-scrollbar space-y-4">
+            <div class="pt-2 overflow-y-auto h-64 pr-2 custom-scrollbar">
               <!-- Favorite Menu Items -->
               <div v-if="!dashboardStore.trendingProducts.length" class="text-center py-8 text-slate-400">
                 <i class="pi pi-inbox text-4xl mb-2"></i>
                 <p>{{ $t('pos.empty_cart') }}</p>
               </div>
               <div v-for="(menu, i) in dashboardStore.trendingProducts" :key="i"
-                class="bg-slate-50 rounded-2xl p-3 flex flex-col gap-3">
-                <img :src="menu.image" alt="Menu" class="w-full h-40 object-cover rounded-xl shadow-sm" />
-                <div class="px-1">
+                class="flex items-center gap-4 py-3 border-b border-slate-100 last:border-0">
+                <img :src="menu.image" alt="Menu" class="w-16 h-16 object-cover rounded-xl shadow-sm" />
+                <div class="flex-1">
                   <div class="flex justify-between items-start">
-                    <div>
-                      <h4 class="font-bold text-slate-800">{{ menu.name }}</h4>
-                      <p class="text-xs text-slate-500">{{ menu.category }}</p>
-                    </div>
-                    <i class="pi pi-chart-bar text-slate-300"></i>
+                    <h4 class="font-bold text-slate-800 text-sm">{{ menu.name }}</h4>
+                    <span class="font-bold text-red-500 text-sm whitespace-nowrap ml-2">Rp {{ money(menu.price) }}</span>
                   </div>
-                  <div class="flex items-center justify-between mt-4">
-                    <div class="flex gap-4 text-xs font-semibold text-slate-600">
-                      <span><i class="pi pi-star-fill text-amber-400 mr-1"></i> {{ menu.rating }}</span>
-                      <span><i class="pi pi-shopping-bag text-slate-400 mr-1"></i> {{ menu.orders }} {{ $t('dashboard.sold') }}</span>
-                    </div>
-                    <span class="font-bold text-red-500">Rp {{ money(menu.price) }}</span>
+                  <p class="text-xs text-slate-500 mt-0.5">{{ menu.category }}</p>
+                  <div class="flex items-center gap-4 mt-2 text-xs font-semibold text-slate-600">
+                    <span><i class="pi pi-star-fill text-amber-400 text-[10px] mr-1"></i> {{ menu.rating }}</span>
+                    <span><i class="pi pi-shopping-bag text-slate-400 text-[10px] mr-1"></i> {{ menu.orders }} {{ $t('dashboard.sold') }}</span>
                   </div>
                 </div>
               </div>
@@ -134,6 +80,57 @@
           </template>
         </Card>
       </div>
+    </div>
+
+    <!-- Bottom Section: Live Order Table full width -->
+    <div class="mt-6">
+      <Card class="!bg-white border !border-slate-100 shadow-sm !rounded-3xl">
+        <template #title>
+          <div class="flex items-center justify-between text-slate-800 px-2 pt-2">
+            <div class="font-bold text-lg flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-red-500"></span> {{ $t('dashboard.live_order') }}
+            </div>
+            <Button label="Today" icon="pi pi-angle-down" iconPos="right" text
+              class="!text-slate-500 border border-slate-200 !rounded-xl !px-4 !py-2" />
+          </div>
+        </template>
+        <template #content>
+          <div class="pt-2">
+            <!-- Using lowStock data as a placeholder for Live Order table layout -->
+            <DataTable :value="dashboardStore.recentOrders" :loading="dashboardStore.loading"
+              class="p-datatable-sm !border-t !border-slate-100">
+              <Column field="order_number" :header="$t('dashboard.order_id')">
+                <template #body="{ data }"><span class="font-bold text-slate-700">{{ data.order_number
+                    }}</span></template>
+              </Column>
+              <Column :header="$t('common.status')">
+                <template #body="{ data }">
+                  <span
+                    :class="['px-3 py-1 text-xs font-bold rounded-lg', data.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-yellow-100 text-yellow-700']">
+                    {{ $t(`common.${data.status}`) }}
+                  </span>
+                </template>
+              </Column>
+              <Column :header="$t('checkout.customer')">
+                <template #body="{ data }">
+                  <span class="text-xs font-medium text-slate-600">{{ data.customer_name || $t('dashboard.walking_customer')
+                  }}</span>
+                </template>
+              </Column>
+              <Column field="total_amount" :header="$t('dashboard.amount')">
+                <template #body="{ data }"><span class="font-semibold text-slate-700">Rp {{ money(data.total_amount)
+                    }}</span></template>
+              </Column>
+              <Column :header="$t('dashboard.details')">
+                <template #body="{ data }">
+                  <Button :label="$t('dashboard.details')" text class="!text-blue-600 !p-0"
+                    @click="router.push('/sales/orders/' + data.id)" />
+                </template>
+              </Column>
+            </DataTable>
+          </div>
+        </template>
+      </Card>
     </div>
   </div>
 </template>

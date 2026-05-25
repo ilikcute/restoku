@@ -15,7 +15,7 @@
       </div>
 
       <!-- Alerts Table -->
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <DataTable 
           :value="rows" 
           :loading="loading" 
@@ -26,20 +26,20 @@
           stripedRows
         >
           <template #empty>
-            <div class="text-center py-12 text-gray-400">
+            <div class="text-center py-12 text-slate-400">
               <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i class="pi pi-thumbs-up text-4xl text-green-500"></i>
               </div>
-              <p class="text-lg font-medium text-gray-600">Semua Terkendali!</p>
+              <p class="text-lg font-medium text-slate-600">Semua Terkendali!</p>
               <p>Tidak ada produk yang stoknya berlebih saat ini.</p>
             </div>
           </template>
 
-          <Column :header="$t('common.name')" field="name" sortable class="font-bold text-gray-800" />
+          <Column :header="$t('common.name')" field="name" sortable class="font-bold text-slate-800" />
           
           <Column :header="$t('common.category')" field="category" sortable>
             <template #body="{ data }">
-              <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-bold uppercase">
+              <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-bold uppercase">
                 {{ data.category }}
               </span>
             </template>
@@ -47,7 +47,7 @@
 
           <Column :header="$t('inventory.maximum')" field="maximum_stock" class="text-center">
             <template #body="{ data }">
-              <span class="font-medium text-gray-500">{{ data.maximum_stock }}</span>
+              <span class="font-medium text-slate-500">{{ data.maximum_stock }}</span>
             </template>
           </Column>
 

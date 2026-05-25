@@ -1,0 +1,1 @@
+var e=`/app/images/logo-restoku.png`;export{e as t};

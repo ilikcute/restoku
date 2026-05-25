@@ -13,7 +13,7 @@
         <template #body="{ data }">
           <div class="flex flex-wrap gap-1 max-w-md">
             <Tag v-for="perm in data.permissions" :key="perm" :value="perm" severity="secondary" class="text-[10px]" />
-            <span v-if="!data.permissions.length" class="text-xs text-gray-400 italic">No permissions</span>
+            <span v-if="!data.permissions.length" class="text-xs text-slate-400 italic">No permissions</span>
           </div>
         </template>
       </Column>

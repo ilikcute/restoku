@@ -1,7 +1,7 @@
 {
     "common": {
         "dashboard": "Dashboard",
-        "overview": "Ringkasan",
+        "overview": "Dashboard",
         "master_data": "Data Master",
         "inventory": "Inventaris",
         "sales": "Penjualan",

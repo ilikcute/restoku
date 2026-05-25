@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex flex-col max-w-md mx-auto shadow-xl">
+  <div class="min-h-screen bg-slate-50 flex flex-col max-w-md mx-auto shadow-xl">
     <!-- Header -->
     <header class="bg-primary-600 text-white p-4 sticky top-0 z-10 shadow-md">
       <div class="flex justify-between items-center">
@@ -30,11 +30,11 @@
 
       <!-- Product List -->
       <div class="grid gap-4">
-        <div v-for="product in filteredProducts" :key="product.id" class="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex gap-3">
-          <img :src="product.image_url" class="w-20 h-20 rounded-xl object-cover bg-gray-100" />
+        <div v-for="product in filteredProducts" :key="product.id" class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex gap-3">
+          <img :src="product.image_url" class="w-20 h-20 rounded-xl object-cover bg-slate-100" />
           <div class="flex-1 min-w-0">
-            <h3 class="font-bold text-gray-800 truncate">{{ product.name }}</h3>
-            <p class="text-xs text-gray-500 line-clamp-1 mb-2">{{ product.description }}</p>
+            <h3 class="font-bold text-slate-800 truncate">{{ product.name }}</h3>
+            <p class="text-xs text-slate-500 line-clamp-1 mb-2">{{ product.description }}</p>
             <div class="flex justify-between items-center">
               <span class="font-bold text-primary-600">Rp {{ money(product.price) }}</span>
               <Button icon="pi pi-plus" rounded size="small" @click="addToCart(product)" />
@@ -61,10 +61,10 @@
     <!-- Cart Modal -->
     <Dialog v-model:visible="showCart" header="Pesanan Saya" modal class="w-[90%] max-w-md">
       <div class="space-y-4">
-        <div v-for="item in cart" :key="item.id" class="flex gap-3 items-start pb-4 border-b border-gray-100">
+        <div v-for="item in cart" :key="item.id" class="flex gap-3 items-start pb-4 border-b border-slate-100">
           <div class="flex-1">
             <div class="font-bold">{{ item.name }}</div>
-            <div class="text-sm text-gray-500">Rp {{ money(item.price) }}</div>
+            <div class="text-sm text-slate-500">Rp {{ money(item.price) }}</div>
             <div class="mt-2">
               <InputText v-model="item.notes" class="w-full text-xs p-2" placeholder="Catatan (misal: pedas, tanpa sayur)" />
             </div>
@@ -76,24 +76,24 @@
           </div>
         </div>
 
-        <div class="p-4 bg-gray-50 rounded-xl space-y-2 border border-gray-100">
+        <div class="p-4 bg-slate-50 rounded-xl space-y-2 border border-slate-100">
           <div class="flex justify-between text-sm">
-            <span class="text-gray-600">Subtotal</span>
+            <span class="text-slate-600">Subtotal</span>
             <span>Rp {{ money(cartSubtotal) }}</span>
           </div>
           <div v-if="cartServiceCharge > 0" class="flex justify-between text-sm">
-            <span class="text-gray-600">Service Charge</span>
+            <span class="text-slate-600">Service Charge</span>
             <span>Rp {{ money(cartServiceCharge) }}</span>
           </div>
           <div v-if="cartTax > 0" class="flex justify-between text-sm">
-            <span class="text-gray-600">Pajak (PPN)</span>
+            <span class="text-slate-600">Pajak (PPN)</span>
             <span>Rp {{ money(cartTax) }}</span>
           </div>
           <div v-if="cartRounding > 0" class="flex justify-between text-sm">
-            <span class="text-gray-600">Pembulatan</span>
+            <span class="text-slate-600">Pembulatan</span>
             <span>Rp {{ money(cartRounding) }}</span>
           </div>
-          <div class="flex justify-between font-bold text-primary-600 pt-2 border-t border-gray-200">
+          <div class="flex justify-between font-bold text-primary-600 pt-2 border-t border-slate-200">
             <span>Total Bayar</span>
             <span>Rp {{ money(cartTotal) }}</span>
           </div>
@@ -117,7 +117,7 @@
     <!-- Success Modal with QR -->
     <Dialog v-model:visible="showQR" header="Tunjukkan ke Kasir" modal :closable="false" class="w-[90%] max-w-md">
       <div class="text-center py-6 space-y-6">
-        <p class="text-gray-600">Berikan kode ini ke kasir untuk memproses pesananmu:</p>
+        <p class="text-slate-600">Berikan kode ini ke kasir untuk memproses pesananmu:</p>
         
         <div class="bg-white p-4 rounded-3xl shadow-inner inline-block mx-auto border-2 border-primary-100">
           <!-- QR Code placeholder using external API -->

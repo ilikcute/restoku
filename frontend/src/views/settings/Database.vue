@@ -1,12 +1,9 @@
 <template>
-  <AppPage
-    title="Database Backup & Restore"
-    subtitle="Kelola keamanan data Anda dengan melakukan backup berkala"
-    :breadcrumb="[$t('sidebar.settings'), 'Database']"
-  >
+  <AppPage title="Database Backup & Restore" :breadcrumb="[$t('sidebar.settings'), 'Database']">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <!-- Export Card -->
-      <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center text-center space-y-6 transition-all hover:shadow-md">
+      <div
+        class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center text-center space-y-6 transition-all hover:shadow-md">
         <div class="w-20 h-20 bg-emerald-50 rounded-2xl flex items-center justify-center">
           <i class="pi pi-database text-4xl text-emerald-500"></i>
         </div>
@@ -16,17 +13,14 @@
             Unduh seluruh data master Anda (Produk, Kategori, Supplier, dll) dalam format JSON untuk cadangan.
           </p>
         </div>
-        <Button 
-          label="Unduh Backup Sekarang" 
-          icon="pi pi-download" 
+        <Button label="Unduh Backup Sekarang" icon="pi pi-download"
           class="!rounded-2xl !px-8 !py-4 !bg-emerald-600 !border-none shadow-lg shadow-emerald-200"
-          :loading="exporting"
-          @click="exportDatabase"
-        />
+          :loading="exporting" @click="exportDatabase" />
       </div>
 
       <!-- Import Card -->
-      <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center text-center space-y-6 transition-all hover:shadow-md">
+      <div
+        class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center text-center space-y-6 transition-all hover:shadow-md">
         <div class="w-20 h-20 bg-amber-50 rounded-2xl flex items-center justify-center">
           <i class="pi pi-upload text-4xl text-amber-500"></i>
         </div>
@@ -37,21 +31,10 @@
             <span class="text-rose-500 font-bold">Peringatan:</span> Proses ini akan memperbarui data yang ada.
           </p>
         </div>
-        <input 
-          type="file" 
-          ref="fileInput" 
-          class="hidden" 
-          accept=".json" 
-          @change="handleImport"
-        />
-        <Button 
-          label="Pilih File & Restore" 
-          icon="pi pi-refresh" 
-          severity="warning"
-          class="!rounded-2xl !px-8 !py-4 shadow-lg shadow-amber-200"
-          :loading="importing"
-          @click="$refs.fileInput.click()"
-        />
+        <input type="file" ref="fileInput" class="hidden" accept=".json" @change="handleImport" />
+        <Button label="Pilih File & Restore" icon="pi pi-refresh" severity="warning"
+          class="!rounded-2xl !px-8 !py-4 shadow-lg shadow-amber-200" :loading="importing"
+          @click="$refs.fileInput.click()" />
       </div>
     </div>
 
@@ -61,7 +44,9 @@
       <div class="space-y-1">
         <h4 class="font-bold text-sky-900">Tentang Backup & Restore</h4>
         <p class="text-sky-700 text-sm leading-relaxed">
-          Sistem ini melakukan backup pada data master saja. Data transaksi (penjualan) tidak termasuk dalam file ini untuk menjaga ukuran file tetap ringan. Pastikan Anda melakukan backup secara rutin setelah melakukan banyak perubahan pada data produk atau harga.
+          Sistem ini melakukan backup pada data master saja. Data transaksi (penjualan) tidak termasuk dalam file ini
+          untuk menjaga ukuran file tetap ringan. Pastikan Anda melakukan backup secara rutin setelah melakukan banyak
+          perubahan pada data produk atau harga.
         </p>
       </div>
     </div>
@@ -124,11 +109,11 @@ function handleImport(event) {
         event.target.value = '';
       } catch (error) {
         console.error('Import Error:', error);
-        toast.add({ 
-          severity: 'error', 
-          summary: 'Restore Gagal', 
-          detail: error.response?.data?.message || 'Gagal memproses file backup', 
-          life: 5000 
+        toast.add({
+          severity: 'error',
+          summary: 'Restore Gagal',
+          detail: error.response?.data?.message || 'Gagal memproses file backup',
+          life: 5000
         });
       } finally {
         importing.value = false;

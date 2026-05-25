@@ -25,9 +25,9 @@
       </div>
 
       <!-- Controls -->
-      <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-wrap gap-4 items-center justify-between">
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap gap-4 items-center justify-between">
         <div class="flex items-center gap-3">
-          <span class="text-sm font-medium text-gray-500">{{ $t('inventory.days_of_sales') }}:</span>
+          <span class="text-sm font-medium text-slate-500">{{ $t('inventory.days_of_sales') }}:</span>
           <SelectButton v-model="days" :options="dayOptions" optionLabel="label" optionValue="value" class="custom-select-button" />
         </div>
         <Button 
@@ -41,7 +41,7 @@
       </div>
 
       <!-- Recommendations Table -->
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <DataTable 
           :value="rows" 
           :loading="loading" 
@@ -52,20 +52,20 @@
           stripedRows
         >
           <template #empty>
-            <div class="text-center py-12 text-gray-400">
-              <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div class="text-center py-12 text-slate-400">
+              <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i class="pi pi-check-circle text-4xl text-green-500"></i>
               </div>
-              <p class="text-lg font-medium text-gray-600">Stok Anda dalam kondisi prima!</p>
+              <p class="text-lg font-medium text-slate-600">Stok Anda dalam kondisi prima!</p>
               <p>Tidak ada item yang perlu dipesan kembali saat ini.</p>
             </div>
           </template>
 
-          <Column :header="$t('common.name')" field="name" sortable class="font-bold text-gray-800" />
+          <Column :header="$t('common.name')" field="name" sortable class="font-bold text-slate-800" />
           
           <Column :header="$t('common.category')" field="category" sortable>
             <template #body="{ data }">
-              <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-bold uppercase">
+              <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-bold uppercase">
                 {{ data.category }}
               </span>
             </template>
@@ -74,7 +74,7 @@
           <Column header="Daily Avg" field="daily_avg_sales" class="text-center">
             <template #body="{ data }">
               <span class="font-medium">{{ data.daily_avg_sales }}</span>
-              <span class="text-xs text-gray-400 ml-1">{{ data.unit }}</span>
+              <span class="text-xs text-slate-400 ml-1">{{ data.unit }}</span>
             </template>
           </Column>
 
@@ -89,8 +89,8 @@
           <Column :header="$t('inventory.rop')" field="calculated_rop" class="text-center">
              <template #body="{ data }">
               <div class="flex flex-col items-center">
-                <span class="font-bold text-gray-700">{{ data.calculated_rop }}</span>
-                <span class="text-[10px] text-gray-400 uppercase tracking-tighter">Point to Reorder</span>
+                <span class="font-bold text-slate-700">{{ data.calculated_rop }}</span>
+                <span class="text-[10px] text-slate-400 uppercase tracking-tighter">Point to Reorder</span>
               </div>
             </template>
           </Column>

@@ -1,8 +1,8 @@
 <template>
-    <div class="fixed inset-0 z-[100] bg-gray-50 flex flex-col h-screen overflow-hidden text-gray-800">
+    <div class="fixed inset-0 z-[100] bg-slate-50 flex flex-col h-screen overflow-hidden text-slate-800">
         <!-- Header -->
         <header
-            class="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200 shadow-sm shrink-0">
+            class="flex items-center justify-between px-4 py-3 bg-white border-b border-slate-200 shadow-sm shrink-0">
             <div class="flex items-center gap-4">
                 <Button icon="pi pi-arrow-left" text rounded aria-label="Back to Dashboard"
                     @click="$router.push('/')" />
@@ -44,7 +44,7 @@
         <!-- Main Content -->
         <div class="flex flex-1 overflow-hidden">
             <!-- Left Pane: Products -->
-            <div class="flex flex-col flex-1 min-w-0 p-4 bg-gray-50/50">
+            <div class="flex flex-col flex-1 min-w-0 p-4 bg-slate-50/50">
                 <!-- Search Bar -->
                 <div class="mb-2 shrink-0">
                     <InputText v-model="query" class="w-full" :placeholder="$t('pos.search_item')" />
@@ -57,7 +57,7 @@
                             class="shrink-0 basis-[calc(22%)] min-w-[110px] px-2 py-2.5 rounded-xl text-xs font-bold border transition-all duration-200 whitespace-nowrap shadow-sm uppercase tracking-wider"
                             :class="selectedCategoryId === null
                                 ? 'bg-primary-600 text-white border-primary-600 shadow-primary-200'
-                                : 'bg-white text-gray-600 border-gray-200 hover:border-primary-400 hover:text-primary-600'
+                                : 'bg-white text-slate-600 border-slate-200 hover:border-primary-400 hover:text-primary-600'
                                 " @click="selectedCategoryId = null">
                             {{ $t("pos.all_categories") }}
                         </button>
@@ -65,7 +65,7 @@
                             class="shrink-0 basis-[calc(22%)] min-w-[110px] px-2 py-2.5 rounded-xl text-xs font-bold border transition-all duration-200 whitespace-nowrap shadow-sm uppercase tracking-wider"
                             :class="selectedCategoryId === cat.id
                                 ? 'bg-primary-600 text-white border-primary-600 shadow-primary-200'
-                                : 'bg-white text-gray-600 border-gray-200 hover:border-primary-400 hover:text-primary-600'
+                                : 'bg-white text-slate-600 border-slate-200 hover:border-primary-400 hover:text-primary-600'
                                 " @click="selectedCategoryId = cat.id">
                             {{ cat.name }}
                         </button>
@@ -78,11 +78,11 @@
                     <div v-if="loadingProducts"
                         class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 p-1">
                         <div v-for="n in 10" :key="n"
-                            class="bg-white border border-gray-100 rounded-2xl overflow-hidden animate-pulse">
-                            <div class="aspect-square bg-gray-200"></div>
+                            class="bg-white border border-slate-100 rounded-2xl overflow-hidden animate-pulse">
+                            <div class="aspect-square bg-slate-200"></div>
                             <div class="p-3 space-y-2">
-                                <div class="h-3 bg-gray-200 rounded w-3/4"></div>
-                                <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+                                <div class="h-3 bg-slate-200 rounded w-3/4"></div>
+                                <div class="h-3 bg-slate-200 rounded w-1/2"></div>
                             </div>
                         </div>
                     </div>
@@ -90,24 +90,24 @@
                     <div v-else
                         class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 p-1">
                         <div v-if="!products.length"
-                            class="col-span-full flex flex-col items-center justify-center py-16 text-gray-400">
+                            class="col-span-full flex flex-col items-center justify-center py-16 text-slate-400">
                             <i class="pi pi-search text-5xl mb-3 opacity-40"></i>
                             <p>{{ $t("pos.empty_cart") }}</p>
                         </div>
                         <div v-for="product in products" :key="product.id"
-                            class="relative flex flex-col overflow-hidden transition-shadow bg-white border border-gray-200 rounded-2xl hover:shadow-md cursor-pointer group"
+                            class="relative flex flex-col overflow-hidden transition-shadow bg-white border border-slate-200 rounded-2xl hover:shadow-md cursor-pointer group"
                             @click="addToCart(product)">
-                            <div class="aspect-square bg-gray-100 flex items-center justify-center p-4">
+                            <div class="aspect-square bg-slate-100 flex items-center justify-center p-4">
                                 <img v-if="product.image_url" :src="product.image_url"
                                     class="object-cover w-full h-full rounded-xl" />
-                                <i v-else class="text-4xl text-gray-300 pi pi-image"></i>
+                                <i v-else class="text-4xl text-slate-300 pi pi-image"></i>
                                 <div
                                     class="absolute top-2 right-2 bg-primary-500 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                     <i class="pi pi-plus text-sm"></i>
                                 </div>
                             </div>
                             <div class="p-3 pt-2">
-                                <div class="text-[10px] text-gray-400 font-mono truncate" v-if="product.code">
+                                <div class="text-[10px] text-slate-400 font-mono truncate" v-if="product.code">
                                     {{ product.code }}
                                 </div>
                                 <div class="text-sm font-semibold truncate">
@@ -122,10 +122,10 @@
 
                     <!-- Pagination -->
                     <div v-if="totalProducts > perPage"
-                        class="flex items-center justify-center gap-2 py-4 border-t border-gray-100 mt-2">
+                        class="flex items-center justify-center gap-2 py-4 border-t border-slate-100 mt-2">
                         <Button icon="pi pi-chevron-left" text rounded severity="secondary" :disabled="currentPage <= 1"
                             @click="changePage(currentPage - 1)" />
-                        <span class="text-sm text-gray-600 px-2">{{ currentPage }} / {{ totalPages }}</span>
+                        <span class="text-sm text-slate-600 px-2">{{ currentPage }} / {{ totalPages }}</span>
                         <Button icon="pi pi-chevron-right" text rounded severity="secondary"
                             :disabled="currentPage >= totalPages" @click="changePage(currentPage + 1)" />
                     </div>
@@ -134,9 +134,9 @@
 
             <!-- Right Pane: Cart Sidebar -->
             <div
-                class="flex flex-col w-96 bg-white border-l border-gray-200 shrink-0 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] z-10">
+                class="flex flex-col w-96 bg-white border-l border-slate-200 shrink-0 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] z-10">
                 <!-- Cart Header -->
-                <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <div class="px-4 py-3 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                     <h2 class="text-lg font-bold">
                         {{ $t("pos.cart_items") }}
                     </h2>
@@ -150,18 +150,18 @@
 
                 <!-- Cart Items -->
                 <div class="flex-1 p-2 overflow-y-auto">
-                    <div v-if="!cart.length" class="flex flex-col items-center justify-center h-full text-gray-400">
+                    <div v-if="!cart.length" class="flex flex-col items-center justify-center h-full text-slate-400">
                         <i class="pi pi-shopping-cart text-5xl mb-4 opacity-50"></i>
                         <p>{{ $t("pos.empty_cart") }}</p>
                     </div>
 
                     <div v-for="item in cart" :key="item.id"
-                        class="flex items-center gap-3 p-2 mb-2 bg-white border border-gray-100 rounded-xl shadow-sm">
+                        class="flex items-center gap-3 p-2 mb-2 bg-white border border-slate-100 rounded-xl shadow-sm">
                         <div class="flex-1 min-w-0">
                             <div class="font-medium text-sm truncate">
                                 {{ item.name }}
                             </div>
-                            <div class="text-xs text-gray-500">
+                            <div class="text-xs text-slate-500">
                                 Rp {{ money(itemPrice(item)) }}
                             </div>
                             <div v-if="item.notes" class="text-[10px] text-orange-600 font-medium italic mt-0.5">
@@ -185,22 +185,22 @@
                 </div>
 
                 <!-- Cart Footer / Summary -->
-                <div class="p-4 bg-gray-50 border-t border-gray-200">
+                <div class="p-4 bg-slate-50 border-t border-slate-200">
                     <div class="space-y-3 mb-4">
                         <div class="flex items-center justify-between">
-                            <span class="text-sm font-medium text-gray-600">{{
+                            <span class="text-sm font-medium text-slate-600">{{
                                 $t("pos.order_type")
                             }}</span>
                             <Select v-model="orderType" :options="orderTypes" optionLabel="label" optionValue="value"
                                 class="w-36 text-sm" />
                         </div>
                     </div>
-                    <div class="flex justify-between items-center mb-1 text-gray-500 text-sm">
+                    <div class="flex justify-between items-center mb-1 text-slate-500 text-sm">
                         <span>{{ $t("pos.subtotal") }}</span>
                         <span>Rp {{ money(cartSubtotal) }}</span>
                     </div>
                     <div class="flex justify-between items-end mb-4">
-                        <span class="text-gray-600 font-medium">{{
+                        <span class="text-slate-600 font-medium">{{
                             $t("pos.total")
                         }}</span>
                         <span class="text-2xl font-bold text-primary-600">Rp {{ money(cartTotal) }}</span>
@@ -216,7 +216,7 @@
             class="w-[900px] overflow-hidden" :pt="{ content: { class: 'p-0 overflow-hidden' } }">
             <div class="flex h-[500px] max-h-[90vh] overflow-hidden">
                 <!-- Left Side: Summary & Meta (40%) -->
-                <div class="w-[38%] bg-slate-50 p-4 border-r border-gray-100 flex flex-col gap-3 overflow-hidden">
+                <div class="w-[38%] bg-slate-50 p-4 border-r border-slate-100 flex flex-col gap-3 overflow-hidden">
                     <div>
                         <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
                             Ringkasan & Detail
@@ -367,12 +367,12 @@
                 <h2 class="text-xl font-bold mb-2">
                     {{ $t("checkout.success_title") }}
                 </h2>
-                <p class="text-gray-500 mb-6">
+                <p class="text-slate-500 mb-6">
                     Order {{ lastOrder?.order_number }} has been processed
                     successfully.
                 </p>
 
-                <div class="bg-gray-50 p-4 rounded-xl text-left text-sm font-mono mb-6 space-y-1">
+                <div class="bg-slate-50 p-4 rounded-xl text-left text-sm font-mono mb-6 space-y-1">
                     <div class="flex justify-between">
                         <span>{{ $t("pos.subtotal") }}:</span>
                         <span>Rp {{ money(lastOrder?.subtotal) }}</span>
@@ -393,11 +393,11 @@
                         <span>{{ $t("pos.rounding") }}:</span>
                         <span>Rp {{ money(lastOrder?.rounding) }}</span>
                     </div>
-                    <div class="flex justify-between border-t border-gray-200 mt-2 pt-2 font-bold text-lg">
+                    <div class="flex justify-between border-t border-slate-200 mt-2 pt-2 font-bold text-lg">
                         <span>{{ $t("pos.total") }}:</span>
                         <span>Rp {{ money(lastOrder?.total_amount) }}</span>
                     </div>
-                    <div class="flex justify-between mt-2 pt-2 border-t border-gray-200">
+                    <div class="flex justify-between mt-2 pt-2 border-t border-slate-200">
                         <span>{{ $t("checkout.cash_given") }}:</span>
                         <span>Rp {{ money(lastOrder?.paid_amount) }}</span>
                     </div>
@@ -525,7 +525,7 @@
                             : "Shift Dibutuhkan"
                     }}
                 </h3>
-                <p class="text-gray-600 mb-6" v-if="activeShift && activeShift.is_expired">
+                <p class="text-slate-600 mb-6" v-if="activeShift && activeShift.is_expired">
                     Shift Anda dari tanggal
                     <strong>{{
                         new Date(activeShift.start_time).toLocaleDateString(
@@ -535,7 +535,7 @@
                     sudah melewati batas waktu. Silakan tutup shift tersebut
                     terlebih dahulu sebelum memulai hari baru.
                 </p>
-                <p class="text-gray-600 mb-6" v-else>
+                <p class="text-slate-600 mb-6" v-else>
                     Anda harus membuka Shift terlebih dahulu sebelum dapat
                     melakukan transaksi penjualan di POS.
                 </p>
