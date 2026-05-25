@@ -8,6 +8,8 @@
     :creator="supplierApi.create"
     :updater="supplierApi.update"
     :deleter="supplierApi.delete"
+    :table-framed="false"
+    :table-flat="true"
   />
 </template>
 

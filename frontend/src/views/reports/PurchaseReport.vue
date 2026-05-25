@@ -27,7 +27,7 @@
           </div>
         </template>
         <template #content>
-          <DataTable :value="filteredPurchases" paginator :rows="10" class="p-datatable-sm" stripedRows responsiveLayout="scroll">
+          <AppDataTable :value="filteredPurchases" paginator :rows="10" class="app-table" stripedRows responsiveLayout="scroll">
             <template #empty>
               <div class="text-center py-8 text-slate-400">Tidak ada data pembelian untuk periode ini.</div>
             </template>
@@ -60,7 +60,7 @@
                 <span class="font-black text-xl text-primary-600">Rp {{ money(totalAmount) }}</span>
               </div>
             </template>
-          </DataTable>
+          </AppDataTable>
         </template>
       </Card>
 
@@ -70,6 +70,8 @@
 
 <script setup>
 import axios from '@/api/axios';
+import AppDataTable from '@/components/AppDataTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import AppPage from '@/components/layout/AppPage.vue';
@@ -77,7 +79,6 @@ import Card from 'primevue/card';
 import Button from 'primevue/button';
 import DatePicker from 'primevue/datepicker';
 import InputText from 'primevue/inputtext';
-import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import { useToast } from 'primevue/usetoast';
 

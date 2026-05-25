@@ -24,7 +24,7 @@
       <!-- Audit Table -->
       <Card class="border-none shadow-sm overflow-hidden">
         <template #content>
-          <DataTable :value="filteredRows" :loading="loading" class="p-datatable-sm" paginator :rows="10" 
+          <AppDataTable :value="filteredRows" :loading="loading" class="app-table" paginator :rows="10" 
             responsiveLayout="scroll" v-model:first="first">
             <template #empty>
               <div class="p-4 text-center text-slate-500">{{ $t('common.no_data') }}</div>
@@ -69,7 +69,7 @@
                 <Button icon="pi pi-list" severity="secondary" rounded text @click="showDetail(data)" />
               </template>
             </Column>
-          </DataTable>
+          </AppDataTable>
         </template>
       </Card>
     </div>
@@ -91,7 +91,7 @@
           </div>
         </div>
 
-        <DataTable :value="detailRows" class="p-datatable-sm" :rows="10" paginator>
+        <AppDataTable :value="detailRows" class="app-table" :rows="10" paginator>
           <Column :header="$t('common.date')">
             <template #body="{ data }">{{ formatFullDate(data.created_at) }}</template>
           </Column>
@@ -111,7 +111,7 @@
             <template #body="{ data }">{{ formatQty(data.new_stock) }}</template>
           </Column>
           <Column field="notes" :header="$t('common.description')" class="text-sm italic" />
-        </DataTable>
+        </AppDataTable>
       </div>
     </Dialog>
   </AppPage>
@@ -119,11 +119,12 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
+import AppDataTable from '@/components/AppDataTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { useI18n } from 'vue-i18n';
 import { inventoryApi } from '@/api/inventory';
 import AppPage from '@/components/layout/AppPage.vue';
 import Card from 'primevue/card';
-import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import DatePicker from 'primevue/datepicker';

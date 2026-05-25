@@ -16,7 +16,7 @@
 
       <!-- Alerts Table -->
       <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <DataTable 
+        <AppDataTable framed 
           :value="rows" 
           :loading="loading" 
           paginator 
@@ -83,7 +83,7 @@
               <Button icon="pi pi-megaphone" label="Promo" size="small" rounded severity="help" v-tooltip="'Sarankan promo untuk item ini'" />
             </template>
           </Column>
-        </DataTable>
+        </AppDataTable>
       </div>
     </div>
   </AppPage>
@@ -91,9 +91,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import AppDataTable from '@/components/AppDataTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { inventoryApi } from '@/api/inventory';
 import AppPage from '@/components/layout/AppPage.vue';
-import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';

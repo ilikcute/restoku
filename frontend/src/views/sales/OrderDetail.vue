@@ -44,9 +44,9 @@
                         </div>
                     </div>
 
-                    <DataTable
+                    <AppDataTable framed
                         :value="selected.items || []"
-                        class="p-datatable-sm"
+                        class="app-table"
                         stripedRows
                     >
                         <template #empty>Tidak ada item.</template>
@@ -124,7 +124,7 @@
                                 </div>
                             </template>
                         </Column>
-                    </DataTable>
+                    </AppDataTable>
                 </div>
             </div>
 
@@ -276,6 +276,8 @@
 
 <script setup>
 import axios from "@/api/axios";
+import AppDataTable from '@/components/AppDataTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";

@@ -6,7 +6,7 @@
 
         <!-- Modern Card Container -->
         <div class="modern-card">
-            <DataTable :value="rows" paginator :rows="10" :loading="loading" v-model:first="first" class="modern-table"
+            <AppDataTable :framed="tableFramed" :flat="tableFlat" :value="rows" paginator :rows="10" :loading="loading" v-model:first="first" class="modern-table"
                 :pt="{
                     wrapper: { class: 'border-none' },
                     header: { class: 'border-b border-slate-100' }
@@ -58,7 +58,7 @@
                         </div>
                     </template>
                 </Column>
-            </DataTable>
+            </AppDataTable>
         </div>
 
         <!-- Modern Dialog -->
@@ -118,7 +118,6 @@ import { useI18n } from "vue-i18n";
 import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
 import Button from "primevue/button";
-import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
@@ -126,6 +125,7 @@ import Textarea from "primevue/textarea";
 import Checkbox from "primevue/checkbox";
 import Tag from "primevue/tag";
 import AppPage from "@/components/layout/AppPage.vue";
+import AppDataTable from "@/components/AppDataTable.vue";
 
 const props = defineProps({
     title: { type: String, required: true },
@@ -136,6 +136,8 @@ const props = defineProps({
     creator: { type: Function, required: true },
     updater: { type: Function, required: true },
     deleter: { type: Function, required: true },
+    tableFramed: { type: Boolean, default: true },
+    tableFlat: { type: Boolean, default: false }
 });
 
 const { t: $t } = useI18n();

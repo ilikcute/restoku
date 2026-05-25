@@ -3,7 +3,7 @@
     <template #actions>
       <Button :label="$t('settings.add_role')" icon="pi pi-plus" @click="openCreate" />
     </template>
-    <DataTable :value="rows" :loading="loading" paginator :rows="10">
+    <AppDataTable framed :value="rows" :loading="loading" paginator :rows="10">
       <Column field="name" :header="$t('common.name')">
         <template #body="{ data }">
           <span class="font-bold text-slate-800">{{ data.name }}</span>
@@ -24,7 +24,7 @@
             :disabled="['admin', 'manager', 'cashier'].includes(data.name)" />
         </template>
       </Column>
-    </DataTable>
+    </AppDataTable>
 
     <Dialog v-model:visible="dialogOpen" :header="dialogTitle" modal :style="{ width: '34rem' }">
       <div class="space-y-4">
@@ -48,13 +48,14 @@
 
 <script setup>
 import { reactive, ref } from 'vue';
+import AppDataTable from '@/components/AppDataTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { roleApi, userApi } from '@/api/settings';
 import Button from 'primevue/button';
 import AppPage from '@/components/layout/AppPage.vue';
-import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';

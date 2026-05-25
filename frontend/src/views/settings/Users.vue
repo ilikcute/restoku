@@ -1,50 +1,56 @@
 <template>
-  <AppPage :title="$t('sidebar.users')" :breadcrumb="[$t('common.settings'), $t('sidebar.users')]">
+  <AppPage :title="$t('sidebar.users')" :breadcrumb="[$t('common.settings'), $t('sidebar.users')]" no-card>
     <template #actions>
-      <Button :label="$t('settings.add_user')" icon="pi pi-plus" @click="openCreate" />
+      <Button :label="$t('settings.add_user')" icon="pi pi-plus"
+        class="!rounded-2xl !px-6 !bg-emerald-600 !border-none shadow-lg shadow-emerald-200/50" @click="openCreate" />
     </template>
-        <DataTable :value="rows" :loading="loading" paginator :rows="20">
-          <Column :header="$t('settings.user')">
-            <template #body="{ data }">
-              <div class="flex items-center gap-3">
-                <img :src="data.attributes?.avatar_url" class="w-10 h-10 rounded-xl object-cover shadow-sm border border-slate-100" />
-                <div class="flex flex-col">
-                  <span class="font-bold text-slate-800">{{ data.attributes?.name }}</span>
-                  <span class="text-xs text-slate-400">{{ data.attributes?.email }}</span>
-                </div>
-              </div>
-            </template>
-          </Column>
+    <AppDataTable framed :value="rows" :loading="loading" paginator :rows="20">
+      <Column :header="$t('settings.user')">
+        <template #body="{ data }">
+          <div class="flex items-center gap-3">
+            <img :src="data.attributes?.avatar_url"
+              class="w-10 h-10 rounded-xl object-cover shadow-sm border border-slate-100" />
+            <div class="flex flex-col">
+              <span class="font-bold text-slate-800">{{ data.attributes?.name }}</span>
+              <span class="text-xs text-slate-400">{{ data.attributes?.email }}</span>
+            </div>
+          </div>
+        </template>
+      </Column>
 
-          <Column field="attributes.role" :header="$t('settings.role')">
-            <template #body="{ data }">{{ data.attributes?.role }}</template>
-          </Column>
-          <Column field="attributes.is_active" :header="$t('common.status')">
-            <template #body="{ data }">
-              <Tag :value="data.attributes?.is_active ? $t('common.active') : $t('common.inactive')" :severity="data.attributes?.is_active ? 'success' : 'danger'" />
-            </template>
-          </Column>
-          <Column :header="$t('common.actions')">
-            <template #body="{ data }">
-              <Button icon="pi pi-pencil" text rounded class="text-blue-600" @click="openEdit(data)" />
-              <Button icon="pi pi-trash" text rounded severity="danger" class="text-red-600" @click="remove(data)" />
-            </template>
-          </Column>
-        </DataTable>
+      <Column field="attributes.role" :header="$t('settings.role')">
+        <template #body="{ data }">{{ data.attributes?.role }}</template>
+      </Column>
+      <Column field="attributes.is_active" :header="$t('common.status')">
+        <template #body="{ data }">
+          <Tag :value="data.attributes?.is_active ? $t('common.active') : $t('common.inactive')"
+            :severity="data.attributes?.is_active ? 'success' : 'danger'" />
+        </template>
+      </Column>
+      <Column :header="$t('common.actions')">
+        <template #body="{ data }">
+          <Button icon="pi pi-pencil" text rounded class="text-blue-600" @click="openEdit(data)" />
+          <Button icon="pi pi-trash" text rounded severity="danger" class="text-red-600" @click="remove(data)" />
+        </template>
+      </Column>
+    </AppDataTable>
 
 
     <Dialog v-model:visible="dialogOpen" :header="dialogTitle" modal :style="{ width: '34rem' }">
       <div class="space-y-4">
         <!-- Avatar Section in Dialog -->
         <div class="flex flex-col items-center gap-3 py-2">
-           <div class="relative group">
-              <img :src="form.avatar_url || 'https://ui-avatars.com/api/?name=User&background=f1f5f9&color=94a3b8'" class="w-24 h-24 rounded-2xl object-cover border-2 border-slate-100 shadow-sm" />
-              <div class="absolute inset-0 flex items-center justify-center bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                <i class="pi pi-camera text-white text-xl"></i>
-                <input type="file" class="absolute inset-0 opacity-0 cursor-pointer" @change="onAvatarSelect" accept="image/*" />
-              </div>
-           </div>
-           <p class="text-[10px] text-slate-400">{{ $t('settings.click_to_change') }}</p>
+          <div class="relative group">
+            <img :src="form.avatar_url || 'https://ui-avatars.com/api/?name=User&background=f1f5f9&color=94a3b8'"
+              class="w-24 h-24 rounded-2xl object-cover border-2 border-slate-100 shadow-sm" />
+            <div
+              class="absolute inset-0 flex items-center justify-center bg-black/40 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+              <i class="pi pi-camera text-white text-xl"></i>
+              <input type="file" class="absolute inset-0 opacity-0 cursor-pointer" @change="onAvatarSelect"
+                accept="image/*" />
+            </div>
+          </div>
+          <p class="text-[10px] text-slate-400">{{ $t('settings.click_to_change') }}</p>
         </div>
 
         <div class="space-y-1">
@@ -56,9 +62,12 @@
           <InputText v-model="form.email" :placeholder="$t('auth.email')" class="w-full" />
         </div>
         <Select v-model="form.role" :options="availableRoles" :placeholder="$t('settings.role')" class="w-full" />
-        <MultiSelect v-model="form.permissions" :options="availablePermissions" :placeholder="$t('settings.permissions')" display="chip" class="w-full" />
-        <Password v-model="form.password" :placeholder="$t('auth.password')" toggleMask class="w-full" inputClass="w-full" />
-        <Password v-model="form.password_confirmation" :feedback="false" :placeholder="$t('settings.confirm_password')" toggleMask class="w-full" inputClass="w-full" />
+        <MultiSelect v-model="form.permissions" :options="availablePermissions"
+          :placeholder="$t('settings.permissions')" display="chip" class="w-full" />
+        <Password v-model="form.password" :placeholder="$t('auth.password')" toggleMask class="w-full"
+          inputClass="w-full" />
+        <Password v-model="form.password_confirmation" :feedback="false" :placeholder="$t('settings.confirm_password')"
+          toggleMask class="w-full" inputClass="w-full" />
       </div>
       <template #footer>
         <Button :label="$t('common.cancel')" text @click="dialogOpen = false" />
@@ -70,13 +79,14 @@
 
 <script setup>
 import { reactive, ref } from 'vue';
+import AppDataTable from '@/components/AppDataTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 import { userApi } from '@/api/settings';
 import Button from 'primevue/button';
 import AppPage from '@/components/layout/AppPage.vue';
-import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
@@ -96,12 +106,12 @@ const dialogTitle = ref('');
 const editId = ref(null);
 const availableRoles = ref([]);
 const availablePermissions = ref([]);
-const form = reactive({ 
-  name: '', 
-  email: '', 
-  role: 'cashier', 
-  password: '', 
-  password_confirmation: '', 
+const form = reactive({
+  name: '',
+  email: '',
+  role: 'cashier',
+  password: '',
+  password_confirmation: '',
   permissions: [],
   avatar: null,
   avatar_url: ''

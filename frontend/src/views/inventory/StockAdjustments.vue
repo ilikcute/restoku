@@ -1,67 +1,31 @@
 <template>
-    <AppPage
-        :title="$t('inventory.history')"
-        :breadcrumb="[$t('common.inventory'), $t('inventory.adjustments')]"
-    >
+    <AppPage :title="$t('inventory.history')" :breadcrumb="[$t('common.inventory'), $t('inventory.adjustments')]"
+        no-card>
         <template #actions>
-            <Button
-                :label="$t('inventory.new_adjustment')"
-                icon="pi pi-plus"
-                @click="openDialog()"
-            />
+            <Button :label="$t('inventory.new_adjustment')" icon="pi pi-plus"
+                class="!rounded-2xl !px-6 !bg-emerald-600 !border-none shadow-lg shadow-emerald-200/50"
+                @click="openDialog()" />
         </template>
 
         <div class="space-y-6">
             <!-- Data Table -->
-            <div
-                class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden"
-            >
-                <DataTable
-                    :value="rows"
-                    :loading="loading"
-                    paginator
-                    :rows="20"
-                    stripedRows
-                    class="p-datatable-sm"
-                >
-                    <Column
-                        field="adjustment_number"
-                        header="Nomor"
-                        sortable
-                        class="font-bold text-primary-600"
-                    />
-                    <Column
-                        field="adjustment_date"
-                        :header="$t('common.date')"
-                        sortable
-                    >
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <AppDataTable framed :value="rows" :loading="loading" paginator :rows="20" stripedRows
+                    class="app-table">
+                    <Column field="adjustment_number" header="Nomor" sortable class="font-bold text-primary-600" />
+                    <Column field="adjustment_date" :header="$t('common.date')" sortable>
                         <template #body="{ data }">{{
                             formatDate(data.adjustment_date)
                         }}</template>
                     </Column>
-                    <Column
-                        field="status"
-                        :header="$t('common.status')"
-                        class="text-center"
-                    >
+                    <Column field="status" :header="$t('common.status')" class="text-center">
                         <template #body="{ data }">
-                            <Tag
-                                :value="statusLabel(data.status)"
-                                :severity="statusSeverity(data.status)"
-                                rounded
-                            />
+                            <Tag :value="statusLabel(data.status)" :severity="statusSeverity(data.status)" rounded />
                         </template>
                     </Column>
-                    <Column
-                        field="total_loss_amount"
-                        header="Loss (Rp)"
-                        class="text-right"
-                    >
+                    <Column field="total_loss_amount" header="Loss (Rp)" class="text-right">
                         <template #body="{ data }">
-                            <span
-                                v-if="data.total_loss_amount > 0"
-                                class="text-red-600 font-bold"
-                            >
+                            <span v-if="data.total_loss_amount > 0" class="text-red-600 font-bold">
                                 Rp {{ formatNumber(data.total_loss_amount) }}
                             </span>
                             <span v-else class="text-slate-400">-</span>
@@ -71,145 +35,80 @@
                     <Column header="" class="w-32 text-center">
                         <template #body="{ data }">
                             <div class="flex justify-center gap-2">
-                                <Button
-                                    icon="pi pi-eye"
-                                    severity="secondary"
-                                    rounded
-                                    text
-                                    @click="viewDetail(data)"
-                                />
-                                <Button
-                                    v-if="data.status !== 'A'"
-                                    icon="pi pi-pencil"
-                                    severity="primary"
-                                    rounded
-                                    text
-                                    @click="openDialog(data)"
-                                />
+                                <Button icon="pi pi-eye" severity="secondary" rounded text @click="viewDetail(data)" />
+                                <Button v-if="data.status !== 'A'" icon="pi pi-pencil" severity="primary" rounded text
+                                    @click="openDialog(data)" />
                             </div>
                         </template>
                     </Column>
-                </DataTable>
+                </AppDataTable>
             </div>
         </div>
 
         <!-- Adjustment Dialog -->
-        <Dialog
-            v-model:visible="dialogOpen"
-            :header="dialogTitle"
-            modal
-            :style="{ width: '55rem' }"
-            class="p-fluid"
-        >
+        <Dialog v-model:visible="dialogOpen" :header="dialogTitle" modal :style="{ width: '55rem' }" class="p-fluid">
             <div class="space-y-6 py-4">
                 <!-- Header Info -->
-                <div
-                    class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100"
-                >
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
                     <div class="space-y-1">
-                        <label
-                            class="text-xs font-bold text-slate-400 uppercase tracking-wider"
-                            >Metode Perhitungan</label
-                        >
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Metode
+                            Perhitungan</label>
                         <p class="text-sm font-medium text-slate-700">
                             Stock Opname Fisik (Multi-Stage)
                         </p>
                     </div>
                     <div class="space-y-1">
-                        <label
-                            class="text-xs font-bold text-slate-400 uppercase tracking-wider"
-                            >Status Saat Ini</label
-                        >
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Status Saat Ini</label>
                         <div>
-                            <Tag
-                                :value="statusLabel(form.status)"
-                                :severity="statusSeverity(form.status)"
-                                rounded
-                            />
+                            <Tag :value="statusLabel(form.status)" :severity="statusSeverity(form.status)" rounded />
                         </div>
                     </div>
                 </div>
 
                 <!-- Add Item Row (Only if not Finalized) -->
-                <div
-                    v-if="form.status !== 'A'"
-                    class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-white p-4 rounded-xl border border-emerald-100 shadow-sm"
-                >
+                <div v-if="form.status !== 'A'"
+                    class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-white p-4 rounded-xl border border-emerald-100 shadow-sm">
                     <div class="md:col-span-7 space-y-1">
                         <label class="text-xs font-bold text-slate-500">{{
                             $t("common.name")
                         }}</label>
-                        <Select
-                            v-model="activeItem.product_id"
-                            :options="products"
-                            optionLabel="name"
-                            optionValue="id"
-                            filter
-                            :placeholder="$t('inventory.search_product')"
-                            class="w-full"
-                        />
+                        <Select v-model="activeItem.product_id" :options="products" optionLabel="name" optionValue="id"
+                            filter :placeholder="$t('inventory.search_product')" class="w-full" />
                     </div>
                     <div class="md:col-span-3 space-y-1">
-                        <label class="text-xs font-bold text-slate-500"
-                            >Jumlah Fisik</label
-                        >
-                        <InputNumber
-                            v-model="activeItem.actual_stock"
-                            mode="decimal"
-                            class="w-full"
-                        />
+                        <label class="text-xs font-bold text-slate-500">Jumlah Fisik</label>
+                        <InputNumber v-model="activeItem.actual_stock" mode="decimal" class="w-full" />
                     </div>
                     <div class="md:col-span-2">
-                        <Button
-                            icon="pi pi-plus"
-                            label="Tambah"
-                            severity="success"
-                            class="w-full"
-                            @click="addItem"
-                            :disabled="!activeItem.product_id"
-                        />
+                        <Button icon="pi pi-plus" label="Tambah" severity="success" class="w-full" @click="addItem"
+                            :disabled="!activeItem.product_id" />
                     </div>
                 </div>
 
                 <!-- Items Table -->
                 <div class="border rounded-xl overflow-hidden">
-                    <DataTable
-                        :value="form.items"
-                        class="p-datatable-sm"
-                        stripedRows
-                    >
+                    <AppDataTable framed :value="form.items" class="app-table" stripedRows>
                         <Column header="Produk">
                             <template #body="{ data }">{{
                                 nameById(data.product_id)
                             }}</template>
                         </Column>
-                        <Column
-                            header="System"
-                            field="recorded_stock"
-                            class="text-center text-slate-400"
-                        />
+                        <Column header="System" field="recorded_stock" class="text-center text-slate-400" />
                         <Column header="Fisik" class="text-center font-bold">
                             <template #body="{ data }">
-                                <InputNumber
-                                    v-if="form.status !== 'A'"
-                                    v-model="data.actual_stock"
-                                    mode="decimal"
-                                    class="w-24 p-inputtext-sm text-center"
-                                />
+                                <InputNumber v-if="form.status !== 'A'" v-model="data.actual_stock" mode="decimal"
+                                    class="w-24 p-inputtext-sm text-center" />
                                 <span v-else>{{ data.actual_stock }}</span>
                             </template>
                         </Column>
                         <Column header="Selisih" class="text-center">
                             <template #body="{ data }">
-                                <span
-                                    :class="
-                                        calculateDiff(data) < 0
-                                            ? 'text-red-600 font-bold'
-                                            : calculateDiff(data) > 0
-                                              ? 'text-green-600 font-bold'
-                                              : 'text-slate-400'
-                                    "
-                                >
+                                <span :class="calculateDiff(data) < 0
+                                    ? 'text-red-600 font-bold'
+                                    : calculateDiff(data) > 0
+                                        ? 'text-green-600 font-bold'
+                                        : 'text-slate-400'
+                                    ">
                                     {{ calculateDiff(data) > 0 ? "+" : ""
                                     }}{{ calculateDiff(data) }}
                                 </span>
@@ -217,28 +116,17 @@
                         </Column>
                         <Column v-if="form.status !== 'A'" class="w-12">
                             <template #body="slotProps">
-                                <Button
-                                    icon="pi pi-trash"
-                                    severity="danger"
-                                    text
-                                    rounded
-                                    @click="removeItem(slotProps.index)"
-                                />
+                                <Button icon="pi pi-trash" severity="danger" text rounded
+                                    @click="removeItem(slotProps.index)" />
                             </template>
                         </Column>
-                    </DataTable>
+                    </AppDataTable>
                 </div>
 
                 <div class="space-y-1">
-                    <label class="text-xs font-bold text-slate-500"
-                        >Catatan Internal</label
-                    >
-                    <Textarea
-                        v-model="form.notes"
-                        rows="2"
-                        class="w-full"
-                        placeholder="Tambahkan keterangan jika ada barang hilang/rusak..."
-                    />
+                    <label class="text-xs font-bold text-slate-500">Catatan Internal</label>
+                    <Textarea v-model="form.notes" rows="2" class="w-full"
+                        placeholder="Tambahkan keterangan jika ada barang hilang/rusak..." />
                 </div>
             </div>
 
@@ -246,9 +134,7 @@
                 <div class="flex justify-between w-full items-center">
                     <div class="flex gap-6">
                         <div class="text-left">
-                            <p
-                                class="text-[10px] font-bold text-slate-400 uppercase tracking-widest"
-                            >
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                                 Loss (HPP)
                             </p>
                             <p class="text-lg font-black text-rose-600">
@@ -256,9 +142,7 @@
                             </p>
                         </div>
                         <div class="text-left border-l pl-6 border-slate-100">
-                            <p
-                                class="text-[10px] font-bold text-slate-400 uppercase tracking-widest"
-                            >
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                                 Loss (Gross/Jual)
                             </p>
                             <p class="text-lg font-black text-slate-700">
@@ -267,69 +151,34 @@
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <Button
-                            :label="$t('common.cancel')"
-                            severity="secondary"
-                            text
-                            @click="dialogOpen = false"
-                        />
+                        <Button :label="$t('common.cancel')" severity="secondary" text @click="dialogOpen = false" />
 
                         <!-- Draft Action -->
-                        <Button
-                            v-if="form.status === 'I'"
-                            :label="
-                                !form.id
-                                    ? 'Simpan Draft (I)'
-                                    : 'Draft Tersimpan (I)'
-                            "
-                            icon="pi pi-save"
-                            outlined
-                            :loading="saving"
-                            :disabled="!!form.id"
-                            @click="save('I')"
-                        />
+                        <Button v-if="form.status === 'I'" :label="!form.id
+                            ? 'Simpan Draft (I)'
+                            : 'Draft Tersimpan (I)'
+                            " icon="pi pi-save" outlined :loading="saving" :disabled="!!form.id" @click="save('I')" />
 
                         <!-- Verify Action -->
-                        <Button
-                            v-if="form.status === 'I' || form.status === 'D'"
-                            :label="
-                                form.status === 'I'
-                                    ? 'Verifikasi (D)'
-                                    : 'Sudah Diverifikasi (D)'
-                            "
-                            icon="pi pi-check-square"
-                            :severity="
-                                form.status === 'I' ? 'info' : 'secondary'
-                            "
-                            :loading="saving"
-                            :disabled="form.status === 'D' || !form.id"
-                            @click="save('D')"
-                        />
+                        <Button v-if="form.status === 'I' || form.status === 'D'" :label="form.status === 'I'
+                            ? 'Verifikasi (D)'
+                            : 'Sudah Diverifikasi (D)'
+                            " icon="pi pi-check-square" :severity="form.status === 'I' ? 'info' : 'secondary'
+                                " :loading="saving" :disabled="form.status === 'D' || !form.id" @click="save('D')" />
 
                         <!-- Finalize Action -->
-                        <Button
-                            v-if="
-                                form.status === 'D' ||
-                                (form.status === 'I' && form.id)
-                            "
-                            label="Finalisasi (A)"
-                            icon="pi pi-check-circle"
-                            severity="danger"
-                            :loading="saving"
-                            @click="save('A')"
-                        />
+                        <Button v-if="
+                            form.status === 'D' ||
+                            (form.status === 'I' && form.id)
+                        " label="Finalisasi (A)" icon="pi pi-check-circle" severity="danger" :loading="saving"
+                            @click="save('A')" />
                     </div>
                 </div>
             </template>
         </Dialog>
 
         <!-- Detail View Dialog -->
-        <Dialog
-            v-model:visible="detailOpen"
-            header="Detail Penyesuaian Stok"
-            modal
-            :style="{ width: '45rem' }"
-        >
+        <Dialog v-model:visible="detailOpen" header="Detail Penyesuaian Stok" modal :style="{ width: '45rem' }">
             <div v-if="selectedRow" class="space-y-4">
                 <div class="flex justify-between border-b pb-3">
                     <div>
@@ -350,57 +199,33 @@
                     </div>
                 </div>
 
-                <DataTable
-                    :value="selectedRow.items"
-                    stripedRows
-                    class="p-datatable-sm"
-                >
+                <AppDataTable framed :value="selectedRow.items" stripedRows class="app-table">
                     <Column header="Produk" field="product.name" />
-                    <Column
-                        header="System"
-                        field="recorded_stock"
-                        class="text-center"
-                    />
-                    <Column
-                        header="Fisik"
-                        field="actual_stock"
-                        class="text-center font-bold"
-                    />
+                    <Column header="System" field="recorded_stock" class="text-center" />
+                    <Column header="Fisik" field="actual_stock" class="text-center font-bold" />
                     <Column header="Selisih" class="text-center">
                         <template #body="{ data }">
-                            <span
-                                :class="
-                                    data.adjustment_quantity < 0
-                                        ? 'text-red-600'
-                                        : 'text-green-600'
-                                "
-                            >
+                            <span :class="data.adjustment_quantity < 0
+                                ? 'text-red-600'
+                                : 'text-green-600'
+                                ">
                                 {{ data.adjustment_quantity }}
                             </span>
                         </template>
                     </Column>
                     <Column header="Loss Value" class="text-right">
                         <template #body="{ data }">
-                            <span
-                                v-if="data.loss_value > 0"
-                                class="text-red-600"
-                                >Rp {{ formatNumber(data.loss_value) }}</span
-                            >
+                            <span v-if="data.loss_value > 0" class="text-red-600">Rp {{ formatNumber(data.loss_value)
+                            }}</span>
                             <span v-else>-</span>
                         </template>
                     </Column>
-                </DataTable>
+                </AppDataTable>
 
-                <div
-                    class="bg-slate-50 p-4 rounded-xl flex justify-between items-center"
-                >
-                    <span class="font-bold text-slate-600"
-                        >Total Kerugian (Inventory Loss)</span
-                    >
-                    <span class="text-xl font-black text-red-600"
-                        >Rp
-                        {{ formatNumber(selectedRow.total_loss_amount) }}</span
-                    >
+                <div class="bg-slate-50 p-4 rounded-xl flex justify-between items-center">
+                    <span class="font-bold text-slate-600">Total Kerugian (Inventory Loss)</span>
+                    <span class="text-xl font-black text-red-600">Rp
+                        {{ formatNumber(selectedRow.total_loss_amount) }}</span>
                 </div>
             </div>
         </Dialog>
@@ -409,6 +234,8 @@
 
 <script setup>
 import { reactive, ref, computed, onMounted } from "vue";
+import AppDataTable from '@/components/AppDataTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { useI18n } from "vue-i18n";
 import { useToast } from "primevue/usetoast";
 import { inventoryApi } from "@/api/inventory";
@@ -489,10 +316,10 @@ function openDialog(data = null) {
         form.status = data.status || "I";
         form.items = Array.isArray(data.items)
             ? data.items.map((i) => ({
-                  product_id: i.product?.id || i.product_id,
-                  actual_stock: i.actual_stock,
-                  recorded_stock: i.recorded_stock,
-              }))
+                product_id: i.product?.id || i.product_id,
+                actual_stock: i.actual_stock,
+                recorded_stock: i.recorded_stock,
+            }))
             : [];
     } else {
         form.id = null;

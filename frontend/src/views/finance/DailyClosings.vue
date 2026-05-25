@@ -80,7 +80,7 @@
             </div>
           </template>
           <template #content>
-            <DataTable :value="rows" :loading="loading" paginator :rows="10" class="p-datatable-sm" stripedRows responsiveLayout="scroll">
+            <AppDataTable :value="rows" :loading="loading" paginator :rows="10" class="app-table" stripedRows responsiveLayout="scroll">
               <Column field="closing_date" header="Tgl. Closing">
                 <template #body="{ data }">
                   <span class="text-xs font-bold text-slate-700">{{ formatDate(data.closing_date) }}</span>
@@ -110,7 +110,7 @@
                   </div>
                 </template>
               </Column>
-            </DataTable>
+            </AppDataTable>
           </template>
         </Card>
       </div>
@@ -172,6 +172,8 @@
 
 <script setup>
 import axios from '@/api/axios';
+import AppDataTable from '@/components/AppDataTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from 'primevue/usetoast';
@@ -179,7 +181,6 @@ import { closingApi } from '@/api/finance';
 import { unwrapCollection } from '@/utils/api';
 import Button from 'primevue/button';
 import AppPage from '@/components/layout/AppPage.vue';
-import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
 import DatePicker from 'primevue/datepicker';
@@ -310,11 +311,4 @@ async function save() {
 load();
 </script>
 
-<style scoped>
-:deep(.p-card-body) {
-  padding: 0;
-}
-:deep(.p-card-content) {
-  padding: 1.5rem;
-}
-</style>
+

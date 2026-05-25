@@ -225,34 +225,4 @@ onUnmounted(() => {
 });
 </script>
 
-<style scoped>
-@keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
 
-.animate-marquee {
-  animation: marquee 30s linear infinite;
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.list-enter-active,
-.list-leave-active {
-  transition: all 0.5s ease;
-}
-.list-enter-from {
-  opacity: 0;
-  transform: translateX(30px);
-}
-.list-leave-to {
-  opacity: 0;
-  transform: scale(0.9);
-}
-</style>

@@ -70,7 +70,7 @@
 
       <!-- Data Table -->
       <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <DataTable 
+        <AppDataTable framed 
           :value="filteredRows" 
           :loading="loading" 
           paginator 
@@ -78,7 +78,7 @@
           :rows="10"
           responsiveLayout="stack" 
           breakpoint="960px"
-          class="p-datatable-sm"
+          class="app-table"
           stripedRows
         >
           <template #empty>
@@ -139,7 +139,7 @@
               />
             </template>
           </Column>
-        </DataTable>
+        </AppDataTable>
       </div>
     </div>
   </AppPage>
@@ -147,11 +147,12 @@
 
 <script setup>
 import { computed, ref, onMounted, watch } from 'vue';
+import AppDataTable from '@/components/AppDataTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { useI18n } from 'vue-i18n';
 import { inventoryApi } from '@/api/inventory';
 import { categoryApi } from '@/api/master';
 import AppPage from '@/components/layout/AppPage.vue';
-import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
@@ -220,8 +221,4 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
-.p-datatable-sm .p-datatable-tbody > tr > td {
-  padding: 0.5rem 0.5rem;
-}
-</style>
+

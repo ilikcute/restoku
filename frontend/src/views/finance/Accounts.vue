@@ -1,11 +1,11 @@
 <template>
-  <AppPage title="Rekening Kas" :breadcrumb="['Manajemen', 'Rekening']">
+  <AppPage title="Rekening Kas" :breadcrumb="['Manajemen', 'Rekening']" no-card>
     <template #actions>
       <Button label="Tambah Rekening" icon="pi pi-plus"
         class="!rounded-2xl !px-6 !bg-emerald-600 !border-none shadow-lg shadow-emerald-200/50" @click="openDialog" />
     </template>
 
-    <DataTable :value="rows" :loading="loading" paginator :rows="20" class="p-datatable-modern"
+    <AppDataTable framed :value="rows" :loading="loading" paginator :rows="20" class="app-table"
       responsiveLayout="scroll">
       <Column field="name" :header="$t('common.name')" style="width: 250px">
         <template #body="{ data }">
@@ -51,7 +51,7 @@
           </div>
         </template>
       </Column>
-    </DataTable>
+    </AppDataTable>
 
     <Dialog v-model:visible="dialogOpen" :style="{ width: '450px' }"
       :header="form.id ? 'Edit Rekening' : 'Tambah Rekening Baru'" :modal="true"
@@ -120,11 +120,12 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
+import AppDataTable from '@/components/AppDataTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from 'primevue/usetoast';
 import { financeApi } from '@/api/finance';
 import AppPage from '@/components/layout/AppPage.vue';
-import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
@@ -221,7 +222,3 @@ onMounted(() => {
   load();
 });
 </script>
-
-<style scoped>
-@reference "@/style.css";
-</style>

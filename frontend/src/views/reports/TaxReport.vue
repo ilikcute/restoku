@@ -30,7 +30,7 @@
           </div>
         </template>
         <template #content>
-          <DataTable :value="reportData" class="p-datatable-sm" stripedRows responsiveLayout="scroll" :loading="loading">
+          <AppDataTable :value="reportData" class="app-table" stripedRows responsiveLayout="scroll" :loading="loading">
             <template #empty>
               <div class="text-center py-12">
                 <i class="pi pi-info-circle text-4xl text-slate-200 mb-3 block"></i>
@@ -98,7 +98,7 @@
                 </div>
               </div>
             </template>
-          </DataTable>
+          </AppDataTable>
         </template>
       </Card>
 
@@ -108,12 +108,13 @@
 
 <script setup>
 import axios from '@/api/axios';
+import AppDataTable from '@/components/AppDataTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { ref, onMounted, computed } from 'vue';
 import AppPage from '@/components/layout/AppPage.vue';
 import Card from 'primevue/card';
 import Button from 'primevue/button';
 import DatePicker from 'primevue/datepicker';
-import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import { useToast } from 'primevue/usetoast';
 

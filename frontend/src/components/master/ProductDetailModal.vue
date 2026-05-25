@@ -11,62 +11,18 @@
         </div>
       </div>
 
-      <table class="w-full text-left border-collapse">
-        <tbody>
-          <tr class="border-b">
-            <th class="py-2 w-1/3">{{ $t('common.name') }}</th>
-            <td>{{ product.name }}</td>
-          </tr>
-          <tr class="border-b">
-            <th class="py-2">{{ $t('product.short_name') }}</th>
-            <td>{{ product.short_name || '-' }}</td>
-          </tr>
-          <tr class="border-b">
-            <th class="py-2">{{ $t('product.code') }}</th>
-            <td class="font-bold text-blue-600">{{ product.code || '-' }}</td>
-          </tr>
-          <tr class="border-b">
-            <th class="py-2">{{ $t('common.category') }}</th>
-            <td>{{ product.category?.name || '-' }}</td>
-          </tr>
-          <tr class="border-b">
-            <th class="py-2">{{ $t('common.brand') }}</th>
-            <td>{{ product.brand_name || '-' }}</td>
-          </tr>
-          <tr class="border-b">
-            <th class="py-2">{{ $t('common.supplier') }}</th>
-            <td>{{ product.supplier?.name || '-' }}</td>
-          </tr>
-          <tr class="border-b">
-            <th class="py-2">{{ $t('common.unit') }}</th>
-            <td>{{ product.unit?.name || '-' }}</td>
-          </tr>
-          <tr class="border-b">
-            <th class="py-2">{{ $t('product.cost_price') }}</th>
-            <td>Rp {{ money(product.cost_price) }}</td>
-          </tr>
-          <tr class="border-b">
-            <th class="py-2">{{ $t('product.selling_price') }}</th>
-            <td>Rp {{ money(product.price) }}</td>
-          </tr>
-          <tr class="border-b">
-            <th class="py-2">{{ $t('product.stock_type') }}</th>
-            <td>{{ $t(`product.${product.stock_type}`) }}</td>
-          </tr>
-          <tr class="border-b">
-            <th class="py-2">{{ $t('product.minimum_stock') }}</th>
-            <td>{{ product.minimum_stock || 0 }}</td>
-          </tr>
-          <tr class="border-b">
-            <th class="py-2">{{ $t('product.maximum_stock') }}</th>
-            <td>{{ product.maximum_stock || 0 }}</td>
-          </tr>
-          <tr>
-            <th class="py-2">{{ $t('common.stock') }}</th>
-            <td>{{ product.stock?.current_stock || 0 }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <AppDataTable framed :value="detailRows" :paginator="false" dataKey="field" compact>
+        <Column field="label" header="Field" class="w-1/3">
+          <template #body="{ data }">
+            <span class="font-semibold">{{ data.label }}</span>
+          </template>
+        </Column>
+        <Column field="value" header="Nilai">
+          <template #body="{ data }">
+            <span :class="data.valueClass">{{ data.value }}</span>
+          </template>
+        </Column>
+      </AppDataTable>
     </div>
     <template #footer>
       <Button :label="$t('common.cancel')" text @click="$emit('update:visible', false)" />
@@ -77,15 +33,38 @@
 <script setup>
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
+import Column from 'primevue/column';
+import AppDataTable from '@/components/AppDataTable.vue';
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 const { t: $t } = useI18n();
-
-defineProps({
+const props = defineProps({
   visible: { type: Boolean, default: false },
   product: { type: Object, default: null }
 });
 
 defineEmits(['update:visible']);
+
+const detailRows = computed(() => {
+  const product = props.product;
+  if (!product) return [];
+
+  return [
+    { field: 'name', label: $t('common.name'), value: product.name || '-' },
+    { field: 'short_name', label: $t('product.short_name'), value: product.short_name || '-' },
+    { field: 'code', label: $t('product.code'), value: product.code || '-', valueClass: 'font-bold text-blue-600' },
+    { field: 'category', label: $t('common.category'), value: product.category?.name || '-' },
+    { field: 'brand', label: $t('common.brand'), value: product.brand_name || '-' },
+    { field: 'supplier', label: $t('common.supplier'), value: product.supplier?.name || '-' },
+    { field: 'unit', label: $t('common.unit'), value: product.unit?.name || '-' },
+    { field: 'cost_price', label: $t('product.cost_price'), value: `Rp ${money(product.cost_price)}` },
+    { field: 'selling_price', label: $t('product.selling_price'), value: `Rp ${money(product.price)}` },
+    { field: 'stock_type', label: $t('product.stock_type'), value: $t(`product.${product.stock_type}`) },
+    { field: 'minimum_stock', label: $t('product.minimum_stock'), value: product.minimum_stock || 0 },
+    { field: 'maximum_stock', label: $t('product.maximum_stock'), value: product.maximum_stock || 0 },
+    { field: 'stock', label: $t('common.stock'), value: product.stock?.current_stock || 0 }
+  ];
+});
 
 function money(value) {
   return Number(value || 0).toLocaleString('id-ID');

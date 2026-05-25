@@ -85,7 +85,7 @@
         <Card class="lg:col-span-1 border-none shadow-sm">
           <template #title><span class="text-slate-800">{{ $t('reports.top_selling') }}</span></template>
           <template #content>
-            <DataTable :value="topProducts" class="p-datatable-sm" :rows="10">
+            <AppDataTable :value="topProducts" class="app-table" :rows="10">
               <Column field="product_name" :header="$t('reports.product')">
                 <template #body="{ data }">
                   <span class="text-xs font-bold text-slate-700">{{ data.product_name }}</span>
@@ -101,7 +101,7 @@
                   <span class="text-xs font-semibold text-emerald-600">Rp {{ money(data.total_sales) }}</span>
                 </template>
               </Column>
-            </DataTable>
+            </AppDataTable>
           </template>
         </Card>
       </div>
@@ -143,13 +143,14 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
+import AppDataTable from '@/components/AppDataTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { useRouter } from 'vue-router';
 import axios from '@/api/axios';
 import AppPage from '@/components/layout/AppPage.vue';
 import Card from 'primevue/card';
 import Button from 'primevue/button';
 import DatePicker from 'primevue/datepicker';
-import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
 import Chart from 'primevue/chart';

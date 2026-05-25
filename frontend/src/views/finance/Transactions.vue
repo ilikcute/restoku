@@ -1,24 +1,21 @@
 <template>
   <AppPage title="Keuangan" :breadcrumb="['Manajemen', 'Transaksi']" no-card>
+    <template #actions>
+      <Button label="Tambah Transaksi" icon="pi pi-plus"
+        class="!rounded-2xl !px-6 !bg-emerald-600 !border-none shadow-lg shadow-emerald-200/50" @click="openDialog" />
+    </template>
     <div class="space-y-6">
-      <!-- Header Section with Stats -->
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white/60 backdrop-blur-lg p-6 rounded-3xl border border-slate-200/50 shadow-sm">
-        <div>
-          <h2 class="text-2xl font-black text-slate-800 tracking-tight italic uppercase">Riwayat <span class="text-blue-600">Transaksi</span></h2>
-          <p class="text-slate-500 text-sm font-medium mt-1">Pantau arus kas masuk dan keluar bisnis Anda.</p>
-        </div>
-        <Button label="Buat Transaksi Baru" icon="pi pi-plus" class="!rounded-2xl !px-6 !py-3 !font-bold shadow-lg shadow-blue-200/50 hover:scale-105 transition-transform" @click="openDialog" />
-      </div>
-
       <!-- Main Table Card -->
       <Card class="!rounded-3xl border-none shadow-sm overflow-hidden bg-white">
         <template #content>
-          <DataTable :value="rows" :loading="loading" paginator :rows="20" class="p-datatable-modern" responsiveLayout="scroll">
+          <AppDataTable :value="rows" :loading="loading" paginator :rows="20" class="app-table"
+            responsiveLayout="scroll">
             <Column :header="$t('common.date')" style="width: 150px">
               <template #body="{ data }">
                 <div class="flex flex-col">
                   <span class="text-sm font-bold text-slate-700">{{ formatDate(data.transaction_date) }}</span>
-                  <span class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">{{ data.transaction_number }}</span>
+                  <span class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">{{
+                    data.transaction_number }}</span>
                 </div>
               </template>
             </Column>
@@ -28,7 +25,8 @@
                   'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-1.5',
                   data.type === 'income' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'
                 ]">
-                  <span :class="['w-1.5 h-1.5 rounded-full', data.type === 'income' ? 'bg-emerald-500' : 'bg-rose-500']"></span>
+                  <span
+                    :class="['w-1.5 h-1.5 rounded-full', data.type === 'income' ? 'bg-emerald-500' : 'bg-rose-500']"></span>
                   {{ data.type === 'income' ? 'Masuk' : 'Keluar' }}
                 </div>
               </template>
@@ -37,9 +35,11 @@
               <template #body="{ data }">
                 <div class="flex items-center gap-2">
                   <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-50 text-slate-500">
-                    <i :class="['pi', data.type === 'income' ? 'pi-arrow-down-left' : 'pi-arrow-up-right', 'text-xs']"></i>
+                    <i
+                      :class="['pi', data.type === 'income' ? 'pi-arrow-down-left' : 'pi-arrow-up-right', 'text-xs']"></i>
                   </div>
-                  <span class="font-medium text-slate-700">{{ data.type === 'income' ? data.income_category?.name : data.expense_category?.name }}</span>
+                  <span class="font-medium text-slate-700">{{ data.type === 'income' ? data.income_category?.name :
+                    data.expense_category?.name }}</span>
                 </div>
               </template>
             </Column>
@@ -64,21 +64,31 @@
                 </span>
               </template>
             </Column>
-          </DataTable>
+          </AppDataTable>
         </template>
       </Card>
 
       <!-- Transaction Modal -->
-      <Dialog v-model:visible="dialogOpen" :style="{width: '500px'}" :header="form.id ? 'Edit Transaksi' : 'Transaksi Baru'" :modal="true" class="p-fluid !rounded-3xl overflow-hidden shadow-2xl" pt:root:class="!rounded-3xl" pt:header:class="!bg-slate-50 !p-6 !border-b !border-slate-100" pt:content:class="!p-6">
+      <Dialog v-model:visible="dialogOpen" :style="{ width: '500px' }"
+        :header="form.id ? 'Edit Transaksi' : 'Transaksi Baru'" :modal="true"
+        class="p-fluid !rounded-3xl overflow-hidden shadow-2xl" pt:root:class="!rounded-3xl"
+        pt:header:class="!bg-slate-50 !p-6 !border-b !border-slate-100" pt:content:class="!p-6">
         <div class="space-y-6">
           <!-- Form Header Info -->
-          <div class="flex items-start gap-4 p-4 rounded-2xl border transition-colors duration-300" :class="form.type === 'income' ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm" :class="form.type === 'income' ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'">
+          <div class="flex items-start gap-4 p-4 rounded-2xl border transition-colors duration-300"
+            :class="form.type === 'income' ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+              :class="form.type === 'income' ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'">
               <i :class="['pi', form.type === 'income' ? 'pi-plus-circle' : 'pi-minus-circle', 'text-xl']"></i>
             </div>
             <div>
-              <p class="text-sm font-bold" :class="form.type === 'income' ? 'text-emerald-900' : 'text-rose-900'">Input Kas {{ form.type === 'income' ? 'Masuk' : 'Keluar' }}</p>
-              <p class="text-[11px] leading-relaxed font-medium" :class="form.type === 'income' ? 'text-emerald-700/70' : 'text-rose-700/70'">Pencatatan keuangan yang akurat membantu Anda menganalisa performa bisnis dengan lebih baik.</p>
+              <p class="text-sm font-bold" :class="form.type === 'income' ? 'text-emerald-900' : 'text-rose-900'">Input
+                Kas {{
+                  form.type === 'income' ? 'Masuk' : 'Keluar' }}</p>
+              <p class="text-[11px] leading-relaxed font-medium"
+                :class="form.type === 'income' ? 'text-emerald-700/70' : 'text-rose-700/70'">Pencatatan keuangan yang
+                akurat
+                membantu Anda menganalisa performa bisnis dengan lebih baik.</p>
             </div>
           </div>
 
@@ -86,27 +96,36 @@
             <!-- Type Selector -->
             <div class="flex flex-col gap-2">
               <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Tipe Transaksi</label>
-              <SelectButton v-model="form.type" :options="types" optionLabel="label" optionValue="value" class="!rounded-xl overflow-hidden border border-slate-100" pt:button:class="!py-3 !text-xs !font-bold !border-none" />
+              <SelectButton v-model="form.type" :options="types" optionLabel="label" optionValue="value"
+                class="!rounded-xl overflow-hidden border border-slate-100"
+                pt:button:class="!py-3 !text-xs !font-bold !border-none" />
             </div>
 
             <div class="grid grid-cols-2 gap-4">
               <!-- Account -->
               <div class="flex flex-col gap-2">
                 <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Sumber Dana</label>
-                <Select v-model="form.account_id" :options="accounts" optionLabel="name" optionValue="id" class="!rounded-xl !bg-slate-50 !border-slate-100" pt:input:class="!p-3 !text-sm" />
+                <Select v-model="form.account_id" :options="accounts" optionLabel="name" optionValue="id"
+                  class="!rounded-xl !bg-slate-50 !border-slate-100" pt:input:class="!p-3 !text-sm" />
               </div>
               <!-- Date -->
               <div class="flex flex-col gap-2">
                 <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Tanggal</label>
-                <DatePicker v-model="dateValue" dateFormat="yy-mm-dd" showIcon iconDisplay="input" class="!rounded-xl overflow-hidden" pt:input:class="!bg-slate-50 !border-slate-100 !p-3 !text-sm" />
+                <DatePicker v-model="dateValue" dateFormat="yy-mm-dd" showIcon iconDisplay="input"
+                  class="!rounded-xl overflow-hidden" pt:input:class="!bg-slate-50 !border-slate-100 !p-3 !text-sm" />
               </div>
             </div>
 
             <!-- Category -->
             <div class="flex flex-col gap-2">
-              <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Kategori {{ form.type === 'income' ? 'Pemasukan' : 'Pengeluaran' }}</label>
-              <Select v-if="form.type === 'income'" v-model="form.income_category_id" :options="incomeCategories" optionLabel="name" optionValue="id" placeholder="Pilih Kategori Pemasukan" class="!rounded-xl !bg-slate-50 !border-slate-100" pt:input:class="!p-3 !text-sm" />
-              <Select v-else v-model="form.expense_category_id" :options="expenseCategories" optionLabel="name" optionValue="id" placeholder="Pilih Kategori Pengeluaran" class="!rounded-xl !bg-slate-50 !border-slate-100" pt:input:class="!p-3 !text-sm" />
+              <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Kategori {{ form.type ===
+                'income' ? 'Pemasukan' : 'Pengeluaran' }}</label>
+              <Select v-if="form.type === 'income'" v-model="form.income_category_id" :options="incomeCategories"
+                optionLabel="name" optionValue="id" placeholder="Pilih Kategori Pemasukan"
+                class="!rounded-xl !bg-slate-50 !border-slate-100" pt:input:class="!p-3 !text-sm" />
+              <Select v-else v-model="form.expense_category_id" :options="expenseCategories" optionLabel="name"
+                optionValue="id" placeholder="Pilih Kategori Pengeluaran"
+                class="!rounded-xl !bg-slate-50 !border-slate-100" pt:input:class="!p-3 !text-sm" />
             </div>
 
             <!-- Amount -->
@@ -114,22 +133,28 @@
               <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Jumlah (Nominal)</label>
               <div class="relative">
                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">Rp</span>
-                <InputNumber v-model="form.amount" mode="decimal" :minFractionDigits="0" placeholder="0" class="!rounded-xl overflow-hidden !border-slate-100" pt:input:class="!bg-slate-50 !pl-10 !p-4 !text-xl !font-black !text-slate-800" />
+                <InputNumber v-model="form.amount" mode="decimal" :minFractionDigits="0" placeholder="0"
+                  class="!rounded-xl overflow-hidden !border-slate-100"
+                  pt:input:class="!bg-slate-50 !pl-10 !p-4 !text-xl !font-black !text-slate-800" />
               </div>
             </div>
 
             <!-- Description -->
             <div class="flex flex-col gap-2">
               <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Catatan / Deskripsi</label>
-              <Textarea v-model="form.description" rows="2" placeholder="Tulis keterangan transaksi di sini..." class="!rounded-xl !bg-slate-50 !border-slate-100 focus:!ring-blue-500 !p-3 !text-sm" autoResize />
+              <Textarea v-model="form.description" rows="2" placeholder="Tulis keterangan transaksi di sini..."
+                class="!rounded-xl !bg-slate-50 !border-slate-100 focus:!ring-blue-500 !p-3 !text-sm" autoResize />
             </div>
           </div>
         </div>
 
         <template #footer>
           <div class="flex gap-3 p-2">
-            <Button label="Batal" icon="pi pi-times" text class="!rounded-xl !text-slate-400 hover:!bg-slate-100" @click="dialogOpen = false" />
-            <Button label="Simpan Transaksi" icon="pi pi-check" :loading="saving" :class="['!rounded-xl !border-none !px-8 h-12 font-bold shadow-lg', form.type === 'income' ? '!bg-emerald-600 shadow-emerald-100' : '!bg-blue-600 shadow-blue-100']" @click="save" />
+            <Button label="Batal" icon="pi pi-times" text class="!rounded-xl !text-slate-400 hover:!bg-slate-100"
+              @click="dialogOpen = false" />
+            <Button label="Simpan Transaksi" icon="pi pi-check" :loading="saving"
+              :class="['!rounded-xl !border-none !px-8 h-12 font-bold shadow-lg', form.type === 'income' ? '!bg-emerald-600 shadow-emerald-100' : '!bg-blue-600 shadow-blue-100']"
+              @click="save" />
           </div>
         </template>
       </Dialog>
@@ -139,13 +164,14 @@
 
 <script setup>
 import { reactive, ref, computed, onMounted } from 'vue';
+import AppDataTable from '@/components/AppDataTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from 'primevue/usetoast';
 import { financeApi } from '@/api/finance';
 import { unwrapCollection } from '@/utils/api';
 import Button from 'primevue/button';
 import AppPage from '@/components/layout/AppPage.vue';
-import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
 import Select from 'primevue/select';
@@ -244,8 +270,8 @@ async function save() {
     // Format date as YYYY-MM-DD local time
     const d = dateValue.value;
     const offset = d.getTimezoneOffset();
-    form.transaction_date = new Date(d.getTime() - (offset*60*1000)).toISOString().split('T')[0];
-    
+    form.transaction_date = new Date(d.getTime() - (offset * 60 * 1000)).toISOString().split('T')[0];
+
     await financeApi.createTransaction(form);
     dialogOpen.value = false;
     toast.add({ severity: 'success', summary: $t('common.save'), detail: 'Transaksi berhasil disimpan', life: 2000 });
@@ -262,7 +288,3 @@ onMounted(() => {
   loadRows();
 });
 </script>
-
-<style scoped>
-@reference "@/style.css";
-</style>

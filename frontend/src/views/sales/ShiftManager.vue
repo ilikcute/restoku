@@ -158,12 +158,12 @@
             </div>
           </template>
           <template #content>
-            <DataTable 
+            <AppDataTable 
               :value="history" 
               :loading="loadingHistory" 
               paginator 
               :rows="10" 
-              class="p-datatable-sm"
+              class="app-table"
               responsiveLayout="scroll"
               stripedRows
             >
@@ -213,7 +213,7 @@
                   </div>
                 </template>
               </Column>
-            </DataTable>
+            </AppDataTable>
           </template>
         </Card>
       </div>
@@ -301,6 +301,8 @@
 
 <script setup>
 import axios from '@/api/axios';
+import AppDataTable from '@/components/AppDataTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { reactive, ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from 'primevue/usetoast';
@@ -310,7 +312,6 @@ import AppPage from '@/components/layout/AppPage.vue';
 import Button from 'primevue/button';
 import InputNumber from 'primevue/inputnumber';
 import Textarea from 'primevue/textarea';
-import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Card from 'primevue/card';
 import Tag from 'primevue/tag';

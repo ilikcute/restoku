@@ -25,7 +25,7 @@
             </div>
           </div>
 
-          <DataTable :value="selected.items || []" class="p-datatable-sm" stripedRows>
+          <AppDataTable framed :value="selected.items || []" class="app-table" stripedRows>
             <template #empty>Tidak ada item.</template>
             <Column :header="$t('sidebar.products')">
               <template #body="{ data }">
@@ -54,7 +54,7 @@
                 </div>
               </template>
             </Column>
-          </DataTable>
+          </AppDataTable>
           
           <div v-if="selected.notes" class="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
             <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">Catatan</p>
@@ -128,12 +128,13 @@
 
 <script setup>
 import axios from '@/api/axios';
+import AppDataTable from '@/components/AppDataTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useToast } from 'primevue/usetoast';
 import AppPage from '@/components/layout/AppPage.vue';
-import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';

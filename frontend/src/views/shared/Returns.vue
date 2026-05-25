@@ -107,9 +107,9 @@
       <div class="lg:col-span-2">
         <Card class="border-none shadow-sm h-full">
           <template #content>
-            <DataTable 
+            <AppDataTable 
               :value="items" 
-              class="p-datatable-sm" 
+              class="app-table" 
               responsiveLayout="scroll"
               :placeholder="'Belum ada data transaksi'"
             >
@@ -159,7 +159,7 @@
                   Rp {{ money(calculateItemReturn(data)) }}
                 </template>
               </Column>
-            </DataTable>
+            </AppDataTable>
           </template>
         </Card>
       </div>
@@ -169,6 +169,8 @@
 
 <script setup>
 import { ref, computed, onMounted, reactive } from 'vue';
+import AppDataTable from '@/components/AppDataTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
@@ -178,7 +180,6 @@ import AppPage from '@/components/layout/AppPage.vue';
 import Card from 'primevue/card';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
-import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputNumber from 'primevue/inputnumber';
 import Tag from 'primevue/tag';
@@ -330,9 +331,4 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
-.p-inputnumber :deep(.p-inputnumber-input) {
-  width: 4rem;
-  text-align: center;
-}
-</style>
+

@@ -1,38 +1,29 @@
 <template>
-  <AppPage title="Audit Trail (Log Aktivitas)" :breadcrumb="['Laporan', 'Audit Trail']">
+  <AppPage title="Audit Trail (Log Aktivitas)" :breadcrumb="['Laporan', 'Audit Trail']" no-card>
     <div class="space-y-6 mt-4">
-      
+
       <!-- Table -->
       <Card class="border-none shadow-sm overflow-hidden">
         <template #title>
           <div class="flex justify-between items-center px-2">
             <div class="flex flex-col">
               <span class="text-slate-800 font-black tracking-tight text-xl">Log Aktivitas Sistem</span>
-              <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Memantau setiap perubahan data penting</span>
+              <span class="text-xs text-slate-400 font-medium uppercase tracking-wider">Memantau setiap perubahan data
+                penting</span>
             </div>
             <Button icon="pi pi-refresh" outlined rounded @click="loadActivities" :loading="loading" />
           </div>
         </template>
         <template #content>
-          <DataTable 
-            :value="activities" 
-            class="p-datatable-sm" 
-            stripedRows 
-            responsiveLayout="scroll" 
-            :loading="loading"
-            lazy
-            :paginator="true"
-            :rows="rows"
-            :totalRecords="totalRecords"
-            @page="onPage($event)"
-          >
+          <AppDataTable :value="activities" class="app-table" stripedRows responsiveLayout="scroll" :loading="loading"
+            lazy :paginator="true" :rows="rows" :totalRecords="totalRecords" @page="onPage($event)">
             <template #empty>
               <div class="text-center py-12">
                 <i class="pi pi-history text-4xl text-slate-200 mb-3 block"></i>
                 <div class="text-slate-400">Belum ada rekaman aktivitas.</div>
               </div>
             </template>
-            
+
             <Column field="created_at" header="Waktu" class="w-48">
               <template #body="{ data }">
                 <div class="flex flex-col">
@@ -61,7 +52,7 @@
                   <div class="flex items-center gap-2">
                     <Tag :value="translateEvent(data.description)" :severity="getEventSeverity(data.description)" />
                     <span class="font-medium text-slate-600">
-                      {{ formatSubjectType(data.subject_type) }} 
+                      {{ formatSubjectType(data.subject_type) }}
                       <span class="text-slate-400 font-normal">#{{ data.subject_id }}</span>
                     </span>
                   </div>
@@ -74,12 +65,13 @@
                 <Button icon="pi pi-eye" text rounded @click="showDetail(data)" />
               </template>
             </Column>
-          </DataTable>
+          </AppDataTable>
         </template>
       </Card>
 
       <!-- Detail Dialog -->
-      <Dialog v-model:visible="displayDetail" header="Detail Aktivitas" :modal="true" :style="{ width: '50vw' }" class="p-fluid">
+      <Dialog v-model:visible="displayDetail" header="Detail Aktivitas" :modal="true" :style="{ width: '50vw' }"
+        class="p-fluid">
         <div v-if="selectedActivity" class="space-y-4">
           <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl">
             <div class="flex flex-col">
@@ -89,7 +81,8 @@
             <div class="flex flex-col">
               <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Aktivitas</span>
               <div>
-                 <Tag :value="translateEvent(selectedActivity.description)" :severity="getEventSeverity(selectedActivity.description)" />
+                <Tag :value="translateEvent(selectedActivity.description)"
+                  :severity="getEventSeverity(selectedActivity.description)" />
               </div>
             </div>
             <div class="flex flex-col">
@@ -98,29 +91,32 @@
             </div>
             <div class="flex flex-col">
               <span class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Objek</span>
-              <span class="font-bold">{{ formatSubjectType(selectedActivity.subject_type) }} (#{{ selectedActivity.subject_id }})</span>
+              <span class="font-bold">{{ formatSubjectType(selectedActivity.subject_type) }} (#{{
+                selectedActivity.subject_id
+                }})</span>
             </div>
           </div>
 
           <div v-if="hasChanges" class="space-y-2">
             <span class="text-xs font-bold text-slate-500 uppercase">Perubahan Data</span>
             <div class="border rounded-xl overflow-hidden">
-               <table class="w-full text-sm">
-                 <thead class="bg-slate-100 text-slate-600 font-bold">
-                   <tr>
-                     <th class="px-4 py-2 text-left">Field</th>
-                     <th class="px-4 py-2 text-left">Sebelum</th>
-                     <th class="px-4 py-2 text-left">Sesudah</th>
-                   </tr>
-                 </thead>
-                 <tbody class="divide-y">
-                   <tr v-for="(val, field) in changes.attributes" :key="field">
-                     <td class="px-4 py-2 font-mono text-xs text-slate-500">{{ field }}</td>
-                     <td class="px-4 py-2 text-red-500 line-through">{{ changes.old ? changes.old[field] : '-' }}</td>
-                     <td class="px-4 py-2 text-emerald-600 font-bold">{{ val }}</td>
-                   </tr>
-                 </tbody>
-               </table>
+              <AppDataTable :value="changeRows" :paginator="false" dataKey="field" compact>
+                <Column field="field" header="Field" class="w-44">
+                  <template #body="{ data }">
+                    <span class="font-mono text-xs text-slate-500">{{ data.field }}</span>
+                  </template>
+                </Column>
+                <Column field="before" header="Sebelum">
+                  <template #body="{ data }">
+                    <span class="text-red-500 line-through">{{ data.before }}</span>
+                  </template>
+                </Column>
+                <Column field="after" header="Sesudah">
+                  <template #body="{ data }">
+                    <span class="text-emerald-600 font-bold">{{ data.after }}</span>
+                  </template>
+                </Column>
+              </AppDataTable>
             </div>
           </div>
           <div v-else class="text-center py-4 text-slate-400 italic text-sm">
@@ -135,11 +131,12 @@
 
 <script setup>
 import axios from '@/api/axios';
+import AppDataTable from '@/components/AppDataTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { ref, onMounted, computed } from 'vue';
 import AppPage from '@/components/layout/AppPage.vue';
 import Card from 'primevue/card';
 import Button from 'primevue/button';
-import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
@@ -164,6 +161,17 @@ const hasChanges = computed(() => {
   return changes.value.attributes && Object.keys(changes.value.attributes).length > 0;
 });
 
+const changeRows = computed(() => {
+  const attributes = changes.value.attributes || {};
+  const oldValues = changes.value.old || {};
+
+  return Object.entries(attributes).map(([field, after]) => ({
+    field,
+    before: oldValues[field] ?? '-',
+    after: after ?? '-'
+  }));
+});
+
 function formatDateTime(str) {
   return new Date(str).toLocaleString('id-ID', {
     day: '2-digit', month: 'short', year: 'numeric',
@@ -175,7 +183,7 @@ function timeAgo(str) {
   const date = new Date(str);
   const now = new Date();
   const diff = Math.floor((now - date) / 1000);
-  
+
   if (diff < 60) return 'Baru saja';
   if (diff < 3600) return `${Math.floor(diff / 60)}m lalu`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}j lalu`;

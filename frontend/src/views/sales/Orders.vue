@@ -17,10 +17,18 @@
           placeholder="Filter Status" showClear class="!rounded-xl" />
       </div>
 
-      <!-- Data Table -->
-      <DataTable :value="rows" lazy paginator :rows="rowsPerPage" v-model:first="first" :totalRecords="totalRecords"
-        :loading="loading" @page="onPage" class="custom-table" :pt="{ wrapper: { class: 'border-none' } }"
-        selectionMode="single" @rowSelect="openOrder">
+      <AppDataTable framed
+        :value="rows"
+        lazy
+        paginator
+        :rows="rowsPerPage"
+        :first="first"
+        :totalRecords="totalRecords"
+        :loading="loading"
+        selectionMode="single"
+        @page="onPage"
+        @rowSelect="openOrder"
+      >
         <Column header="No" class="w-16 text-center">
           <template #body="slotProps">
             <span class="text-slate-400 font-mono text-xs">{{ slotProps.index + first + 1 }}</span>
@@ -28,12 +36,12 @@
         </Column>
         <Column field="order_number" :header="$t('dashboard.order_id')">
           <template #body="{ data }">
-            <span class="font-bold text-slate-700">{{ data.order_number }}</span>
+            <span class="font-semibold text-slate-800">{{ data.order_number }}</span>
           </template>
         </Column>
         <Column :header="$t('common.date')">
           <template #body="{ data }">
-            <span class="text-slate-600">{{ formatDate(data.created_at) }}</span>
+            <span class="text-slate-500">{{ formatDate(data.created_at) }}</span>
           </template>
         </Column>
         <Column field="customer_name" :header="$t('checkout.customer')">
@@ -50,28 +58,15 @@
         </Column>
         <Column field="total_amount" :header="$t('common.total')">
           <template #body="{ data }">
-            <span class="font-bold text-slate-800">Rp {{ money(data.total_amount) }}</span>
+            <span class="font-semibold text-slate-700">Rp {{ money(data.total_amount) }}</span>
           </template>
         </Column>
         <Column :header="$t('common.status')" class="w-32">
           <template #body="{ data }">
-            <span :class="[
-              'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-1.5',
-              data.status === 'completed'
-                ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                : data.status === 'cancelled'
-                  ? 'bg-rose-50 text-rose-600 border border-rose-100'
-                  : 'bg-amber-50 text-amber-600 border border-amber-100'
-            ]">
-              <span :class="[
-                'w-1.5 h-1.5 rounded-full',
-                data.status === 'completed' ? 'bg-emerald-500' : data.status === 'cancelled' ? 'bg-rose-500' : 'bg-amber-500'
-              ]"></span>
-              {{ data.status || 'pending' }}
-            </span>
+            <StatusBadge :status="data.status || 'pending'" :label="data.status || 'pending'" />
           </template>
         </Column>
-      </DataTable>
+      </AppDataTable>
     </div>
   </AppPage>
 </template>
@@ -83,7 +78,8 @@ import { useI18n } from 'vue-i18n';
 import { orderApi } from '@/api/sales';
 import { unwrapCollection } from '@/utils/api';
 import AppPage from '@/components/layout/AppPage.vue';
-import DataTable from 'primevue/datatable';
+import AppDataTable from '@/components/AppDataTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
@@ -153,63 +149,4 @@ async function openOrder(event) {
 load();
 </script>
 
-<style scoped>
-:deep(.custom-table .p-datatable-thead > tr > th) {
-  background-color: transparent !important;
-  color: #64748b !important;
-  font-size: 0.75rem !important;
-  text-transform: uppercase !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid #f1f5f9 !important;
-  border-top: none !important;
-  padding: 1rem 0.5rem !important;
-}
 
-:deep(.custom-table .p-datatable-tbody > tr > td) {
-  border-bottom: 1px solid #f1f5f9 !important;
-  padding: 1rem 0.5rem !important;
-  color: #334155 !important;
-  font-size: 0.875rem !important;
-  font-weight: 500;
-}
-
-:deep(.custom-table .p-datatable-tbody > tr:hover) {
-  background-color: #f8fafc !important;
-}
-
-:deep(.custom-table .p-paginator) {
-  background-color: transparent !important;
-  border: none !important;
-  padding-top: 1.5rem !important;
-  justify-content: center !important;
-}
-
-:deep(.custom-table .p-paginator .p-paginator-pages .p-paginator-page.p-highlight) {
-  background-color: #3b82f6 !important;
-  color: white !important;
-  border-radius: 0.5rem !important;
-  border: none !important;
-}
-
-:deep(.custom-table .p-paginator .p-paginator-pages .p-paginator-page) {
-  border-radius: 0.5rem !important;
-  border: 1px solid #e2e8f0 !important;
-  margin: 0 0.25rem !important;
-  color: #64748b !important;
-  min-width: 2.5rem !important;
-  height: 2.5rem !important;
-}
-
-:deep(.custom-table .p-paginator .p-paginator-prev),
-:deep(.custom-table .p-paginator .p-paginator-next),
-:deep(.custom-table .p-paginator .p-paginator-first),
-:deep(.custom-table .p-paginator .p-paginator-last) {
-  border-radius: 0.5rem !important;
-  border: 1px solid #e2e8f0 !important;
-  margin: 0 0.25rem !important;
-  color: #64748b !important;
-  min-width: 2.5rem !important;
-  height: 2.5rem !important;
-}
-</style>

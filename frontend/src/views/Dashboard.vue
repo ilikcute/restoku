@@ -97,7 +97,7 @@
         <template #content>
           <div class="pt-2">
             <!-- Using lowStock data as a placeholder for Live Order table layout -->
-            <DataTable :value="dashboardStore.recentOrders" :loading="dashboardStore.loading"
+            <AppDataTable :value="dashboardStore.recentOrders" :loading="dashboardStore.loading"
               class="p-datatable-sm !border-t !border-slate-100">
               <Column field="order_number" :header="$t('dashboard.order_id')">
                 <template #body="{ data }"><span class="font-bold text-slate-700">{{ data.order_number
@@ -127,7 +127,7 @@
                     @click="router.push('/sales/orders/' + data.id)" />
                 </template>
               </Column>
-            </DataTable>
+            </AppDataTable>
           </div>
         </template>
       </Card>
@@ -137,6 +137,8 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue';
+import AppDataTable from '@/components/AppDataTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { useRouter } from 'vue-router';
 import { useDashboardStore } from '@/stores/dashboard';
 import { inventoryApi } from '@/api/inventory';
@@ -144,7 +146,6 @@ import { useI18n } from 'vue-i18n';
 import Card from 'primevue/card';
 import Chart from 'primevue/chart';
 import Button from 'primevue/button';
-import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
 
@@ -258,26 +259,4 @@ onMounted(async () => {
 });
 </script>
 
-<style scoped>
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
-  border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #cbd5e1;
-}
-
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: #e2e8f0 transparent;
-}
-</style>

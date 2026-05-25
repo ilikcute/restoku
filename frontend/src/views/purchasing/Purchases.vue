@@ -1,11 +1,11 @@
 <template>
-  <AppPage title="Pembelian Stok" :breadcrumb="['Manajemen', 'Pembelian']">
+  <AppPage title="Pembelian Stok" :breadcrumb="['Manajemen', 'Pembelian']" no-card>
     <template #actions>
       <Button label="Tambah Pembelian" icon="pi pi-plus"
         class="!rounded-2xl !px-6 !bg-orange-600 !border-none shadow-lg shadow-orange-200/50" @click="openDialog" />
     </template>
 
-    <DataTable :value="rows" :loading="loading" paginator :rows="20" class="p-datatable-modern"
+    <AppDataTable framed :value="rows" :loading="loading" paginator :rows="20" class="app-table"
       responsiveLayout="scroll">
       <Column field="purchase_number" :header="$t('purchasing.number')" style="width: 180px">
         <template #body="{ data }">
@@ -69,7 +69,7 @@
           </div>
         </template>
       </Column>
-    </DataTable>
+    </AppDataTable>
 
     <!-- Create Purchase Dialog -->
     <Dialog v-model:visible="dialogOpen" :header="$t('purchasing.create_purchase')" modal :style="{ width: '56rem' }"
@@ -157,7 +157,7 @@
 
         <!-- Items Table -->
         <div class="border border-slate-100 rounded-2xl overflow-hidden bg-white shadow-sm">
-          <DataTable :value="form.items" class="p-datatable-sm" responsiveLayout="scroll">
+          <AppDataTable framed :value="form.items" class="app-table" responsiveLayout="scroll">
             <Column :header="$t('sidebar.products')">
               <template #body="{ data }">
                 <div class="flex flex-col">
@@ -169,7 +169,7 @@
             <Column field="quantity" :header="$t('inventory.qty')" style="width: 100px">
               <template #body="{ data }">
                 <span class="font-mono font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded text-xs">{{ data.quantity
-                  }}</span>
+                }}</span>
               </template>
             </Column>
             <Column field="cost_price" :header="$t('product.cost_price')">
@@ -188,7 +188,7 @@
                   @click="removeItem(slotProps.index)" />
               </template>
             </Column>
-          </DataTable>
+          </AppDataTable>
           <div v-if="form.items.length === 0" class="p-12 text-center bg-slate-50/30">
             <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
               <i class="pi pi-shopping-bag text-2xl text-slate-300"></i>
@@ -219,6 +219,8 @@
 
 <script setup>
 import axios from '@/api/axios';
+import AppDataTable from '@/components/AppDataTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { reactive, ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from 'primevue/usetoast';
@@ -229,7 +231,6 @@ import { unwrapCollection } from '@/utils/api';
 import { useRouter } from 'vue-router';
 import Button from 'primevue/button';
 import AppPage from '@/components/layout/AppPage.vue';
-import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
 import Select from 'primevue/select';
@@ -371,7 +372,3 @@ onMounted(() => {
   loadRows();
 });
 </script>
-
-<style scoped>
-@reference "@/style.css";
-</style>

@@ -42,7 +42,7 @@
 
       <!-- Recommendations Table -->
       <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <DataTable 
+        <AppDataTable framed 
           :value="rows" 
           :loading="loading" 
           paginator 
@@ -118,7 +118,7 @@
               <Button icon="pi pi-shopping-cart" size="small" rounded severity="primary" v-tooltip="'Buat Purchase Order'" />
             </template>
           </Column>
-        </DataTable>
+        </AppDataTable>
       </div>
     </div>
   </AppPage>
@@ -126,9 +126,10 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue';
+import AppDataTable from '@/components/AppDataTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import { inventoryApi } from '@/api/inventory';
 import AppPage from '@/components/layout/AppPage.vue';
-import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import Tag from 'primevue/tag';
@@ -166,9 +167,4 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
-.custom-select-button :deep(.p-button) {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-}
-</style>
+

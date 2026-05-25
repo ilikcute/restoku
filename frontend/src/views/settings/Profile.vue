@@ -1,5 +1,5 @@
 <template>
-  <AppPage :title="$t('settings.profile_settings')" :breadcrumb="[$t('common.settings'), $t('sidebar.profile')]" no-card>
+  <AppPage :title="$t('settings.profile_settings')" :breadcrumb="[$t('common.settings'), $t('sidebar.profile')]">
     <div class="grid gap-6 xl:grid-cols-2">
       <!-- Profile Information -->
       <Card class="!rounded-3xl border-none shadow-sm overflow-hidden">
@@ -16,25 +16,35 @@
             <!-- Avatar Upload -->
             <div class="flex flex-col items-center gap-4 py-2">
               <div class="relative group">
-                <img :src="profile.avatar_url" class="w-32 h-32 rounded-3xl object-cover border-4 border-white shadow-md transition-transform group-hover:scale-105" />
-                <div class="absolute inset-0 flex items-center justify-center bg-black/40 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                <img :src="profile.avatar_url"
+                  class="w-32 h-32 rounded-3xl object-cover border-4 border-white shadow-md transition-transform group-hover:scale-105" />
+                <div
+                  class="absolute inset-0 flex items-center justify-center bg-black/40 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                   <i class="pi pi-camera text-white text-2xl"></i>
-                  <input type="file" class="absolute inset-0 opacity-0 cursor-pointer" @change="onAvatarSelect" accept="image/*" />
+                  <input type="file" class="absolute inset-0 opacity-0 cursor-pointer" @change="onAvatarSelect"
+                    accept="image/*" />
                 </div>
               </div>
               <p class="text-xs text-slate-400">{{ $t('settings.click_to_change') }} ({{ $t('settings.max_size') }})</p>
             </div>
 
             <div class="flex flex-col gap-2">
-              <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">{{ $t('common.name') }}</label>
-              <InputText v-model="profile.name" class="!rounded-xl !bg-slate-50 !border-slate-100 focus:!ring-emerald-500" :placeholder="$t('common.name')" />
+              <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">{{ $t('common.name')
+                }}</label>
+              <InputText v-model="profile.name"
+                class="!rounded-xl !bg-slate-50 !border-slate-100 focus:!ring-emerald-500"
+                :placeholder="$t('common.name')" />
             </div>
             <div class="flex flex-col gap-2">
-              <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">{{ $t('auth.email') }}</label>
-              <InputText v-model="profile.email" class="!rounded-xl !bg-slate-50 !border-slate-100 focus:!ring-emerald-500" :placeholder="$t('auth.email')" />
+              <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">{{ $t('auth.email')
+                }}</label>
+              <InputText v-model="profile.email"
+                class="!rounded-xl !bg-slate-50 !border-slate-100 focus:!ring-emerald-500"
+                :placeholder="$t('auth.email')" />
             </div>
             <div class="pt-2">
-              <Button :label="$t('settings.update_profile')" icon="pi pi-check" class="!rounded-xl !px-6" :loading="savingProfile" @click="saveProfile" />
+              <Button :label="$t('settings.update_profile')" icon="pi pi-check" class="!rounded-xl !px-6"
+                :loading="savingProfile" @click="saveProfile" />
             </div>
           </div>
         </template>
@@ -53,19 +63,26 @@
         <template #content>
           <div class="p-2 space-y-5">
             <div class="flex flex-col gap-2">
-              <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">{{ $t('settings.current_password') }}</label>
-              <Password v-model="password.current_password" :feedback="false" class="w-full" inputClass="w-full !rounded-xl !bg-slate-50 !border-slate-100" placeholder="••••••••" toggleMask />
+              <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">{{
+                $t('settings.current_password') }}</label>
+              <Password v-model="password.current_password" :feedback="false" class="w-full"
+                inputClass="w-full !rounded-xl !bg-slate-50 !border-slate-100" placeholder="••••••••" toggleMask />
             </div>
             <div class="flex flex-col gap-2">
-              <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">{{ $t('settings.new_password') }}</label>
-              <Password v-model="password.password" class="w-full" inputClass="w-full !rounded-xl !bg-slate-50 !border-slate-100" placeholder="••••••••" toggleMask />
+              <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">{{
+                $t('settings.new_password') }}</label>
+              <Password v-model="password.password" class="w-full"
+                inputClass="w-full !rounded-xl !bg-slate-50 !border-slate-100" placeholder="••••••••" toggleMask />
             </div>
             <div class="flex flex-col gap-2">
-              <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">{{ $t('settings.confirm_password') }}</label>
-              <Password v-model="password.password_confirmation" :feedback="false" class="w-full" inputClass="w-full !rounded-xl !bg-slate-50 !border-slate-100" placeholder="••••••••" toggleMask />
+              <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">{{
+                $t('settings.confirm_password') }}</label>
+              <Password v-model="password.password_confirmation" :feedback="false" class="w-full"
+                inputClass="w-full !rounded-xl !bg-slate-50 !border-slate-100" placeholder="••••••••" toggleMask />
             </div>
             <div class="pt-2">
-              <Button :label="$t('settings.change_password')" icon="pi pi-shield" severity="warning" class="!rounded-xl !px-6" :loading="savingPassword" @click="savePassword" />
+              <Button :label="$t('settings.change_password')" icon="pi pi-shield" severity="warning"
+                class="!rounded-xl !px-6" :loading="savingPassword" @click="savePassword" />
             </div>
           </div>
         </template>
@@ -84,8 +101,10 @@
         <template #content>
           <div class="p-2 space-y-5">
             <div class="flex flex-col gap-2">
-              <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">{{ $t('settings.select_language') }}</label>
-              <Select v-model="currentLocale" :options="locales" optionLabel="label" optionValue="value" class="w-full !rounded-xl !bg-slate-50 !border-slate-100" @change="changeLanguage" />
+              <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">{{
+                $t('settings.select_language') }}</label>
+              <Select v-model="currentLocale" :options="locales" optionLabel="label" optionValue="value"
+                class="w-full !rounded-xl !bg-slate-50 !border-slate-100" @change="changeLanguage" />
               <p class="text-xs text-slate-400 mt-1">{{ $t('settings.language_desc') }}</p>
             </div>
           </div>

@@ -1,14 +1,7 @@
 <template>
-  <SimpleCrudPage
-    :title="$t('sidebar.customers')"
-    :create-label="`${$t('common.add')} ${$t('sidebar.customers')}`"
-    :columns="columns"
-    :form-fields="fields"
-    :loader="customerApi.getAll"
-    :creator="customerApi.create"
-    :updater="customerApi.update"
-    :deleter="customerApi.delete"
-  />
+  <SimpleCrudPage :title="$t('sidebar.customers')" :create-label="`${$t('common.add')} ${$t('sidebar.customers')}`"
+    :columns="columns" :form-fields="fields" :loader="customerApi.getAll" :creator="customerApi.create"
+    :updater="customerApi.update" :deleter="customerApi.delete" :table-framed="false" :table-flat="true" />
 </template>
 
 <script setup>

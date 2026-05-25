@@ -29,13 +29,19 @@
         </div>
       </div>
 
-      <DataTable :value="products" lazy paginator :rows="rowsPerPage" v-model:first="first" :totalRecords="totalRecords"
-        :loading="loading" @page="onPage" class="custom-table" :pt="{
-          wrapper: { class: 'border-none' }
-        }">
+      <AppDataTable framed
+        :value="products"
+        lazy
+        paginator
+        :rows="rowsPerPage"
+        :first="first"
+        :totalRecords="totalRecords"
+        :loading="loading"
+        @page="onPage"
+      >
         <Column header="No" class="w-16 text-center">
           <template #body="slotProps">
-            {{ slotProps.index + first + 1 }}
+            <span class="text-slate-400 font-mono text-xs">{{ slotProps.index + first + 1 }}</span>
           </template>
         </Column>
         <Column :header="$t('common.image')">
@@ -46,23 +52,37 @@
             </div>
           </template>
         </Column>
-        <Column field="name" :header="$t('common.name')" />
-        <Column field="code" :header="$t('product.code')" />
+        <Column field="name" :header="$t('common.name')">
+          <template #body="{ data }">
+            <span class="font-semibold text-slate-800">{{ data.name }}</span>
+          </template>
+        </Column>
+        <Column field="code" :header="$t('product.code')">
+          <template #body="{ data }">
+            <span class="font-mono text-xs text-slate-500">{{ data.code }}</span>
+          </template>
+        </Column>
         <Column field="category.name" :header="$t('common.category')">
-          <template #body="{ data }">{{ data.category?.name }}</template>
+          <template #body="{ data }">
+            <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold uppercase tracking-wider">{{ data.category?.name }}</span>
+          </template>
         </Column>
         <Column field="unit.short_name" :header="$t('common.unit')">
-          <template #body="{ data }">{{ data.unit?.short_name }}</template>
+          <template #body="{ data }">
+            <span class="text-slate-500 text-xs">{{ data.unit?.short_name }}</span>
+          </template>
         </Column>
         <Column field="price" :header="$t('common.price')">
-          <template #body="{ data }">Rp {{ money(data.price) }}</template>
+          <template #body="{ data }">
+            <span class="font-semibold text-slate-700">Rp {{ money(data.price) }}</span>
+          </template>
         </Column>
         <Column :header="$t('common.stock')">
           <template #body="{ data }">
-            <Tag :value="data.stock?.current_stock ?? 0" :severity="stockSeverity(data)" />
+            <StatusBadge :status="stockSeverity(data) === 'danger' ? 'failed' : 'active'" :label="String(data.stock?.current_stock ?? 0)" />
           </template>
         </Column>
-        <Column :header="$t('common.actions')">
+        <Column :header="$t('common.actions')" class="w-28">
           <template #body="{ data }">
             <div class="flex items-center gap-1">
               <Button icon="pi pi-eye" outlined class="!w-8 !h-8 !p-0 !text-slate-500 !border-slate-200 hover:!bg-slate-50" @click="openShow(data)" />
@@ -71,7 +91,7 @@
             </div>
           </template>
         </Column>
-      </DataTable>
+      </AppDataTable>
 
       <ProductFormModal v-model:visible="dialogOpen" :title="dialogTitle" :product="selectedProductForEdit"
         :categories="categories" :suppliers="suppliers" :units="units" @saved="loadProducts" />
@@ -89,7 +109,6 @@ import { useConfirm } from 'primevue/useconfirm';
 import { productApi, masterApi } from '@/api/master';
 
 import Button from 'primevue/button';
-import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
 import Select from 'primevue/select';
@@ -98,6 +117,8 @@ import InputText from 'primevue/inputtext';
 import ProductFormModal from '@/components/master/ProductFormModal.vue';
 import ProductDetailModal from '@/components/master/ProductDetailModal.vue';
 import AppPage from '@/components/layout/AppPage.vue';
+import AppDataTable from '@/components/AppDataTable.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 
 const { t: $t } = useI18n();
 const toast = useToast();
@@ -311,63 +332,4 @@ function remove(item) {
 initPage();
 </script>
 
-<style scoped>
-:deep(.custom-table .p-datatable-thead > tr > th) {
-  background-color: transparent !important;
-  color: #64748b !important;
-  font-size: 0.75rem !important;
-  text-transform: uppercase !important;
-  font-weight: 600 !important;
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid #f1f5f9 !important;
-  border-top: none !important;
-  padding: 1rem 0.5rem !important;
-}
 
-:deep(.custom-table .p-datatable-tbody > tr > td) {
-  border-bottom: 1px solid #f1f5f9 !important;
-  padding: 1rem 0.5rem !important;
-  color: #334155 !important;
-  font-size: 0.875rem !important;
-  font-weight: 500;
-}
-
-:deep(.custom-table .p-datatable-tbody > tr:hover) {
-  background-color: #f8fafc !important;
-}
-
-:deep(.custom-table .p-paginator) {
-  background-color: transparent !important;
-  border: none !important;
-  padding-top: 1.5rem !important;
-  justify-content: center !important;
-}
-
-:deep(.custom-table .p-paginator .p-paginator-pages .p-paginator-page.p-highlight) {
-  background-color: #3b82f6 !important;
-  color: white !important;
-  border-radius: 0.5rem !important;
-  border: none !important;
-}
-
-:deep(.custom-table .p-paginator .p-paginator-pages .p-paginator-page) {
-  border-radius: 0.5rem !important;
-  border: 1px solid #e2e8f0 !important;
-  margin: 0 0.25rem !important;
-  color: #64748b !important;
-  min-width: 2.5rem !important;
-  height: 2.5rem !important;
-}
-
-:deep(.custom-table .p-paginator .p-paginator-prev),
-:deep(.custom-table .p-paginator .p-paginator-next),
-:deep(.custom-table .p-paginator .p-paginator-first),
-:deep(.custom-table .p-paginator .p-paginator-last) {
-  border-radius: 0.5rem !important;
-  border: 1px solid #e2e8f0 !important;
-  margin: 0 0.25rem !important;
-  color: #64748b !important;
-  min-width: 2.5rem !important;
-  height: 2.5rem !important;
-}
-</style>
