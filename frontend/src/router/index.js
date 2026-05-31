@@ -49,6 +49,7 @@ const router = createRouter({
         
         // Sales
         { path: 'sales/shifts', name: 'shifts', component: () => import('@/views/sales/ShiftManager.vue'), meta: { auth: true, permission: 'view-shifts' } },
+        { path: 'sales/import', name: 'import-transactions', component: () => import('@/views/sales/ImportTransactions.vue'), meta: { auth: true, permission: 'view-orders' } },
         { path: 'sales/orders', name: 'orders', component: () => import('@/views/sales/Orders.vue'), meta: { auth: true, permission: 'view-orders' } },
         { path: 'sales/orders/:id', name: 'order-detail', component: () => import('@/views/sales/OrderDetail.vue'), meta: { auth: true, permission: 'view-orders' } },
         { path: 'sales/returns', name: 'sales-returns', component: () => import('@/views/shared/Returns.vue'), meta: { auth: true, permission: 'view-sales-returns' }, props: { type: 'order' } },
@@ -71,6 +72,7 @@ const router = createRouter({
         { path: 'reports/sales-returns', name: 'reports-sales-returns', component: () => import('@/views/reports/SalesReturnReport.vue'), meta: { auth: true, permission: 'view-report-returns' } },
         { path: 'reports/purchase-returns', name: 'reports-purchase-returns', component: () => import('@/views/reports/PurchaseReturnReport.vue'), meta: { auth: true, permission: 'view-report-returns' } },
         { path: 'reports/tax', name: 'reports-tax', component: () => import('@/views/reports/TaxReport.vue'), meta: { auth: true, permission: 'view-report-tax' } },
+        { path: 'reports/tax-fixed', name: 'reports-tax-fixed', component: () => import('@/views/reports/TaxFixedReport.vue'), meta: { auth: true, permission: 'view-report-tax' } },
         { path: 'reports/audit-logs', name: 'reports-audit', component: () => import('@/views/reports/AuditLog.vue'), meta: { auth: true, permission: 'view-reports' } },
         
         // Settings

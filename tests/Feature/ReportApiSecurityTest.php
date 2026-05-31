@@ -32,6 +32,11 @@ test('export excel does not expose internal exception details', function () {
             return collect();
         }
 
+        public function getFixedDpkadOrders(int $tenantId, string $startDate, string $endDate): Collection
+        {
+            return collect();
+        }
+
         public function getDailyChart(int $tenantId, string $startDate, string $endDate): Collection
         {
             return collect();
@@ -91,4 +96,76 @@ test('export excel does not expose internal exception details', function () {
             'status' => 'error',
             'message' => 'Gagal membuat file Excel.',
         ]);
+});
+
+test('can export tax excel report successfully', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create(['tenant_id' => $tenant->id]);
+    Permission::findOrCreate('view-reports');
+    $user->givePermissionTo('view-reports');
+
+    $response = $this->actingAs($user, 'sanctum')
+        ->get('/api/v1/reports/export/tax-excel?start_date=2026-05-01&end_date=2026-05-31');
+
+    $response->assertStatus(200);
+});
+
+test('can export tax pdf report successfully', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create(['tenant_id' => $tenant->id]);
+    Permission::findOrCreate('view-reports');
+    $user->givePermissionTo('view-reports');
+
+    $response = $this->actingAs($user, 'sanctum')
+        ->get('/api/v1/reports/export/tax-pdf?start_date=2026-05-01&end_date=2026-05-31');
+
+    $response->assertStatus(200);
+});
+
+test('can get tax report json successfully', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create(['tenant_id' => $tenant->id]);
+    Permission::findOrCreate('view-reports');
+    $user->givePermissionTo('view-reports');
+
+    $response = $this->actingAs($user, 'sanctum')
+        ->get('/api/v1/reports/tax?start_date=2026-05-01&end_date=2026-05-31');
+
+    $response->assertStatus(200);
+});
+
+test('can get fixed tax report json successfully', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create(['tenant_id' => $tenant->id]);
+    Permission::findOrCreate('view-reports');
+    $user->givePermissionTo('view-reports');
+
+    $response = $this->actingAs($user, 'sanctum')
+        ->get('/api/v1/reports/tax-fixed?start_date=2026-05-01&end_date=2026-05-31');
+
+    $response->assertStatus(200);
+});
+
+test('can export fixed tax excel report successfully', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create(['tenant_id' => $tenant->id]);
+    Permission::findOrCreate('view-reports');
+    $user->givePermissionTo('view-reports');
+
+    $response = $this->actingAs($user, 'sanctum')
+        ->get('/api/v1/reports/export/tax-fixed-excel?start_date=2026-05-01&end_date=2026-05-31');
+
+    $response->assertStatus(200);
+});
+
+test('can export fixed tax pdf report successfully', function () {
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create(['tenant_id' => $tenant->id]);
+    Permission::findOrCreate('view-reports');
+    $user->givePermissionTo('view-reports');
+
+    $response = $this->actingAs($user, 'sanctum')
+        ->get('/api/v1/reports/export/tax-fixed-pdf?start_date=2026-05-01&end_date=2026-05-31');
+
+    $response->assertStatus(200);
 });

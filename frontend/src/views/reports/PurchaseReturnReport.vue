@@ -1,23 +1,42 @@
 <template>
   <AppPage :title="$t('sidebar.purchase_return_report')" :breadcrumb="[$t('common.reports'), $t('sidebar.purchase_return_report')]">
-    <div class="space-y-6 mt-4">
+    <div class="space-y-1">
       
       <!-- Filters -->
-      <Card class="border-none shadow-sm">
-        <template #content>
-          <div class="flex flex-wrap items-end gap-4">
-            <div class="flex flex-col gap-2">
-              <label class="text-xs font-bold text-slate-500 uppercase">{{ $t('reports.period') }}</label>
-              <DatePicker v-model="dates" selectionMode="range" :manualInput="false" showIcon iconDisplay="input" class="w-72" />
-            </div>
-            <div class="flex flex-col gap-2 flex-1 min-w-[200px]">
-              <label class="text-xs font-bold text-slate-500 uppercase">Cari Transaksi</label>
-              <InputText v-model="search" placeholder="Cari No. Pembelian atau Pemasok..." class="w-full" />
-            </div>
-            <Button :label="$t('reports.show')" icon="pi pi-search" @click="loadData" :loading="loading" />
+      <div
+          class="flex flex-wrap items-center justify-between gap-4 bg-slate-50/50 p-2 rounded-2xl border border-slate-100"
+      >
+          <div class="flex items-center gap-3">
+              <label
+                  class="text-xs font-bold text-slate-500 uppercase whitespace-nowrap"
+                  >{{ $t("reports.period") }}</label
+              >
+              <DatePicker
+                  v-model="dates"
+                  selectionMode="range"
+                  :manualInput="false"
+                  showIcon
+                  iconDisplay="input"
+                  class="w-72"
+              />
+              <label
+                  class="text-xs font-bold text-slate-500 uppercase whitespace-nowrap"
+                  >Cari Transaksi</label
+              >
+              <InputText
+                  v-model="search"
+                  placeholder="Cari No. Pembelian atau Pemasok..."
+                  class="w-full"
+              />
           </div>
-        </template>
-      </Card>
+          <Button
+              :label="$t('reports.show')"
+              icon="pi pi-search"
+              @click="loadData"
+              :loading="loading"
+              class="!rounded-xl shadow-sm"
+          />
+      </div>
 
       <!-- Purchase Return Table -->
       <Card class="border-none shadow-sm">

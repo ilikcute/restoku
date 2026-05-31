@@ -64,3 +64,25 @@ test('cannot open a new shift while current shift is still open', function () {
             'message' => 'Anda masih memiliki Shift yang terbuka.',
         ]);
 });
+
+test('cannot open a new shift while having an active shift from a prior day', function () {
+    config(['app.debug' => true]);
+
+    Shift::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'user_id' => $this->user->id,
+        'status' => 'open',
+        'start_time' => now()->subDay(),
+    ]);
+
+    $response = $this->actingAs($this->user, 'sanctum')
+        ->postJson('/api/v1/shifts/open', [
+            'starting_cash' => 100000,
+        ]);
+
+    $response->assertStatus(500)
+        ->assertJsonPath('status', 'error')
+        ->assertJsonFragment([
+            'message' => 'Anda memiliki shift aktif dari hari sebelumnya yang belum ditutup. Harap tutup shift tersebut terlebih dahulu sebelum membuka shift baru.',
+        ]);
+});

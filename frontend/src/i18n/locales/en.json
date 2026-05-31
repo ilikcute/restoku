@@ -85,6 +85,7 @@
         "promotions": "Marquee Promotions",
         "database": "Backup & Restore",
         "tax_report": "Tax Report",
+        "tax_report_fixed": "Fixed Tax Report",
         "audit_trail": "Audit Trail (Logs)",
         "logout": "Logout"
     },
@@ -328,6 +329,7 @@
         "title": "Sales Report & Recapitulation",
         "period": "Date Range",
         "show": "Show Report",
+        "search": "Search Transactions",
         "total_net": "Total Sales (Net)",
         "gross_profit": "Gross Profit",
         "total_expenses": "Total Expenses",
@@ -351,6 +353,7 @@
         "qty": "Qty",
         "total": "Total",
         "tax_report": "Tax Report (VAT/PB1)",
+        "tax_report_fixed": "Fixed Tax Report (DPKAD)",
         "reported_sales": "Reported Sales Recap (TAX)",
         "synced_only_desc": "Only showing data synced to tax office",
         "total_dpp": "Total DPP (Net)",

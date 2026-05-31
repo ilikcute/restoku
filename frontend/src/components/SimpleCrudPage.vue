@@ -1,13 +1,15 @@
 <template>
     <AppPage :title="title" :breadcrumb="[$t('common.master_data'), title]">
         <template #actions>
-            <Button :label="createLabel" icon="pi pi-plus" class="!rounded-3xl !px-7 !py-3 !bg-emerald-600 !border-none shadow-xl shadow-emerald-500/20 hover:shadow-emerald-600/30 transition-all duration-200 hover:-translate-y-0.5" @click="openCreate" />
+            <Button :label="createLabel" icon="pi pi-plus"
+                class="!rounded-3xl !px-7 !py-3 !bg-emerald-600 !border-none shadow-xl shadow-emerald-500/20 hover:shadow-emerald-600/30 transition-all duration-200 hover:-translate-y-0.5"
+                @click="openCreate" />
         </template>
 
         <!-- Modern Card Container -->
         <div class="modern-card">
-            <AppDataTable :framed="tableFramed" :flat="tableFlat" :value="rows" paginator :rows="10" :loading="loading" v-model:first="first" class="modern-table"
-                :pt="{
+            <AppDataTable :framed="tableFramed" :flat="tableFlat" :value="rows" paginator :rows="10" :loading="loading"
+                v-model:first="first" class="modern-table" :pt="{
                     wrapper: { class: 'border-none' },
                     header: { class: 'border-b border-slate-100' }
                 }">
@@ -41,7 +43,8 @@
                             'inline-flex items-center gap-2 px-3 py-1.5 rounded-2xl text-xs font-bold uppercase tracking-widest border',
                             data.is_active ? 'bg-emerald-50 text-emerald-500 border-emerald-200' : 'bg-red-50 text-red-500 border-red-200'
                         ]">
-                            <span :class="['inline-block w-[7px] h-[7px] rounded-full', data.is_active ? 'bg-emerald-500' : 'bg-red-500']"></span>
+                            <span
+                                :class="['inline-block w-[7px] h-[7px] rounded-full', data.is_active ? 'bg-emerald-500' : 'bg-red-500']"></span>
                             {{ data.is_active ? $t("common.active") : $t("common.inactive") }}
                         </div>
                     </template>
@@ -51,9 +54,11 @@
                 <Column :header="$t('common.actions')" class="w-28">
                     <template #body="{ data }">
                         <div class="flex items-center gap-2">
-                            <Button icon="pi pi-pencil" outlined class="!w-9 !h-9 !rounded-2xl transition-all !text-slate-500 !border-slate-200 hover:!bg-slate-50 hover:!border-slate-300"
+                            <Button icon="pi pi-pencil" outlined
+                                class="!w-8 !h-8 !p-0 transition-all !text-slate-500 !border-slate-200 hover:!bg-slate-50 hover:!border-slate-200"
                                 @click="openEdit(data)" />
-                            <Button icon="pi pi-trash" outlined class="!w-9 !h-9 !rounded-2xl transition-all !text-red-500 !border-slate-200 hover:!bg-red-50 hover:!border-red-200"
+                            <Button icon="pi pi-trash" outlined
+                                class="!w-8 !h-8 !p-0  transition-all !text-red-500 !border-slate-200 hover:!bg-red-50 hover:!border-slate-200"
                                 @click="remove(data)" />
                         </div>
                     </template>
@@ -63,7 +68,8 @@
 
         <!-- Modern Dialog -->
         <Dialog v-model:visible="dialogOpen" modal :header="dialogTitle" :style="{ width: '380px' }"
-            pt:root:class="!rounded-[24px] shadow-[0_25px_50px_-12px_rgb(0,0,0,0.25)]" pt:header:class="!bg-slate-50 !border-b !border-slate-200 !px-7 !py-6 !rounded-t-[24px]"
+            pt:root:class="!rounded-[24px] shadow-[0_25px_50px_-12px_rgb(0,0,0,0.25)]"
+            pt:header:class="!bg-slate-50 !border-b !border-slate-200 !px-7 !py-6 !rounded-t-[24px]"
             pt:content:class="!p-7">
 
             <div class="space-y-6">
@@ -74,17 +80,21 @@
 
                     <!-- Input variants -->
                     <InputText v-if="field.type === 'number'" v-model.number="form[field.key]" type="number"
-                        class="w-full rounded-2xl bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all px-5 py-3.5 text-slate-700" :class="{ 'p-invalid': errors[field.key] }" />
+                        class="w-full rounded-2xl bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all px-5 py-3.5 text-slate-700"
+                        :class="{ 'p-invalid': errors[field.key] }" />
 
                     <Textarea v-else-if="field.type === 'textarea'" v-model="form[field.key]" rows="4"
-                        class="w-full rounded-2xl bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all px-5 py-3.5 text-slate-700" :class="{ 'p-invalid': errors[field.key] }" />
+                        class="w-full rounded-2xl bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all px-5 py-3.5 text-slate-700"
+                        :class="{ 'p-invalid': errors[field.key] }" />
 
-                    <div v-else-if="field.type === 'checkbox'" class="flex items-center gap-3 bg-slate-50 border border-slate-100 hover:border-slate-200 px-5 py-4 rounded-2xl transition-all">
+                    <div v-else-if="field.type === 'checkbox'"
+                        class="flex items-center gap-3 bg-slate-50 border border-slate-100 hover:border-slate-200 px-5 py-4 rounded-2xl transition-all">
                         <Checkbox v-model="form[field.key]" binary :inputId="field.key" />
                         <label :for="field.key" class="cursor-pointer">{{ field.checkboxLabel || field.label }}</label>
                     </div>
 
-                    <InputText v-else v-model="form[field.key]" class="w-full rounded-2xl bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all px-5 py-3.5 text-slate-700"
+                    <InputText v-else v-model="form[field.key]"
+                        class="w-full rounded-2xl bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all px-5 py-3.5 text-slate-700"
                         :class="{ 'p-invalid': errors[field.key] }" />
 
                     <small v-if="errors[field.key]" class="text-red-500 text-xs font-medium ml-1 mt-1 block">
@@ -93,7 +103,8 @@
                 </div>
 
                 <!-- Active Toggle -->
-                <div class="flex items-center gap-3 bg-slate-50 border border-slate-100 hover:border-slate-200 px-5 py-4 rounded-2xl transition-all">
+                <div
+                    class="flex items-center gap-3 bg-slate-50 border border-slate-100 hover:border-slate-200 px-5 py-4 rounded-2xl transition-all">
                     <Checkbox v-model="form.is_active" binary inputId="activeField" />
                     <label for="activeField" class="cursor-pointer font-medium">
                         {{ $t("common.active") }}
@@ -103,8 +114,10 @@
 
             <template #footer>
                 <div class="flex gap-3">
-                    <Button :label="$t('common.cancel')" text class="!rounded-3xl !text-slate-500 hover:!bg-slate-100" @click="dialogOpen = false" />
-                    <Button :label="$t('common.save')" icon="pi pi-check" :loading="saving" class="!rounded-3xl !h-12 !px-8 !bg-emerald-600 !border-none shadow-lg shadow-emerald-500/25 font-semibold"
+                    <Button :label="$t('common.cancel')" text class="!rounded-3xl !text-slate-500 hover:!bg-slate-100"
+                        @click="dialogOpen = false" />
+                    <Button :label="$t('common.save')" icon="pi pi-check" :loading="saving"
+                        class="!rounded-3xl !h-12 !px-8 !bg-emerald-600 !border-none shadow-lg shadow-emerald-500/25 font-semibold"
                         @click="save" />
                 </div>
             </template>
@@ -297,5 +310,4 @@ load();
 .modern-table :deep(.p-datatable-tbody > tr:hover) {
     background-color: #f8fafc;
 }
-
 </style>

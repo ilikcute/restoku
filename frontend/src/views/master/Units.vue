@@ -1,16 +1,7 @@
 <template>
-  <SimpleCrudPage
-    :title="$t('sidebar.units')"
-    :create-label="`${$t('common.add')} ${$t('sidebar.units')}`"
-    :columns="columns"
-    :form-fields="fields"
-    :loader="unitApi.getAll"
-    :creator="unitApi.create"
-    :updater="unitApi.update"
-    :deleter="unitApi.delete"
-    :table-framed="false"
-    :table-flat="true"
-  />
+  <SimpleCrudPage :title="$t('sidebar.units')" :create-label="`${$t('common.add')} ${$t('sidebar.units')}`"
+    :columns="columns" :form-fields="fields" :loader="unitApi.getAll" :creator="unitApi.create"
+    :updater="unitApi.update" :deleter="unitApi.delete" :table-framed="false" :table-flat="true" no-card />
 </template>
 
 <script setup>

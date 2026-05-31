@@ -10,6 +10,7 @@
     :deleter="supplierApi.delete"
     :table-framed="false"
     :table-flat="true"
+    no-card
   />
 </template>
 

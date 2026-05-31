@@ -47,6 +47,9 @@ class ShiftRepository implements ShiftRepositoryInterface
             ->first();
 
         if ($existingShift) {
+            if (! $existingShift->start_time->isToday()) {
+                throw new \Exception('Anda memiliki shift aktif dari hari sebelumnya yang belum ditutup. Harap tutup shift tersebut terlebih dahulu sebelum membuka shift baru.');
+            }
             throw new \Exception('Anda masih memiliki Shift yang terbuka.');
         }
 

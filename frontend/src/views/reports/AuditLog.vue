@@ -1,6 +1,6 @@
 <template>
   <AppPage title="Audit Trail (Log Aktivitas)" :breadcrumb="['Laporan', 'Audit Trail']" no-card>
-    <div class="space-y-6 mt-4">
+    <div class="space-y-1">
 
       <!-- Table -->
       <Card class="border-none shadow-sm overflow-hidden">

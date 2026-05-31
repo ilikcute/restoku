@@ -12,6 +12,8 @@ interface ReportRepositoryInterface
 
     public function getDpkadOrders(int $tenantId, string $startDate, string $endDate): Collection;
 
+    public function getFixedDpkadOrders(int $tenantId, string $startDate, string $endDate): Collection;
+
     public function getDailyChart(int $tenantId, string $startDate, string $endDate): Collection;
 
     public function getTopProducts(int $tenantId, string $startDate, string $endDate): Collection;

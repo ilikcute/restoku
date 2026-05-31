@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DailyClosingController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\DatabaseController;
 use App\Http\Controllers\Api\DpkadSyncController;
 use App\Http\Controllers\Api\FinancialController;
 use App\Http\Controllers\Api\InventoryController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Api\PublicMenuController;
 use App\Http\Controllers\Api\PurchaseController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ReturnController;
+use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\ShiftController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Http\Controllers\Api\TenantController;
@@ -150,7 +152,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::get('/roles/list', [UserController::class, 'roles'])->middleware('permission:manage-users|manage-roles');
 
         Route::middleware('permission:manage-roles')->group(function () {
-            Route::apiResource('roles', \App\Http\Controllers\Api\RoleController::class);
+            Route::apiResource('roles', RoleController::class);
         });
 
         Route::middleware('permission:manage-users')->group(function () {
@@ -175,6 +177,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('/export/tax-pdf', [ReportController::class, 'exportPdfTax']);
 
             Route::get('/tax', [ReportController::class, 'taxReport']);
+            Route::get('/tax-fixed', [ReportController::class, 'taxFixedReport']);
+            Route::get('/export/tax-fixed-excel', [ReportController::class, 'exportExcelTaxFixed']);
+            Route::get('/export/tax-fixed-pdf', [ReportController::class, 'exportPdfTaxFixed']);
             Route::get('/audit-logs', [ActivityLogController::class, 'index']);
             Route::get('/audit-logs/{activity}', [ActivityLogController::class, 'show']);
 
@@ -182,9 +187,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('/sync-dpkad', [DpkadSyncController::class, 'sync']);
         });
         // Database Backup & Restore
-        Route::get('/database/export', [\App\Http\Controllers\Api\DatabaseController::class, 'export'])
+        Route::get('/database/export', [DatabaseController::class, 'export'])
             ->middleware('permission:manage-tenant-settings');
-        Route::post('/database/import', [\App\Http\Controllers\Api\DatabaseController::class, 'import'])
+        Route::post('/database/import', [DatabaseController::class, 'import'])
             ->middleware('permission:manage-tenant-settings');
     });
 });

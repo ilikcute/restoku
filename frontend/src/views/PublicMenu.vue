@@ -159,7 +159,7 @@ const tenantId = ref(null);
 onMounted(() => {
   // Get tenant_id and table number from URL query (?tenant_id=2&table=5)
   const urlParams = new URLSearchParams(window.location.search);
-  tenantId.value = urlParams.get('tenant_id') || '2'; // Default to 2 based on DB data
+  tenantId.value = urlParams.get('tenant_id') || '1'; // Default to 1 based on DB data
   tableNumber.value = urlParams.get('table') || '';
   loadMenu();
 });

@@ -32,7 +32,7 @@ class PublicMenuController extends BaseApiController
         }
 
         if (! $tenantId) {
-            $tenantId = 2; // Fallback ke tenant 2 berdasarkan data di DB
+            $tenantId = 1; // Fallback ke tenant 1 berdasarkan data di DB
         }
 
         $products = $this->publicMenuRepository->getActiveProducts((int) $tenantId);

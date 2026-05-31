@@ -7,7 +7,7 @@
                 @click="openDialog()" />
         </template>
 
-        <div class="space-y-6">
+        <div class="space-y-1">
             <!-- Data Table -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                 <AppDataTable framed :value="rows" :loading="loading" paginator :rows="20" stripedRows

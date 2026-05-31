@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Interfaces\ReportRepositoryInterface;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Shift;
 use App\Models\Transaction;
@@ -104,6 +105,64 @@ class ReportRepository implements ReportRepositoryInterface
             ->with(['items.product.category'])
             ->orderBy('created_at', 'asc')
             ->get();
+    }
+
+    public function getFixedDpkadOrders(int $tenantId, string $startDate, string $endDate): Collection
+    {
+        $tenantOrderIds = Order::where('tenant_id', $tenantId)
+            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
+            ->pluck('id');
+
+        $dpkadOrders = DB::connection('dpkad')
+            ->table('orders')
+            ->whereIn('external_order_id', $tenantOrderIds)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        if ($dpkadOrders->isEmpty()) {
+            return collect();
+        }
+
+        $dpkadOrderIds = $dpkadOrders->pluck('id');
+        $dpkadItems = DB::connection('dpkad')
+            ->table('order_items')
+            ->whereIn('order_id', $dpkadOrderIds)
+            ->get()
+            ->groupBy('order_id');
+
+        return $dpkadOrders->map(function ($order) use ($dpkadItems) {
+            $order->created_at = Carbon::parse($order->created_at);
+
+            $items = collect($dpkadItems->get($order->id, []))->map(function ($item) {
+                $localProduct = Product::with('category')->where('name', $item->product_name)->first();
+                $categoryName = $localProduct?->category?->name ?? 'Lain-lain';
+
+                return (object) [
+                    'subtotal' => (float) $item->subtotal,
+                    'price' => (float) $item->price,
+                    'quantity' => (int) $item->quantity,
+                    'product_name' => $item->product_name,
+                    'product' => (object) [
+                        'category' => (object) [
+                            'name' => $categoryName,
+                        ],
+                    ],
+                ];
+            });
+
+            return (object) [
+                'id' => $order->id,
+                'external_order_id' => $order->external_order_id,
+                'order_number' => $order->order_number,
+                'customer_name' => $order->customer_name,
+                'subtotal' => (float) $order->subtotal,
+                'tax_amount' => (float) $order->tax_amount,
+                'service_charge' => (float) $order->service_charge,
+                'total_amount' => (float) $order->total_amount,
+                'created_at' => $order->created_at,
+                'items' => $items,
+            ];
+        });
     }
 
     public function getDailyChart(int $tenantId, string $startDate, string $endDate): Collection

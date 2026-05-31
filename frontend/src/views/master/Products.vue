@@ -1,44 +1,36 @@
 <template>
   <AppPage :title="$t('sidebar.products')" :breadcrumb="[$t('common.master_data'), $t('sidebar.products')]">
     <template #actions>
-      <div class="flex gap-2">
-        <Button label="Template" icon="pi pi-download" severity="info" text class="!rounded-2xl !px-4"
-          @click="downloadTemplate" />
-        <Button label="Export" icon="pi pi-file-excel" severity="success" text class="!rounded-2xl !px-4"
-          @click="exportProducts" />
-        <Button label="Import" icon="pi pi-upload" severity="secondary"
-          class="!rounded-2xl !px-6 !bg-white !border-slate-200 !text-slate-600 shadow-sm"
-          @click="$refs.fileInput.click()" :loading="importing" />
-        <input type="file" ref="fileInput" class="hidden" accept=".xlsx,.xls,.csv" @change="handleImport" />
-
+      <div class="flex flex-wrap items-center gap-3">
+        <!-- Import/Export Tools -->
+        <div class="flex items-center gap-2">
+          <Button label="Template" icon="pi pi-download" severity="info" text class="!rounded-2xl !px-3"
+            @click="downloadTemplate" />
+          <Button label="Export" icon="pi pi-file-excel" severity="success" text class="!rounded-2xl !px-3"
+            @click="exportProducts" />
+          <Button label="Import" icon="pi pi-upload" severity="secondary"
+            class="!rounded-2xl !px-5 !bg-white !border-slate-200 !text-slate-600 shadow-sm"
+            @click="$refs.fileInput.click()" :loading="importing" />
+          <input type="file" ref="fileInput" class="hidden" accept=".xlsx,.xls,.csv" @change="handleImport" />
+        </div>
+        <div class="hidden lg:block h-8 w-px bg-slate-200"></div>
         <Button :label="`${$t('common.add')} ${$t('sidebar.products')}`" icon="pi pi-plus"
           class="!rounded-2xl !px-6 !bg-emerald-600 !border-none shadow-lg shadow-emerald-200/50" @click="openCreate" />
       </div>
     </template>
 
-    <div class="space-y-6">
-      <div class="grid gap-4 md:grid-cols-4 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+    <div class="space-y-1">
+      <!-- Filters -->
+      <div class="flex items-center gap-3 bg-slate-50/50 p-1 rounded-2xl  border border-slate-100">
         <Select v-model="filters.category_id" :options="categories" optionLabel="name" optionValue="id"
-          :placeholder="$t('common.category')" showClear class="!rounded-xl" />
+          :placeholder="$t('common.category')" showClear class="flex-1 !rounded-xl" />
         <Select v-model="filters.unit_id" :options="units" optionLabel="name" optionValue="id"
-          :placeholder="$t('common.unit')" showClear class="!rounded-xl" />
-        <div class="md:col-span-2">
-          <InputText v-model="filters.q"
-            :placeholder="`${$t('common.search_placeholder')} ${$t('sidebar.products')}...`"
-            class="w-full !rounded-xl" />
-        </div>
+          :placeholder="$t('common.unit')" showClear class="flex-1 !rounded-xl" />
+        <InputText v-model="filters.q" :placeholder="`${$t('common.search_placeholder')} ${$t('sidebar.products')}...`"
+          class="flex-1 !rounded-xl" />
       </div>
-
-      <AppDataTable framed
-        :value="products"
-        lazy
-        paginator
-        :rows="rowsPerPage"
-        :first="first"
-        :totalRecords="totalRecords"
-        :loading="loading"
-        @page="onPage"
-      >
+      <AppDataTable framed :value="products" lazy paginator :rows="rowsPerPage" :first="first"
+        :totalRecords="totalRecords" :loading="loading" @page="onPage">
         <Column header="No" class="w-16 text-center">
           <template #body="slotProps">
             <span class="text-slate-400 font-mono text-xs">{{ slotProps.index + first + 1 }}</span>
@@ -46,8 +38,10 @@
         </Column>
         <Column :header="$t('common.image')">
           <template #body="{ data }">
-            <img v-if="data.image" :src="getImageUrl(data.image)" class="w-10 h-10 object-cover rounded-full shadow-sm" />
-            <div v-else class="w-10 h-10 bg-slate-50 border border-slate-100 rounded-full shadow-sm flex items-center justify-center text-slate-400">
+            <img v-if="data.image" :src="getImageUrl(data.image)"
+              class="w-10 h-10 object-cover rounded-full shadow-sm" />
+            <div v-else
+              class="w-10 h-10 bg-slate-50 border border-slate-100 rounded-full shadow-sm flex items-center justify-center text-slate-400">
               <i class="pi pi-image text-lg"></i>
             </div>
           </template>
@@ -64,7 +58,8 @@
         </Column>
         <Column field="category.name" :header="$t('common.category')">
           <template #body="{ data }">
-            <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold uppercase tracking-wider">{{ data.category?.name }}</span>
+            <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold uppercase tracking-wider">{{
+              data.category?.name }}</span>
           </template>
         </Column>
         <Column field="unit.short_name" :header="$t('common.unit')">
@@ -79,15 +74,19 @@
         </Column>
         <Column :header="$t('common.stock')">
           <template #body="{ data }">
-            <StatusBadge :status="stockSeverity(data) === 'danger' ? 'failed' : 'active'" :label="String(data.stock?.current_stock ?? 0)" />
+            <StatusBadge :status="stockSeverity(data) === 'danger' ? 'failed' : 'active'"
+              :label="String(data.stock?.current_stock ?? 0)" />
           </template>
         </Column>
         <Column :header="$t('common.actions')" class="w-28">
           <template #body="{ data }">
             <div class="flex items-center gap-1">
-              <Button icon="pi pi-eye" outlined class="!w-8 !h-8 !p-0 !text-slate-500 !border-slate-200 hover:!bg-slate-50" @click="openShow(data)" />
-              <Button icon="pi pi-pencil" outlined class="!w-8 !h-8 !p-0 !text-slate-500 !border-slate-200 hover:!bg-slate-50" @click="openEdit(data)" />
-              <Button icon="pi pi-trash" outlined class="!w-8 !h-8 !p-0 !text-red-500 !border-slate-200 hover:!bg-red-50" @click="remove(data)" />
+              <Button icon="pi pi-eye" outlined
+                class="!w-8 !h-8 !p-0 !text-slate-500 !border-slate-200 hover:!bg-slate-50" @click="openShow(data)" />
+              <Button icon="pi pi-pencil" outlined
+                class="!w-8 !h-8 !p-0 !text-slate-500 !border-slate-200 hover:!bg-slate-50" @click="openEdit(data)" />
+              <Button icon="pi pi-trash" outlined
+                class="!w-8 !h-8 !p-0 !text-red-500 !border-slate-200 hover:!bg-red-50" @click="remove(data)" />
             </div>
           </template>
         </Column>
@@ -331,5 +330,3 @@ function remove(item) {
 // Inisialisasi halaman
 initPage();
 </script>
-
-

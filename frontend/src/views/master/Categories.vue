@@ -1,7 +1,7 @@
 <template>
   <SimpleCrudPage :title="$t('sidebar.categories')" :create-label="`${$t('common.add')} ${$t('sidebar.categories')}`"
     :columns="columns" :form-fields="fields" :loader="categoryApi.getAll" :creator="categoryApi.create"
-    :updater="categoryApi.update" :deleter="categoryApi.delete" :table-framed="false" :table-flat="true" />
+    :updater="categoryApi.update" :deleter="categoryApi.delete" :table-framed="false" :table-flat="true" no-card/>
 </template>
 
 <script setup>

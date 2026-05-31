@@ -226,7 +226,7 @@ class ReportController extends BaseApiController
         $grouped = $this->reportRepository->aggregateTaxReportData($orders);
         $allCategories = $orders->pluck('items.*.product.category.name')->flatten()->unique()->filter()->values()->sort();
 
-        $writer = $this->exportService->exportTaxExcel($grouped, $allCategories, $startDate, $endDate);
+        $writer = $this->exportService->exportTaxExcel($grouped->toArray(), $allCategories, $startDate, $endDate);
         $fileName = 'Laporan_Pajak_'.$startDate.'_'.$endDate.'.xlsx';
 
         return response()->stream(function () use ($writer) {
@@ -258,5 +258,61 @@ class ReportController extends BaseApiController
         $pdf = $this->exportService->exportTaxPdf($data);
 
         return $pdf->download('Laporan_Pajak_'.$startDate.'_'.$endDate.'.pdf');
+    }
+
+    public function taxFixedReport(Request $request)
+    {
+        $startDate = $request->query('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->query('end_date', now()->endOfDay()->format('Y-m-d'));
+        $tenantId = $request->user()->tenant_id;
+
+        $orders = $this->reportRepository->getFixedDpkadOrders($tenantId, $startDate, $endDate);
+        $grouped = $this->reportRepository->aggregateTaxReportData($orders);
+
+        return $this->successResponse($grouped);
+    }
+
+    public function exportExcelTaxFixed(Request $request)
+    {
+        $startDate = $request->query('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->query('end_date', now()->endOfDay()->format('Y-m-d'));
+        $tenantId = $request->user()->tenant_id;
+
+        $orders = $this->reportRepository->getFixedDpkadOrders($tenantId, $startDate, $endDate);
+        $grouped = $this->reportRepository->aggregateTaxReportData($orders);
+        $allCategories = $orders->pluck('items.*.product.category.name')->flatten()->unique()->filter()->values()->sort();
+
+        $writer = $this->exportService->exportTaxExcel($grouped->toArray(), $allCategories, $startDate, $endDate);
+        $fileName = 'Laporan_Pajak_Fixed_'.$startDate.'_'.$endDate.'.xlsx';
+
+        return response()->stream(function () use ($writer) {
+            $writer->save('php://output');
+        }, 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
+        ]);
+    }
+
+    public function exportPdfTaxFixed(Request $request)
+    {
+        $startDate = $request->query('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->query('end_date', now()->endOfDay()->format('Y-m-d'));
+        $tenantId = $request->user()->tenant_id;
+
+        $orders = $this->reportRepository->getFixedDpkadOrders($tenantId, $startDate, $endDate);
+        $grouped = $this->reportRepository->aggregateTaxReportData($orders);
+        $allCategories = $orders->pluck('items.*.product.category.name')->flatten()->unique()->filter()->values()->sort();
+
+        $data = [
+            'tenant' => $request->user()->tenant,
+            'reportData' => $grouped,
+            'allCategories' => $allCategories,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+        ];
+
+        $pdf = $this->exportService->exportTaxPdf($data);
+
+        return $pdf->download('Laporan_Pajak_Fixed_'.$startDate.'_'.$endDate.'.pdf');
     }
 }

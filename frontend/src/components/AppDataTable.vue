@@ -37,6 +37,15 @@
       tableStyle="min-width: 100%"
     >
       <slot />
+      <template #header v-if="$slots.header">
+        <slot name="header" />
+      </template>
+      <template #footer v-if="$slots.footer">
+        <slot name="footer" />
+      </template>
+      <template #empty v-if="$slots.empty">
+        <slot name="empty" />
+      </template>
     </DataTable>
   </div>
 </template>
