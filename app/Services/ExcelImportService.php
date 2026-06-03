@@ -47,6 +47,10 @@ class ExcelImportService
             $dateStr = trim((string) $sheet->getCell('D'.$row)->getFormattedValue()); // e.g. 01/05/2026
             $room = trim((string) $sheet->getCell('L'.$row)->getFormattedValue());
 
+            if (empty($room) || $room === '-' || stripos($room, 'Bar') !== false) {
+                $room = '1';
+            }
+
             if (! isset($ordersData[$billNumber])) {
                 $ordersData[$billNumber] = [
                     'order_number' => str_replace("'", '', $billNumber),
@@ -156,7 +160,7 @@ class ExcelImportService
                     'tenant_id' => $tenantId,
                     'user_id' => $user->id,
                     'order_number' => $data['order_number'],
-                    'table_number' => (empty($data['table_number']) || $data['table_number'] === '-') ? '1' : $data['table_number'],
+                    'table_number' => (empty($data['table_number']) || $data['table_number'] === '-' || stripos($data['table_number'], 'Bar') !== false) ? '1' : $data['table_number'],
                     'subtotal' => $orderTotal,
                     'tax_amount' => $orderTax,
                     'service_charge' => $orderService,

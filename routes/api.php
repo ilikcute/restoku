@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DatabaseController;
 use App\Http\Controllers\Api\DpkadSyncController;
 use App\Http\Controllers\Api\FinancialController;
+use App\Http\Controllers\Api\ImportTransactionController;
 use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\MasterController;
 use App\Http\Controllers\Api\OrderController;
@@ -107,6 +108,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('/shifts/close', [ShiftController::class, 'close'])->middleware('permission:view-shifts');
         Route::get('/shifts/{id}/report', [ShiftController::class, 'downloadReport'])->middleware('permission:view-shifts');
         Route::apiResource('shifts', ShiftController::class)->only(['index', 'show'])->middleware('permission:view-shifts');
+
+        // Import transactions (defined before wildcards to prevent 404 route precedence conflict)
+        Route::post('/orders/import', [ImportTransactionController::class, 'import'])->middleware('permission:view-orders');
+        Route::get('/orders/import/summary', [ImportTransactionController::class, 'getSummary'])->middleware('permission:view-orders');
+        Route::post('/orders/import/confirm', [ImportTransactionController::class, 'confirmImport'])->middleware('permission:view-orders');
+
         Route::get('/orders/{order}/receipt', [OrderController::class, 'downloadReceipt'])->middleware('permission:view-orders');
         Route::apiResource('orders', OrderController::class)->only(['index', 'store', 'show'])->middleware('permission:view-orders');
         Route::get('/orders/pending/{token}', [PublicMenuController::class, 'fetchOrder'])->middleware('permission:view-pos');
