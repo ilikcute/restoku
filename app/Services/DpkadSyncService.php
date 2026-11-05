@@ -11,7 +11,7 @@ class DpkadSyncService
     /**
      * Sync multiple orders to DPKAD database.
      */
-    public function syncOrders(array $orderIds): array
+    public function syncOrders(array $orderIds, bool $force = false): array
     {
         // Pastikan database dpkad siap
         $this->ensureDpkadTablesExist();
@@ -20,8 +20,8 @@ class DpkadSyncService
         $syncedCount = 0;
 
         foreach ($orders as $order) {
-            // Lewati jika sudah pernah disinkronkan di DB lokal
-            if ($order->is_synced_to_dpkad) {
+            // Lewati jika sudah pernah disinkronkan di DB lokal kecuali jika $force = true
+            if ($order->is_synced_to_dpkad && ! $force) {
                 continue;
             }
 
@@ -55,6 +55,37 @@ class DpkadSyncService
                             'subtotal' => $item->subtotal,
                             'created_at' => $item->created_at,
                             'updated_at' => $item->updated_at,
+                        ]);
+                    }
+                } else {
+                    // Update order di database dpkad jika ada perubahan / force sync
+                    DB::connection('dpkad')->table('orders')
+                        ->where('id', $exists->id)
+                        ->update([
+                            'order_number' => $order->order_number,
+                            'customer_name' => $order->customer_name,
+                            'subtotal' => $order->subtotal,
+                            'tax_amount' => $order->tax_amount,
+                            'service_charge' => $order->service_charge,
+                            'total_amount' => $order->total_amount,
+                            'payment_method' => $order->payment_method,
+                            'updated_at' => now(),
+                        ]);
+
+                    // Hapus item lama dan ganti dengan items terbaru
+                    DB::connection('dpkad')->table('order_items')
+                        ->where('order_id', $exists->id)
+                        ->delete();
+
+                    foreach ($order->items as $item) {
+                        DB::connection('dpkad')->table('order_items')->insert([
+                            'order_id' => $exists->id,
+                            'product_name' => $item->product_name,
+                            'price' => $item->price,
+                            'quantity' => $item->quantity,
+                            'subtotal' => $item->subtotal,
+                            'created_at' => $item->created_at,
+                            'updated_at' => now(),
                         ]);
                     }
                 }

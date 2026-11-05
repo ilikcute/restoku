@@ -22,5 +22,7 @@ export const reportsApi = {
   exportExcelTaxFixed: (params) => api.get('/reports/export/tax-fixed-excel', { params, responseType: 'blob' }),
   exportPdfTaxFixed: (params) => api.get('/reports/export/tax-fixed-pdf', { params, responseType: 'blob' }),
   
-  syncDpkad: (data) => api.post('/reports/sync-dpkad', data)
+  syncDpkad: (data) => api.post('/reports/sync-dpkad', data),
+  getReconciliation: (params) => api.get('/reports/reconciliation', { params }),
+  syncReconciliation: (data) => api.post('/reports/reconciliation/sync', data)
 };

@@ -86,6 +86,7 @@
         "database": "Backup & Restore",
         "tax_report": "Laporan Pajak",
         "tax_report_fixed": "Laporan Pajak Fixed",
+        "dpkad_reconciliation": "Rekonsiliasi DPKAD",
         "audit_trail": "Audit Trail (Log)",
         "logout": "Keluar"
     },

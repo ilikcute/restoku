@@ -559,6 +559,12 @@ const menuGroups = [
                 permission: "view-report-tax",
             },
             {
+                to: "/reports/reconciliation",
+                icon: "pi pi-sync",
+                label: "sidebar.dpkad_reconciliation",
+                permission: "view-reports",
+            },
+            {
                 to: "/reports/audit-logs",
                 icon: "pi pi-history",
                 label: "sidebar.audit_trail",

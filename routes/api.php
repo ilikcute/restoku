@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DailyClosingController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DatabaseController;
+use App\Http\Controllers\Api\DpkadReconciliationController;
 use App\Http\Controllers\Api\DpkadSyncController;
 use App\Http\Controllers\Api\FinancialController;
 use App\Http\Controllers\Api\ImportTransactionController;
@@ -200,8 +201,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('/audit-logs', [ActivityLogController::class, 'index']);
             Route::get('/audit-logs/{activity}', [ActivityLogController::class, 'show']);
 
-            // DPKAD Sync
+            // DPKAD Sync & Reconciliation
             Route::post('/sync-dpkad', [DpkadSyncController::class, 'sync']);
+            Route::get('/reconciliation', [DpkadReconciliationController::class, 'index']);
+            Route::post('/reconciliation/sync', [DpkadReconciliationController::class, 'sync']);
         });
         // Database Backup & Restore
         Route::get('/database/export', [DatabaseController::class, 'export'])

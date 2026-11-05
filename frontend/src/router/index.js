@@ -73,6 +73,7 @@ const router = createRouter({
         { path: 'reports/purchase-returns', name: 'reports-purchase-returns', component: () => import('@/views/reports/PurchaseReturnReport.vue'), meta: { auth: true, permission: 'view-report-returns' } },
         { path: 'reports/tax', name: 'reports-tax', component: () => import('@/views/reports/TaxReport.vue'), meta: { auth: true, permission: 'view-report-tax' } },
         { path: 'reports/tax-fixed', name: 'reports-tax-fixed', component: () => import('@/views/reports/TaxFixedReport.vue'), meta: { auth: true, permission: 'view-report-tax' } },
+        { path: 'reports/reconciliation', name: 'reports-reconciliation', component: () => import('@/views/reports/DpkadReconciliation.vue'), meta: { auth: true, permission: 'view-reports' } },
         { path: 'reports/audit-logs', name: 'reports-audit', component: () => import('@/views/reports/AuditLog.vue'), meta: { auth: true, permission: 'view-reports' } },
         
         // Settings
