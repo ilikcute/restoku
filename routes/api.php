@@ -118,6 +118,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         // Import transactions (defined before wildcards to prevent 404 route precedence conflict)
         Route::post('/orders/import', [ImportTransactionController::class, 'import'])->middleware('permission:view-orders');
         Route::get('/orders/import/summary', [ImportTransactionController::class, 'getSummary'])->middleware('permission:view-orders');
+        Route::delete('/orders/import/clear', [ImportTransactionController::class, 'clearStaging'])->middleware('permission:view-orders');
+        Route::delete('/orders/import/empty-records', [ImportTransactionController::class, 'deleteEmptyRecords'])->middleware('permission:view-orders');
         Route::post('/orders/import/confirm', [ImportTransactionController::class, 'confirmImport'])->middleware('permission:view-orders');
 
         Route::get('/orders/{order}/receipt', [OrderController::class, 'downloadReceipt'])->middleware('permission:view-orders');

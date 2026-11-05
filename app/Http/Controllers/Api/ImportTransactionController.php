@@ -82,4 +82,36 @@ class ImportTransactionController extends BaseApiController
             return $this->errorResponse('Gagal memindahkan transaksi: '.$e->getMessage(), 500);
         }
     }
+
+    public function clearStaging(Request $request)
+    {
+        try {
+            $user = $request->user();
+            $deleted = $this->importService->clearStaging($user);
+
+            return $this->successResponse(['deleted_count' => $deleted], 'Staging transaksi berhasil dibersihkan.');
+        } catch (\Exception $e) {
+            Log::error('Clear Staging Error: '.$e->getMessage());
+
+            return $this->errorResponse('Gagal membersihkan staging: '.$e->getMessage(), 500);
+        }
+    }
+
+    public function deleteEmptyRecords(Request $request)
+    {
+        try {
+            $user = $request->user();
+            $deleted = $this->importService->deleteEmptyOrders($user);
+            $summary = $this->importService->getImportSummary($user);
+
+            return $this->successResponse([
+                'deleted_count' => $deleted,
+                'summary' => $summary,
+            ], "Berhasil menghapus $deleted data transaksi kosong/bernilai 0.");
+        } catch (\Exception $e) {
+            Log::error('Delete Empty Records Error: '.$e->getMessage());
+
+            return $this->errorResponse('Gagal menghapus data kosong: '.$e->getMessage(), 500);
+        }
+    }
 }

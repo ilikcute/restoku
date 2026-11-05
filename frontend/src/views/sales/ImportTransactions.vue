@@ -11,6 +11,16 @@
                 </div>
                 <div v-if="hasStagingData" class="flex gap-2">
                     <Button 
+                        v-if="hasEmptyRecords"
+                        label="Hapus Data Kosong" 
+                        icon="pi pi-trash" 
+                        severity="danger" 
+                        outlined 
+                        class="!rounded-xl text-xs"
+                        :loading="cleaningEmpty"
+                        @click="deleteEmptyStaging"
+                    />
+                    <Button 
                         label="Unggah File Lain" 
                         icon="pi pi-upload" 
                         outlined 
@@ -159,7 +169,7 @@
                         
                         <div class="flex-1 overflow-y-auto max-h-[350px] p-4 space-y-3">
                             <div 
-                                v-for="dateItem in summary.dates" 
+                                v-for="dateItem in validDates" 
                                 :key="dateItem.date"
                                 class="flex items-center justify-between p-3 rounded-xl border border-slate-50 bg-slate-50/20 hover:bg-slate-50 transition-colors"
                             >
@@ -263,6 +273,7 @@ const toast = useToast();
 const uploading = ref(false);
 const committing = ref(false);
 const loadingSummary = ref(false);
+const cleaningEmpty = ref(false);
 
 const summary = ref({
     total_orders: 0,
@@ -282,20 +293,38 @@ const fileInput = ref(null);
 
 // Computed properties
 const hasStagingData = computed(() => {
-    return summary.value.total_orders > 0;
+    return summary.value.total_orders > 0 && Number(summary.value.total_amount) > 0;
+});
+
+const validDates = computed(() => {
+    return (summary.value.dates || []).filter(d => d.date && Number(d.total) > 0 && d.count > 0);
+});
+
+const hasEmptyRecords = computed(() => {
+    const hasZeroDates = (summary.value.dates || []).some(d => !d.date || Number(d.total) <= 0);
+    const hasZeroOrders = (summary.value.orders || []).some(o => Number(o.total_amount) <= 0);
+    return hasZeroDates || hasZeroOrders;
 });
 
 const filteredOrders = computed(() => {
     if (selectedDates.value.length === 0) {
         return [];
     }
-    return summary.value.orders.filter(order => selectedDates.value.includes(order.date));
+    return (summary.value.orders || []).filter(order => 
+        selectedDates.value.includes(order.date) && Number(order.total_amount) > 0
+    );
 });
 
 const activeSelectionCount = computed(() => {
     // If selected dates are checked, count all orders corresponding to those dates + individual orders not on those dates
-    const ordersFromSelectedDates = summary.value.orders.filter(o => selectedDates.value.includes(o.date)).map(o => o.order_number);
-    const combinedSet = new Set([...ordersFromSelectedDates, ...selectedOrderNumbers.value]);
+    const ordersFromSelectedDates = (summary.value.orders || [])
+        .filter(o => selectedDates.value.includes(o.date) && Number(o.total_amount) > 0 && !o.already_imported)
+        .map(o => o.order_number);
+    const individualValidOrders = (selectedOrderNumbers.value || []).filter(num => {
+        const order = summary.value.orders.find(o => o.order_number === num);
+        return order && Number(order.total_amount) > 0 && !order.already_imported;
+    });
+    const combinedSet = new Set([...ordersFromSelectedDates, ...individualValidOrders]);
     return combinedSet.size;
 });
 
@@ -321,7 +350,7 @@ onMounted(() => {
 // Selection handlers
 const onToggleAllDates = () => {
     if (selectAllDates.value) {
-        selectedDates.value = summary.value.dates.map(d => d.date);
+        selectedDates.value = validDates.value.map(d => d.date);
     } else {
         selectedDates.value = [];
     }
@@ -358,7 +387,43 @@ const clearSelections = () => {
     selectAllOrders.value = false;
 };
 
-const resetStagingView = () => {
+const deleteEmptyStaging = async () => {
+    cleaningEmpty.value = true;
+    try {
+        const response = await api.delete('/orders/import/empty-records');
+        if (response.data.status === 'success' || response.data.success) {
+            toast.add({
+                severity: 'info',
+                summary: 'Berhasil',
+                detail: response.data.message || 'Data kosong telah dibersihkan.',
+                life: 3000
+            });
+            if (response.data.data?.summary) {
+                summary.value = response.data.data.summary;
+            } else {
+                await loadSummary();
+            }
+            clearSelections();
+        }
+    } catch (error) {
+        console.error('Failed to delete empty records', error);
+        toast.add({
+            severity: 'error',
+            summary: 'Gagal',
+            detail: 'Gagal membersihkan data kosong.',
+            life: 3000
+        });
+    } finally {
+        cleaningEmpty.value = false;
+    }
+};
+
+const resetStagingView = async () => {
+    try {
+        await api.delete('/orders/import/clear');
+    } catch (e) {
+        console.error('Failed to clear staging on server', e);
+    }
     summary.value = {
         total_orders: 0,
         total_amount: 0,
@@ -366,6 +431,7 @@ const resetStagingView = () => {
         orders: []
     };
     clearSelections();
+    clearSelectedFile();
 };
 
 // Formatting helpers

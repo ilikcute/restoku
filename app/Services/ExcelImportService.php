@@ -89,9 +89,12 @@ class ExcelImportService
                     ];
                 }
             }
-
-            // If an order ends up with absolutely no items after looping, we could remove it, but it's fine.
         }
+
+        // Filter out orders that have no items (empty/0 rows)
+        $ordersData = array_filter($ordersData, function ($order) {
+            return ! empty($order['items']);
+        });
 
         // Process Database Insertion
         $importedCount = 0;
@@ -106,6 +109,10 @@ class ExcelImportService
             TempOrder::where('tenant_id', $tenantId)->delete();
 
             foreach ($ordersData as $bill => $data) {
+                if (empty($data['items'])) {
+                    continue;
+                }
+
                 $orderTotal = 0;
                 $orderTax = 0;
                 $orderService = 0;
@@ -156,6 +163,11 @@ class ExcelImportService
 
                 $grandTotal = $orderTotal + $orderTax + $orderService;
 
+                // Abaikan dan jangan simpan transaksi yang bernilai 0 atau tidak ada item
+                if ($grandTotal <= 0 || empty($orderItemsToInsert)) {
+                    continue;
+                }
+
                 $tempOrder = TempOrder::create([
                     'tenant_id' => $tenantId,
                     'user_id' => $user->id,
@@ -191,11 +203,22 @@ class ExcelImportService
     {
         $tenantId = $user->tenant_id;
 
-        $totalOrders = TempOrder::where('tenant_id', $tenantId)->count();
-        $totalAmount = TempOrder::where('tenant_id', $tenantId)->sum('total_amount');
+        // Otomatis hapus data staging yang record-nya 0 atau kosong (tanpa item)
+        TempOrder::where('tenant_id', $tenantId)
+            ->where(function ($q) {
+                $q->where('total_amount', '<=', 0)
+                    ->orWhereNull('total_amount')
+                    ->orWhereDoesntHave('items');
+            })
+            ->delete();
 
-        // Distinct dates with their count & total amount
+        $totalOrders = TempOrder::where('tenant_id', $tenantId)->count();
+        $totalAmount = TempOrder::where('tenant_id', $tenantId)->sum('total_amount') ?: 0;
+
+        // Distinct dates with their count & total amount (hanya tanggal terisi dan total > 0)
         $datesSummary = TempOrder::where('tenant_id', $tenantId)
+            ->where('total_amount', '>', 0)
+            ->whereNotNull('date')
             ->selectRaw('date, count(*) as count, sum(total_amount) as total')
             ->groupBy('date')
             ->orderBy('date', 'asc')
@@ -203,6 +226,7 @@ class ExcelImportService
 
         // All temp orders with already_imported check
         $orders = TempOrder::where('tenant_id', $tenantId)
+            ->where('total_amount', '>', 0)
             ->orderBy('order_number', 'asc')
             ->get()
             ->map(function ($order) use ($tenantId) {
@@ -225,7 +249,19 @@ class ExcelImportService
     {
         $tenantId = $user->tenant_id;
 
-        $query = TempOrder::where('tenant_id', $tenantId)->with('items');
+        // Bersihkan data temporary yang kosong atau bernilai 0
+        TempOrder::where('tenant_id', $tenantId)
+            ->where(function ($q) {
+                $q->where('total_amount', '<=', 0)
+                    ->orWhereNull('total_amount')
+                    ->orWhereDoesntHave('items');
+            })
+            ->delete();
+
+        $query = TempOrder::where('tenant_id', $tenantId)
+            ->where('total_amount', '>', 0)
+            ->has('items')
+            ->with('items');
 
         // Apply filters if provided
         if (! empty($dates) && ! empty($orderNumbers)) {
@@ -250,6 +286,12 @@ class ExcelImportService
         DB::beginTransaction();
         try {
             foreach ($tempOrders as $tempOrder) {
+                // Lewati jika total 0 atau tanpa item
+                if ($tempOrder->total_amount <= 0 || $tempOrder->items->isEmpty()) {
+                    $tempOrder->delete();
+
+                    continue;
+                }
                 // Skip if already imported to main table
                 $existingOrder = Order::where('tenant_id', $tenantId)
                     ->where('order_number', $tempOrder->order_number)
@@ -332,5 +374,21 @@ class ExcelImportService
         } catch (\Exception $e) {
             return null;
         }
+    }
+
+    public function clearStaging($user)
+    {
+        return TempOrder::where('tenant_id', $user->tenant_id)->delete();
+    }
+
+    public function deleteEmptyOrders($user)
+    {
+        return TempOrder::where('tenant_id', $user->tenant_id)
+            ->where(function ($q) {
+                $q->where('total_amount', '<=', 0)
+                    ->orWhereNull('total_amount')
+                    ->orWhereDoesntHave('items');
+            })
+            ->delete();
     }
 }
