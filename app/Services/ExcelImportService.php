@@ -72,9 +72,14 @@ class ExcelImportService
             $dateStr = trim((string) $sheet->getCell('D'.$row)->getFormattedValue()); // e.g. 01/05/2026
             $parsedRowDate = $this->parseDate($dateStr);
 
-            // 3. Verifikasi: jika tanggal transaksi pada file Excel tidak sama dengan hari ini / shift aktif, tolak
+            // 3. Jagaan tanggal: hanya transaksi yang sesuai dengan tanggal shift aktif yang diimpor
+            // Transaksi dengan tanggal lain otomatis dilewati / diabaikan
             if (! empty($parsedRowDate) && $parsedRowDate !== $shiftDate) {
-                throw new \Exception("Tanggal transaksi pada file Excel ($parsedRowDate) tidak sama dengan tanggal hari ini / shift aktif ($shiftDate). Upload ditolak.");
+                continue;
+            }
+
+            if (empty($parsedRowDate) && ! isset($ordersData[$billNumber])) {
+                continue;
             }
 
             $room = trim((string) $sheet->getCell('L'.$row)->getFormattedValue());
@@ -127,6 +132,10 @@ class ExcelImportService
         $ordersData = array_filter($ordersData, function ($order) {
             return ! empty($order['items']);
         });
+
+        if (empty($ordersData)) {
+            throw new \Exception("Tidak ditemukan transaksi untuk tanggal shift aktif ($shiftDate) pada file Excel. Transaksi dengan tanggal lain tidak diimpor.");
+        }
 
         // Process Database Insertion
         $importedCount = 0;

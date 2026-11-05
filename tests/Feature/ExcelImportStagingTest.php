@@ -389,7 +389,7 @@ test('cannot upload excel when open shift is not for today', function () {
 
 test('cannot upload excel when transaction date in file does not match active shift date', function () {
     /** @var TestCase $this */
-    // Active shift is today, but file has past date
+    // Active shift is today, but file has only past dates
     $excelPath = createSampleExcelFile('01/01/2025');
     $file = new UploadedFile($excelPath, 'test.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
 
@@ -400,6 +400,32 @@ test('cannot upload excel when transaction date in file does not match active sh
 
     $response->assertStatus(400);
     $response->assertJsonFragment(['status' => 'error']);
+    expect($response->json('message'))->toContain('Tidak ditemukan transaksi untuk tanggal shift aktif');
+});
+
+test('can upload multi-date excel and only transactions matching active shift date are imported', function () {
+    /** @var TestCase $this */
+    $todayDate = now()->format('d/m/Y');
+    $excelPath = createMultiDateSampleExcelFile([
+        ['order_number' => 'PAST-001', 'date' => '01/01/2025'],
+        ['order_number' => 'TODAY-001', 'date' => $todayDate],
+        ['order_number' => 'FUTURE-001', 'date' => '31/12/2028'],
+    ]);
+    $file = new UploadedFile($excelPath, 'test.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
+
+    $response = $this->actingAs($this->cashier, 'sanctum')
+        ->postJson('/api/v1/orders/import', ['file' => $file]);
+
+    @unlink($excelPath);
+
+    $response->assertSuccessful();
+    $response->assertJsonPath('data.imported_count', 1);
+
+    // Assert only TODAY-001 exists in temp_orders, PAST and FUTURE are ignored/deleted
+    expect(TempOrder::where('tenant_id', $this->tenant->id)->count())->toBe(1)
+        ->and(TempOrder::where('order_number', 'TODAY-001')->exists())->toBeTrue()
+        ->and(TempOrder::where('order_number', 'PAST-001')->exists())->toBeFalse()
+        ->and(TempOrder::where('order_number', 'FUTURE-001')->exists())->toBeFalse();
 });
 
 test('can upload excel and temp_orders date is verified and matched to active shift date', function () {
@@ -433,6 +459,30 @@ test('staging summary returns active shift information', function () {
     $response->assertJsonPath('data.active_shift.id', $this->shift->id);
     $response->assertJsonPath('data.active_shift.is_today', true);
 });
+
+function createMultiDateSampleExcelFile(array $rows): string
+{
+    $spreadsheet = new Spreadsheet;
+    $sheet = $spreadsheet->getActiveSheet();
+    $sheet->setTitle('Input');
+
+    $rowIndex = 5;
+    foreach ($rows as $item) {
+        $sheet->setCellValue('H'.$rowIndex, $item['order_number']);
+        $sheet->setCellValue('D'.$rowIndex, $item['date']);
+        $sheet->setCellValue('L'.$rowIndex, '1');
+        $sheet->setCellValue('X'.$rowIndex, 'Nasi Goreng');
+        $sheet->setCellValue('Y'.$rowIndex, '1');
+        $sheet->setCellValue('Z'.$rowIndex, '25000');
+        $rowIndex++;
+    }
+
+    $writer = new Xlsx($spreadsheet);
+    $filePath = tempnam(sys_get_temp_dir(), 'test_multidate_excel_').'.xlsx';
+    $writer->save($filePath);
+
+    return $filePath;
+}
 
 function createSampleExcelFile(string $date, string $orderNumber = 'TEST-001'): string
 {

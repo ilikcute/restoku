@@ -26,10 +26,12 @@ class ImportTransactionController extends BaseApiController
             $importedCount = $this->importService->importToTemporaryTable($file->getPathname(), $user);
             $summary = $this->importService->getImportSummary($user);
 
+            $shiftDate = $summary['active_shift']['date'] ?? date('Y-m-d');
+
             return $this->successResponse([
                 'imported_count' => $importedCount,
                 'summary' => $summary,
-            ], "Berhasil mengimpor $importedCount transaksi ke penyimpanan sementara.");
+            ], "Berhasil mengimpor $importedCount transaksi untuk tanggal shift ($shiftDate). Transaksi tanggal lain otomatis diabaikan.");
 
         } catch (\Exception $e) {
             Log::error('Import Controller Error: '.$e->getMessage());
