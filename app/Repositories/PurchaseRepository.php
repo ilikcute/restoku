@@ -6,6 +6,7 @@ use App\Interfaces\PurchaseRepositoryInterface;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Services\InventoryService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class PurchaseRepository implements PurchaseRepositoryInterface
@@ -27,62 +28,91 @@ class PurchaseRepository implements PurchaseRepositoryInterface
 
     public function createPurchase(int $tenantId, int $userId, array $validated)
     {
-        return DB::transaction(function () use ($tenantId, $userId, $validated) {
-            $subtotal = 0;
-            $taxAmountTotal = 0;
-            $itemsData = [];
+        $idempotencyKey = $validated['idempotency_key'] ?? null;
 
-            foreach ($validated['items'] as $item) {
-                $product = Product::where('tenant_id', $tenantId)->findOrFail($item['product_id']);
-                $itemSubtotal = $item['cost_price'] * $item['quantity'];
+        if ($idempotencyKey) {
+            $existingPurchase = Purchase::where('tenant_id', $tenantId)
+                ->where('idempotency_key', $idempotencyKey)
+                ->with(['items.product', 'supplier', 'user'])
+                ->first();
 
-                $taxRate = $validated['tax_rate'] ?? 0;
-                $itemTax = $itemSubtotal * ($taxRate / 100);
+            if ($existingPurchase) {
+                return $existingPurchase;
+            }
+        }
 
-                $subtotal += $itemSubtotal;
-                $taxAmountTotal += $itemTax;
+        $lockKey = 'purchase:create:'.$tenantId.':'.($idempotencyKey ?: $userId);
 
-                $itemsData[] = [
-                    'product_id' => $product->id,
-                    'product_name' => $product->name,
-                    'cost_price' => $item['cost_price'],
-                    'quantity' => $item['quantity'],
-                    'tax_amount' => $itemTax,
-                    'subtotal' => $itemSubtotal,
-                ];
+        return Cache::lock($lockKey, 15)->block(5, function () use ($tenantId, $userId, $validated, $idempotencyKey) {
+            if ($idempotencyKey) {
+                $existingPurchase = Purchase::where('tenant_id', $tenantId)
+                    ->where('idempotency_key', $idempotencyKey)
+                    ->with(['items.product', 'supplier', 'user'])
+                    ->first();
+
+                if ($existingPurchase) {
+                    return $existingPurchase;
+                }
             }
 
-            $totalAmount = $subtotal + $taxAmountTotal;
-            $paymentMethod = $validated['payment_method'] ?? 'cash';
-            $paymentStatus = ($paymentMethod === 'credit') ? 'unpaid' : 'paid';
+            return DB::transaction(function () use ($tenantId, $userId, $validated, $idempotencyKey) {
+                $subtotal = 0;
+                $taxAmountTotal = 0;
+                $itemsData = [];
 
-            $purchase = Purchase::create([
-                'tenant_id' => $tenantId,
-                'supplier_id' => $validated['supplier_id'],
-                'user_id' => $userId,
-                'purchase_number' => $this->inventoryService->generatePurchaseNumber($tenantId),
-                'purchase_date' => $validated['purchase_date'],
-                'subtotal' => $subtotal,
-                'tax_amount' => $taxAmountTotal,
-                'total_amount' => $totalAmount,
-                'payment_status' => $paymentStatus,
-                'status' => 'completed',
-                'notes' => $validated['notes'] ?? null,
-            ]);
+                foreach ($validated['items'] as $item) {
+                    $product = Product::where('tenant_id', $tenantId)->findOrFail($item['product_id']);
+                    $itemSubtotal = $item['cost_price'] * $item['quantity'];
 
-            foreach ($itemsData as $itemData) {
-                $purchase->items()->create($itemData);
+                    $taxRate = $validated['tax_rate'] ?? 0;
+                    $itemTax = $itemSubtotal * ($taxRate / 100);
 
-                Product::where('tenant_id', $tenantId)
-                    ->where('id', $itemData['product_id'])
-                    ->update([
-                        'cost_price' => $itemData['cost_price'],
-                    ]);
-            }
+                    $subtotal += $itemSubtotal;
+                    $taxAmountTotal += $itemTax;
 
-            $this->inventoryService->adjustStockFromPurchase($purchase, $userId, $validated['account_id'] ?? null);
+                    $itemsData[] = [
+                        'product_id' => $product->id,
+                        'product_name' => $product->name,
+                        'cost_price' => $item['cost_price'],
+                        'quantity' => $item['quantity'],
+                        'tax_amount' => $itemTax,
+                        'subtotal' => $itemSubtotal,
+                    ];
+                }
 
-            return $purchase->load('items.product');
+                $totalAmount = $subtotal + $taxAmountTotal;
+                $paymentMethod = $validated['payment_method'] ?? 'cash';
+                $paymentStatus = ($paymentMethod === 'credit') ? 'unpaid' : 'paid';
+
+                $purchase = Purchase::create([
+                    'tenant_id' => $tenantId,
+                    'supplier_id' => $validated['supplier_id'],
+                    'user_id' => $userId,
+                    'purchase_number' => $this->inventoryService->generatePurchaseNumber($tenantId),
+                    'idempotency_key' => $idempotencyKey,
+                    'purchase_date' => $validated['purchase_date'],
+                    'subtotal' => $subtotal,
+                    'tax_amount' => $taxAmountTotal,
+                    'total_amount' => $totalAmount,
+                    'payment_status' => $paymentStatus,
+                    'status' => 'completed',
+                    'notes' => $validated['notes'] ?? null,
+                ]);
+
+                foreach ($itemsData as $itemData) {
+                    $purchase->items()->create($itemData);
+
+                    Product::where('tenant_id', $tenantId)
+                        ->where('id', $itemData['product_id'])
+                        ->update([
+                            'cost_price' => $itemData['cost_price'],
+                        ]);
+                }
+
+                $this->inventoryService->adjustStockFromPurchase($purchase, $userId, $validated['account_id'] ?? null);
+
+                return $purchase->load(['items.product', 'supplier', 'user']);
+            });
         });
     }
 }

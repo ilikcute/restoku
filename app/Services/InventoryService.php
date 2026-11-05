@@ -11,7 +11,9 @@ use App\Models\StockMovement;
 use App\Models\Transaction;
 use Exception;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class InventoryService
@@ -149,13 +151,9 @@ class InventoryService
                 ->firstOrFail();
 
             if ($type === 'income') {
-                $account->update([
-                    'balance' => $account->balance + $amount,
-                ]);
+                $account->increment('balance', $amount);
             } elseif ($type === 'expense') {
-                $account->update([
-                    'balance' => $account->balance - $amount,
-                ]);
+                $account->decrement('balance', $amount);
             }
 
             // If shiftId is null, try to find active shift for the user
@@ -174,7 +172,7 @@ class InventoryService
                 'shift_id' => $shiftId,
                 'expense_category_id' => $expenseCategoryId,
                 'income_category_id' => $incomeCategoryId,
-                'transaction_number' => 'TRX-'.strtoupper(uniqid()),
+                'transaction_number' => 'TRX-'.Str::ulid(),
                 'transaction_date' => now(),
                 'type' => $type,
                 'amount' => $amount,
@@ -258,63 +256,66 @@ class InventoryService
      */
     public function processOrderReturn($order, array $returnItems, int $userId, int $accountId)
     {
-        return DB::transaction(function () use ($order, $returnItems, $userId, $accountId) {
-            $totalReturnAmount = 0;
+        return Cache::lock("return:order:{$order->id}", 15)->block(5, function () use ($order, $returnItems, $userId, $accountId) {
+            return DB::transaction(function () use ($order, $returnItems, $userId, $accountId) {
+                $totalReturnAmount = 0;
 
-            foreach ($returnItems as $itemData) {
-                $orderItem = $order->items()
-                    ->where('id', $itemData['order_item_id'])
-                    ->lockForUpdate()
-                    ->firstOrFail();
-                $qtyToReturn = $itemData['quantity'];
+                foreach ($returnItems as $itemData) {
+                    $orderItem = $order->items()
+                        ->where('id', $itemData['order_item_id'])
+                        ->lockForUpdate()
+                        ->firstOrFail();
+                    $qtyToReturn = $itemData['quantity'];
 
-                if ($qtyToReturn <= 0) {
-                    continue;
+                    if ($qtyToReturn <= 0) {
+                        continue;
+                    }
+                    if (($orderItem->return_quantity + $qtyToReturn) > $orderItem->quantity) {
+                        throw new Exception("Kuantitas retur melebihi kuantitas pesanan untuk produk: {$orderItem->product_name}");
+                    }
+
+                    $unitDiscount = $orderItem->quantity > 0 ? ($orderItem->discount_amount / $orderItem->quantity) : 0;
+                    $returnAmount = ($orderItem->price - $unitDiscount) * $qtyToReturn;
+
+                    $orderItem->increment('return_quantity', $qtyToReturn);
+                    $orderItem->increment('return_amount', $returnAmount);
+                    $totalReturnAmount += $returnAmount;
+
+                    // Update Stock (Return Sales = Stock IN)
+                    $this->updateStock(
+                        $order->tenant_id,
+                        $orderItem->product_id,
+                        $qtyToReturn,
+                        'in',
+                        $userId,
+                        get_class($order),
+                        $order->id,
+                        "Retur Penjualan: {$order->order_number}"
+                    );
                 }
-                if (($orderItem->return_quantity + $qtyToReturn) > $orderItem->quantity) {
-                    throw new Exception("Kuantitas retur melebihi kuantitas pesanan untuk produk: {$orderItem->product_name}");
+
+                if ($totalReturnAmount > 0) {
+                    $order->increment('total_return', $totalReturnAmount);
+                    $order->update([
+                        'return_date' => now(),
+                        'return_user_id' => $userId,
+                    ]);
+
+                    // Record Refund Transaction (Expense)
+                    $this->recordTransaction(
+                        $order->tenant_id,
+                        $accountId,
+                        $userId,
+                        'expense',
+                        $totalReturnAmount,
+                        "Refund Penjualan (Retur): {$order->order_number}",
+                        get_class($order),
+                        $order->id
+                    );
                 }
 
-                $returnAmount = ($orderItem->price - ($orderItem->discount_amount / $orderItem->quantity)) * $qtyToReturn;
-
-                $orderItem->increment('return_quantity', $qtyToReturn);
-                $orderItem->increment('return_amount', $returnAmount);
-                $totalReturnAmount += $returnAmount;
-
-                // Update Stock (Return Sales = Stock IN)
-                $this->updateStock(
-                    $order->tenant_id,
-                    $orderItem->product_id,
-                    $qtyToReturn,
-                    'in',
-                    $userId,
-                    get_class($order),
-                    $order->id,
-                    "Retur Penjualan: {$order->order_number}"
-                );
-            }
-
-            if ($totalReturnAmount > 0) {
-                $order->increment('total_return', $totalReturnAmount);
-                $order->update([
-                    'return_date' => now(),
-                    'return_user_id' => $userId,
-                ]);
-
-                // Record Refund Transaction (Expense)
-                $this->recordTransaction(
-                    $order->tenant_id,
-                    $accountId,
-                    $userId,
-                    'expense',
-                    $totalReturnAmount,
-                    "Refund Penjualan (Retur): {$order->order_number}",
-                    get_class($order),
-                    $order->id
-                );
-            }
-
-            return $order;
+                return $order;
+            });
         });
     }
 
@@ -323,63 +324,66 @@ class InventoryService
      */
     public function processPurchaseReturn($purchase, array $returnItems, int $userId, int $accountId)
     {
-        return DB::transaction(function () use ($purchase, $returnItems, $userId, $accountId) {
-            $totalReturnAmount = 0;
+        return Cache::lock("return:purchase:{$purchase->id}", 15)->block(5, function () use ($purchase, $returnItems, $userId, $accountId) {
+            return DB::transaction(function () use ($purchase, $returnItems, $userId, $accountId) {
+                $totalReturnAmount = 0;
 
-            foreach ($returnItems as $itemData) {
-                $purchaseItem = $purchase->items()
-                    ->where('id', $itemData['purchase_item_id'])
-                    ->lockForUpdate()
-                    ->firstOrFail();
-                $qtyToReturn = $itemData['quantity'];
+                foreach ($returnItems as $itemData) {
+                    $purchaseItem = $purchase->items()
+                        ->where('id', $itemData['purchase_item_id'])
+                        ->lockForUpdate()
+                        ->firstOrFail();
+                    $qtyToReturn = $itemData['quantity'];
 
-                if ($qtyToReturn <= 0) {
-                    continue;
+                    if ($qtyToReturn <= 0) {
+                        continue;
+                    }
+                    if (($purchaseItem->return_quantity + $qtyToReturn) > $purchaseItem->quantity) {
+                        throw new Exception("Kuantitas retur melebihi kuantitas pembelian untuk produk: {$purchaseItem->product_name}");
+                    }
+
+                    $unitDiscount = $purchaseItem->quantity > 0 ? ($purchaseItem->discount_amount / $purchaseItem->quantity) : 0;
+                    $returnAmount = ($purchaseItem->cost_price - $unitDiscount) * $qtyToReturn;
+
+                    $purchaseItem->increment('return_quantity', $qtyToReturn);
+                    $purchaseItem->increment('return_amount', $returnAmount);
+                    $totalReturnAmount += $returnAmount;
+
+                    // Update Stock (Return Purchase = Stock OUT)
+                    $this->updateStock(
+                        $purchase->tenant_id,
+                        $purchaseItem->product_id,
+                        -($qtyToReturn),
+                        'out',
+                        $userId,
+                        get_class($purchase),
+                        $purchase->id,
+                        "Retur Pembelian: {$purchase->purchase_number}"
+                    );
                 }
-                if (($purchaseItem->return_quantity + $qtyToReturn) > $purchaseItem->quantity) {
-                    throw new Exception("Kuantitas retur melebihi kuantitas pembelian untuk produk: {$purchaseItem->product_name}");
+
+                if ($totalReturnAmount > 0) {
+                    $purchase->increment('total_return', $totalReturnAmount);
+                    $purchase->update([
+                        'return_date' => now(),
+                        'return_user_id' => $userId,
+                    ]);
+
+                    // Record Refund Transaction (Income)
+                    $this->recordTransaction(
+                        $purchase->tenant_id,
+                        $accountId,
+                        $userId,
+                        'income',
+                        $totalReturnAmount,
+                        "Refund Pembelian (Retur): {$purchase->purchase_number}",
+                        get_class($purchase),
+                        $purchase->id
+                    );
                 }
 
-                $returnAmount = ($purchaseItem->cost_price - ($purchaseItem->discount_amount / $purchaseItem->quantity)) * $qtyToReturn;
-
-                $purchaseItem->increment('return_quantity', $qtyToReturn);
-                $purchaseItem->increment('return_amount', $returnAmount);
-                $totalReturnAmount += $returnAmount;
-
-                // Update Stock (Return Purchase = Stock OUT)
-                $this->updateStock(
-                    $purchase->tenant_id,
-                    $purchaseItem->product_id,
-                    -($qtyToReturn),
-                    'out',
-                    $userId,
-                    get_class($purchase),
-                    $purchase->id,
-                    "Retur Pembelian: {$purchase->purchase_number}"
-                );
-            }
-
-            if ($totalReturnAmount > 0) {
-                $purchase->increment('total_return', $totalReturnAmount);
-                $purchase->update([
-                    'return_date' => now(),
-                    'return_user_id' => $userId,
-                ]);
-
-                // Record Refund Transaction (Income)
-                $this->recordTransaction(
-                    $purchase->tenant_id,
-                    $accountId,
-                    $userId,
-                    'income',
-                    $totalReturnAmount,
-                    "Refund Pembelian (Retur): {$purchase->purchase_number}",
-                    get_class($purchase),
-                    $purchase->id
-                );
-            }
-
-            return $purchase;
+                return $purchase;
+            });
         });
     }
 }

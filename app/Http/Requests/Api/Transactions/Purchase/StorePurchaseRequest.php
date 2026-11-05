@@ -30,6 +30,7 @@ class StorePurchaseRequest extends FormRequest
                 'required',
                 Rule::exists('suppliers', 'id')->where('tenant_id', $tenantId),
             ],
+            'idempotency_key' => 'nullable|string|max:255',
             'payment_method' => 'required|in:cash,credit',
             'account_id' => [
                 'required_if:payment_method,cash',
@@ -42,7 +43,7 @@ class StorePurchaseRequest extends FormRequest
                 'required',
                 Rule::exists('products', 'id')->where('tenant_id', $tenantId),
             ],
-            'items.*.quantity' => 'required|numeric|min:1',
+            'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.cost_price' => 'required|numeric|min:0',
             'notes' => 'nullable|string',
         ];

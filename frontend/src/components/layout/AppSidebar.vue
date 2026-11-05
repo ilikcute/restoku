@@ -2,13 +2,16 @@
     <aside
         :class="[
             'flex flex-col bg-white rounded-2xl shadow-sm border border-slate-100 transition-all duration-300 shrink-0 h-full overflow-hidden',
-            'hidden lg:flex',
-            isCollapsed ? 'w-20' : 'w-64',
+            modelValue ? 'fixed inset-y-2 left-2 z-50 flex w-64' : 'hidden lg:flex',
+            isCollapsed ? 'lg:w-20' : 'lg:w-64',
         ]"
     >
         <!-- Logo Section -->
         <div
-            class="flex h-16 shrink-0 items-center justify-between px-4 border-b border-slate-100"
+            :class="[
+                'flex h-16 shrink-0 items-center border-b border-slate-100',
+                isCollapsed ? 'justify-center px-2' : 'justify-between px-4',
+            ]"
         >
             <div
                 v-if="!isCollapsed"
@@ -36,18 +39,15 @@
                     {{ tenant.name || "Restoku" }}
                 </span>
             </div>
-            <div
-                v-else
-                class="w-9 h-9 rounded-xl bg-orange-500 flex items-center justify-center mx-auto shadow-sm"
-            >
-                <span class="text-white font-black text-sm leading-none">
-                    {{ (tenant.name || "R").charAt(0).toUpperCase() }}
-                </span>
-            </div>
+
+            <!-- Sidebar Toggle Button (Always accessible to collapse or expand) -->
             <button
-                v-if="!isCollapsed"
                 @click="toggleSidebar"
-                class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors shrink-0"
+                :class="[
+                    'rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors shrink-0 flex items-center justify-center',
+                    isCollapsed ? 'w-10 h-10 mx-auto' : 'p-1.5',
+                ]"
+                :title="isCollapsed ? 'Perbesar Menu' : 'Perkecil Menu'"
             >
                 <i class="pi pi-bars text-base"></i>
             </button>

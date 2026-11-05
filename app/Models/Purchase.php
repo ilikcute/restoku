@@ -18,6 +18,7 @@ class Purchase extends Model
         'supplier_id',
         'user_id',
         'purchase_number',
+        'idempotency_key',
         'purchase_date',
         'subtotal',
         'discount_amount',

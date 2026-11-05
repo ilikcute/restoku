@@ -6,6 +6,7 @@ use App\Events\OrderCreated;
 use App\Interfaces\OrderRepositoryInterface;
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\PendingOrder;
 use App\Models\Shift;
 use App\Services\InventoryService;
 use App\Services\OrderService;
@@ -151,6 +152,12 @@ class OrderRepository implements OrderRepositoryInterface
                 }
 
                 $this->inventoryService->adjustStockFromOrder($order, $userId, $validated['account_id']);
+
+                if (! empty($validated['pending_order_token'])) {
+                    PendingOrder::where('tenant_id', $tenantId)
+                        ->where('token', $validated['pending_order_token'])
+                        ->update(['status' => 'processed']);
+                }
 
                 $shift->increment('total_sales', $order->total_amount);
                 if ($cashAmount > 0) {

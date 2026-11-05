@@ -6,8 +6,10 @@ use App\Models\Category;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\Shift;
 use App\Models\TempOrder;
 use App\Models\TempOrderItem;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -18,8 +20,31 @@ use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class ExcelImportService
 {
-    public function importToTemporaryTable($filePath, $user)
+    /**
+     * Import raw excel file into temporary staging table.
+     */
+    public function importToTemporaryTable(string $filePath, User $user): int
     {
+        $tenantId = $user->tenant_id;
+
+        // 1. Verifikasi harus ada shift yang berstatus 'open'
+        $activeShift = Shift::where('tenant_id', $tenantId)
+            ->where('status', 'open')
+            ->latest()
+            ->first();
+
+        if (! $activeShift) {
+            throw new \Exception('Tidak ada shift kasir yang aktif (status open). Harap buka shift terlebih dahulu sebelum mengimpor transaksi.');
+        }
+
+        // 2. Verifikasi tanggal shift aktif harus sama dengan tanggal hari ini
+        $today = Carbon::today()->format('Y-m-d');
+        $shiftDate = $activeShift->start_time ? $activeShift->start_time->format('Y-m-d') : $today;
+
+        if ($shiftDate !== $today) {
+            throw new \Exception("Shift aktif saat ini ($shiftDate) tidak sesuai dengan tanggal hari ini ($today). Harap tutup shift lama dan buka shift baru untuk hari ini.");
+        }
+
         $spreadsheet = IOFactory::load($filePath);
         $sheet = $spreadsheet->getSheetByName('Input');
 
@@ -45,6 +70,13 @@ class ExcelImportService
             $emptyConsecutive = 0;
 
             $dateStr = trim((string) $sheet->getCell('D'.$row)->getFormattedValue()); // e.g. 01/05/2026
+            $parsedRowDate = $this->parseDate($dateStr);
+
+            // 3. Verifikasi: jika tanggal transaksi pada file Excel tidak sama dengan hari ini / shift aktif, tolak
+            if (! empty($parsedRowDate) && $parsedRowDate !== $shiftDate) {
+                throw new \Exception("Tanggal transaksi pada file Excel ($parsedRowDate) tidak sama dengan tanggal hari ini / shift aktif ($shiftDate). Upload ditolak.");
+            }
+
             $room = trim((string) $sheet->getCell('L'.$row)->getFormattedValue());
 
             if (empty($room) || $room === '-' || stripos($room, 'Bar') !== false) {
@@ -54,7 +86,7 @@ class ExcelImportService
             if (! isset($ordersData[$billNumber])) {
                 $ordersData[$billNumber] = [
                     'order_number' => str_replace("'", '', $billNumber),
-                    'date' => $this->parseDate($dateStr),
+                    'date' => $shiftDate,
                     'table_number' => $room,
                     'items' => [],
                 ];
@@ -177,7 +209,7 @@ class ExcelImportService
                     'tax_amount' => $orderTax,
                     'service_charge' => $orderService,
                     'total_amount' => $grandTotal,
-                    'date' => $data['date'],
+                    'date' => $shiftDate,
                 ]);
 
                 foreach ($orderItemsToInsert as $oItem) {
@@ -186,6 +218,25 @@ class ExcelImportService
                 }
 
                 $importedCount++;
+            }
+
+            // Verifikasi ulang: pastikan shift masih berstatus open saat proses import selesai
+            $reverifiedShift = Shift::where('tenant_id', $tenantId)
+                ->where('id', $activeShift->id)
+                ->where('status', 'open')
+                ->first();
+
+            if (! $reverifiedShift) {
+                throw new \Exception('Verifikasi gagal: Shift kasir tidak aktif saat proses import disimpan.');
+            }
+
+            // Verifikasi ulang: pastikan semua record temp_orders untuk tenant ini memiliki date = shiftDate
+            $mismatchedDateCount = TempOrder::where('tenant_id', $tenantId)
+                ->where('date', '!=', $shiftDate)
+                ->count();
+
+            if ($mismatchedDateCount > 0) {
+                throw new \Exception('Verifikasi gagal: Terdapat data transaksi yang tanggalnya tidak sesuai dengan shift aktif.');
             }
 
             DB::commit();
@@ -199,7 +250,12 @@ class ExcelImportService
         }
     }
 
-    public function getImportSummary($user)
+    /**
+     * Get summary of current staging data for the user's tenant.
+     *
+     * @return array<string, mixed>
+     */
+    public function getImportSummary(User $user): array
     {
         $tenantId = $user->tenant_id;
 
@@ -212,42 +268,94 @@ class ExcelImportService
             })
             ->delete();
 
+        $activeShift = Shift::where('tenant_id', $tenantId)
+            ->where('status', 'open')
+            ->with('user:id,name')
+            ->latest()
+            ->first();
+
+        $shiftDate = $activeShift?->start_time ? $activeShift->start_time->format('Y-m-d') : null;
+        $activeShiftData = null;
+        if ($activeShift) {
+            $activeShiftData = [
+                'id' => $activeShift->id,
+                'date' => $shiftDate,
+                'is_today' => $shiftDate === Carbon::today()->format('Y-m-d'),
+                'user_name' => $activeShift->user?->name,
+                'status' => $activeShift->status,
+            ];
+        }
+
         $totalOrders = TempOrder::where('tenant_id', $tenantId)->count();
         $totalAmount = TempOrder::where('tenant_id', $tenantId)->sum('total_amount') ?: 0;
 
-        // Distinct dates with their count & total amount (hanya tanggal terisi dan total > 0)
+        // Distinct dates with their count & total amount
         $datesSummary = TempOrder::where('tenant_id', $tenantId)
             ->where('total_amount', '>', 0)
             ->whereNotNull('date')
             ->selectRaw('date, count(*) as count, sum(total_amount) as total')
             ->groupBy('date')
             ->orderBy('date', 'asc')
-            ->get();
+            ->get()
+            ->map(function ($item) use ($shiftDate) {
+                $item->is_shift_date = ($shiftDate !== null && $item->date === $shiftDate);
 
-        // All temp orders with already_imported check
+                return $item;
+            });
+
+        // All temp orders with already_imported and is_shift_date checks
         $orders = TempOrder::where('tenant_id', $tenantId)
             ->where('total_amount', '>', 0)
             ->orderBy('order_number', 'asc')
             ->get()
-            ->map(function ($order) use ($tenantId) {
+            ->map(function ($order) use ($tenantId, $shiftDate) {
                 $order->already_imported = Order::where('tenant_id', $tenantId)
                     ->where('order_number', $order->order_number)
                     ->exists();
 
+                $orderDate = $order->date ? Carbon::parse($order->date)->format('Y-m-d') : null;
+                $order->is_shift_date = ($shiftDate !== null && $orderDate === $shiftDate);
+
                 return $order;
             });
+
+        $mismatchedCount = 0;
+        if ($shiftDate) {
+            $mismatchedCount = TempOrder::where('tenant_id', $tenantId)
+                ->where('date', '!=', $shiftDate)
+                ->count();
+        }
 
         return [
             'total_orders' => $totalOrders,
             'total_amount' => $totalAmount,
             'dates' => $datesSummary,
             'orders' => $orders,
+            'active_shift' => $activeShiftData,
+            'mismatched_dates_count' => $mismatchedCount,
         ];
     }
 
-    public function commitImport($user, $shiftId, array $dates = [], array $orderNumbers = [])
+    /**
+     * Commit staging records to final orders and order_items tables.
+     *
+     * @param  array<string>  $dates
+     * @param  array<string>  $orderNumbers
+     */
+    public function commitImport(User $user, int $shiftId, array $dates = [], array $orderNumbers = []): int
     {
         $tenantId = $user->tenant_id;
+
+        // Verifikasi shift yang dituju
+        $shift = Shift::where('tenant_id', $tenantId)->find($shiftId);
+        if (! $shift || $shift->status !== 'open') {
+            throw new \Exception('Shift tidak ditemukan atau statusnya tidak aktif (open). Harap buka shift terlebih dahulu.');
+        }
+
+        $shiftDate = $shift->start_time ? $shift->start_time->format('Y-m-d') : null;
+        if (! $shiftDate) {
+            throw new \Exception('Tanggal shift kasir tidak valid.');
+        }
 
         // Bersihkan data temporary yang kosong atau bernilai 0
         TempOrder::where('tenant_id', $tenantId)
@@ -281,7 +389,16 @@ class ExcelImportService
             return 0;
         }
 
+        // JEGATAN KRITIS: Tolak jika ada transaksi staging yang tanggalnya tidak sama dengan shift aktif!
+        foreach ($tempOrders as $tempOrder) {
+            $orderDate = $tempOrder->date ? Carbon::parse($tempOrder->date)->format('Y-m-d') : null;
+            if ($orderDate !== $shiftDate) {
+                throw new \Exception("Transaksi (#{$tempOrder->order_number}) dengan tanggal ($orderDate) tidak sama dengan tanggal shift aktif ($shiftDate). Proses impor dibatalkan untuk mencegah selisih tanggal laporan kasir.");
+            }
+        }
+
         $importedCount = 0;
+        $totalBatchAmount = 0.0;
 
         DB::beginTransaction();
         try {
@@ -318,7 +435,7 @@ class ExcelImportService
                     'change_amount' => 0,
                     'payment_method' => 'cash',
                     'status' => 'completed',
-                    'created_at' => $tempOrder->date ? Carbon::parse($tempOrder->date)->format('Y-m-d H:i:s') : now(),
+                    'created_at' => Carbon::parse($shiftDate.' '.now()->format('H:i:s')),
                 ]);
 
                 foreach ($tempOrder->items as $tempItem) {
@@ -326,9 +443,19 @@ class ExcelImportService
                         ->where('name', $tempItem->product_name)
                         ->first();
 
+                    if (! $product) {
+                        $product = Product::create([
+                            'tenant_id' => $tenantId,
+                            'name' => $tempItem->product_name,
+                            'price' => $tempItem->price,
+                            'cost_price' => 0,
+                            'is_active' => true,
+                        ]);
+                    }
+
                     OrderItem::create([
                         'order_id' => $order->id,
-                        'product_id' => $product ? $product->id : null,
+                        'product_id' => $product->id,
                         'product_name' => $tempItem->product_name,
                         'price' => $tempItem->price,
                         'cost_price' => $product->cost_price ?? 0,
@@ -341,6 +468,12 @@ class ExcelImportService
 
                 $tempOrder->delete();
                 $importedCount++;
+                $totalBatchAmount += (float) $order->total_amount;
+            }
+
+            if ($totalBatchAmount > 0) {
+                $shift->increment('total_sales', $totalBatchAmount);
+                $shift->increment('cash_sales', $totalBatchAmount);
             }
 
             DB::commit();
@@ -354,7 +487,7 @@ class ExcelImportService
         }
     }
 
-    private function parseDate($dateStr)
+    private function parseDate(?string $dateStr): ?string
     {
         if (empty($dateStr)) {
             return null;
@@ -362,7 +495,7 @@ class ExcelImportService
         try {
             // Check if it is a serial number from excel
             if (is_numeric($dateStr)) {
-                return Date::excelToDateTimeObject($dateStr)->format('Y-m-d');
+                return Date::excelToDateTimeObject((int) $dateStr)->format('Y-m-d');
             }
 
             // format 01/05/2026 -> 2026-05-01
@@ -376,12 +509,12 @@ class ExcelImportService
         }
     }
 
-    public function clearStaging($user)
+    public function clearStaging(User $user): int
     {
         return TempOrder::where('tenant_id', $user->tenant_id)->delete();
     }
 
-    public function deleteEmptyOrders($user)
+    public function deleteEmptyOrders(User $user): int
     {
         return TempOrder::where('tenant_id', $user->tenant_id)
             ->where(function ($q) {
@@ -389,6 +522,28 @@ class ExcelImportService
                     ->orWhereNull('total_amount')
                     ->orWhereDoesntHave('items');
             })
+            ->delete();
+    }
+
+    public function deleteMismatchedOrders(User $user): int
+    {
+        $tenantId = $user->tenant_id;
+        $activeShift = Shift::where('tenant_id', $tenantId)
+            ->where('status', 'open')
+            ->latest()
+            ->first();
+
+        if (! $activeShift) {
+            return 0;
+        }
+
+        $shiftDate = $activeShift->start_time ? $activeShift->start_time->format('Y-m-d') : null;
+        if (! $shiftDate) {
+            return 0;
+        }
+
+        return TempOrder::where('tenant_id', $tenantId)
+            ->where('date', '!=', $shiftDate)
             ->delete();
     }
 }

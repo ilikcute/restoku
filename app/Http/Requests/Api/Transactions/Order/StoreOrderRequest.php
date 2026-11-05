@@ -27,6 +27,7 @@ class StoreOrderRequest extends FormRequest
 
         return [
             'idempotency_key' => 'required|string|uuid',
+            'pending_order_token' => 'nullable|string|max:50',
             'customer_id' => [
                 'nullable',
                 Rule::exists('customers', 'id')->where('tenant_id', $tenantId),

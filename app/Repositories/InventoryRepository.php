@@ -14,6 +14,7 @@ use App\Models\StockMovement;
 use App\Models\Transaction;
 use App\Services\InventoryService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class InventoryRepository implements InventoryRepositoryInterface
 {
@@ -168,7 +169,7 @@ class InventoryRepository implements InventoryRepositoryInterface
                 $adjustment = StockAdjustment::create([
                     'tenant_id' => $tenantId,
                     'user_id' => $userId,
-                    'adjustment_number' => 'ADJ-'.strtoupper(uniqid()),
+                    'adjustment_number' => 'ADJ-'.Str::ulid(),
                     'adjustment_date' => now(),
                     'notes' => $validated['notes'] ?? null,
                     'status' => $validated['status'],

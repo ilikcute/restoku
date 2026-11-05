@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Interfaces\ShiftRepositoryInterface;
 use App\Models\Shift;
 use App\Models\Transaction;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class ShiftRepository implements ShiftRepositoryInterface
@@ -40,26 +41,30 @@ class ShiftRepository implements ShiftRepositoryInterface
 
     public function openShift(int $tenantId, int $userId, array $data): Shift
     {
-        // Check if there is already an open shift
-        $existingShift = Shift::where('tenant_id', $tenantId)
-            ->where('user_id', $userId)
-            ->where('status', 'open')
-            ->first();
+        $lockKey = "shift:open:{$tenantId}:{$userId}";
 
-        if ($existingShift) {
-            if (! $existingShift->start_time->isToday()) {
-                throw new \Exception('Anda memiliki shift aktif dari hari sebelumnya yang belum ditutup. Harap tutup shift tersebut terlebih dahulu sebelum membuka shift baru.');
+        return Cache::lock($lockKey, 10)->block(5, function () use ($tenantId, $userId, $data) {
+            // Check if there is already an open shift
+            $existingShift = Shift::where('tenant_id', $tenantId)
+                ->where('user_id', $userId)
+                ->where('status', 'open')
+                ->first();
+
+            if ($existingShift) {
+                if (! $existingShift->start_time->isToday()) {
+                    throw new \Exception('Anda memiliki shift aktif dari hari sebelumnya yang belum ditutup. Harap tutup shift tersebut terlebih dahulu sebelum membuka shift baru.');
+                }
+                throw new \Exception('Anda masih memiliki Shift yang terbuka.');
             }
-            throw new \Exception('Anda masih memiliki Shift yang terbuka.');
-        }
 
-        return Shift::create([
-            'tenant_id' => $tenantId,
-            'user_id' => $userId,
-            'start_time' => now(),
-            'starting_cash' => $data['starting_cash'],
-            'status' => 'open',
-        ]);
+            return Shift::create([
+                'tenant_id' => $tenantId,
+                'user_id' => $userId,
+                'start_time' => now(),
+                'starting_cash' => $data['starting_cash'],
+                'status' => 'open',
+            ]);
+        });
     }
 
     public function closeShift(int $tenantId, int $userId, array $data): Shift

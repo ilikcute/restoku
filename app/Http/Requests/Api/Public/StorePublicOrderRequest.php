@@ -25,7 +25,7 @@ class StorePublicOrderRequest extends FormRequest
                 'required',
                 Rule::exists('products', 'id')->where('tenant_id', $tenantId),
             ],
-            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.notes' => 'nullable|string|max:255',
         ];
     }

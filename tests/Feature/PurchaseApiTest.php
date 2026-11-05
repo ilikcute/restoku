@@ -2,10 +2,12 @@
 
 use App\Models\Account;
 use App\Models\Product;
+use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Permission;
 
 uses(RefreshDatabase::class);
@@ -87,4 +89,35 @@ test('cannot create purchase using product from another tenant', function () {
 
     $response->assertUnprocessable()
         ->assertJsonValidationErrors(['items.0.product_id']);
+});
+
+test('purchase creation with idempotency key returns existing purchase and prevents duplication', function () {
+    $idempotencyKey = 'test-idemp-'.Str::uuid();
+
+    $payload = [
+        'idempotency_key' => $idempotencyKey,
+        'supplier_id' => $this->supplier->id,
+        'payment_method' => 'cash',
+        'account_id' => $this->account->id,
+        'purchase_date' => now()->toDateString(),
+        'items' => [
+            [
+                'product_id' => $this->product->id,
+                'quantity' => 5,
+                'cost_price' => 10000,
+            ],
+        ],
+    ];
+
+    $res1 = $this->actingAs($this->user, 'sanctum')->postJson(route('api.v1.purchases.store'), $payload);
+    $res1->assertCreated();
+    $purchaseId1 = $res1->json('data.id');
+
+    // Resend identical request with same idempotency key
+    $res2 = $this->actingAs($this->user, 'sanctum')->postJson(route('api.v1.purchases.store'), $payload);
+    $res2->assertSuccessful();
+    $purchaseId2 = $res2->json('data.id');
+
+    expect($purchaseId2)->toBe($purchaseId1)
+        ->and(Purchase::where('tenant_id', $this->tenant->id)->count())->toBe(1);
 });

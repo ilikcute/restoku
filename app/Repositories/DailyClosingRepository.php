@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Interfaces\DailyClosingRepositoryInterface;
 use App\Models\DailyClosing;
+use App\Models\Order;
 use App\Models\Shift;
 use Illuminate\Support\Facades\DB;
 
@@ -22,6 +23,15 @@ class DailyClosingRepository implements DailyClosingRepositoryInterface
         return DB::transaction(function () use ($tenantId, $userId, $validated) {
             $closingDate = $validated['closing_date'];
 
+            // Check if closing already processed for this date
+            $existingClosing = DailyClosing::where('tenant_id', $tenantId)
+                ->where('closing_date', $closingDate)
+                ->first();
+
+            if ($existingClosing) {
+                throw new \Exception("Closing harian untuk tanggal {$closingDate} sudah pernah diproses.");
+            }
+
             // Validate: All shifts for this tenant on this date must be closed
             $openShifts = Shift::where('tenant_id', $tenantId)
                 ->where('status', 'open')
@@ -36,13 +46,18 @@ class DailyClosingRepository implements DailyClosingRepositoryInterface
                 ->whereDate('start_time', $closingDate)
                 ->where('status', 'closed');
 
-            $totalRevenue = $shiftQuery->sum('total_sales');
-            $totalTax = $shiftQuery->sum('total_tax');
-            $totalDiscounts = 0;
+            $closedShiftIds = (clone $shiftQuery)->pluck('id');
+
+            $totalRevenue = (float) $shiftQuery->sum('total_sales');
+            $totalTax = (float) $shiftQuery->sum('total_tax');
+            $totalDiscounts = (float) Order::where('tenant_id', $tenantId)
+                ->whereIn('shift_id', $closedShiftIds)
+                ->where('status', 'completed')
+                ->sum('discount_amount');
             $totalTransactions = $shiftQuery->sum(DB::raw('(SELECT COUNT(*) FROM orders WHERE orders.shift_id = shifts.id AND status = "completed")'));
 
-            $totalIncome = $shiftQuery->sum('total_income');
-            $totalExpense = $shiftQuery->sum('total_expense');
+            $totalIncome = (float) $shiftQuery->sum('total_income');
+            $totalExpense = (float) $shiftQuery->sum('total_expense');
 
             // Net Revenue = Sales + Additional Income - Expenses
             $netRevenue = $totalRevenue + $totalIncome - $totalExpense;

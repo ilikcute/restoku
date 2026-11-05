@@ -8,11 +8,21 @@ use App\Models\TempOrderItem;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Spatie\Permission\Models\Permission;
+use Tests\TestCase;
 
+/**
+ * @property Tenant $tenant
+ * @property User $cashier
+ * @property Shift $shift
+ */
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var TestCase $this */
     $this->tenant = Tenant::factory()->create();
     $this->cashier = User::factory()->cashier()->create(['tenant_id' => $this->tenant->id]);
     Permission::findOrCreate('view-orders');
@@ -25,6 +35,7 @@ beforeEach(function () {
 });
 
 test('can retrieve empty staging summary when no data is imported', function () {
+    /** @var TestCase $this */
     $response = $this->actingAs($this->cashier, 'sanctum')
         ->getJson('/api/v1/orders/import/summary');
 
@@ -41,6 +52,7 @@ test('can retrieve empty staging summary when no data is imported', function () 
 });
 
 test('can retrieve staging summary with temp orders', function () {
+    /** @var TestCase $this */
     // Create staging data
     $tempOrder = TempOrder::create([
         'tenant_id' => $this->tenant->id,
@@ -74,12 +86,15 @@ test('can retrieve staging summary with temp orders', function () {
 });
 
 test('can commit staging orders to main orders table', function () {
+    /** @var TestCase $this */
     // Create product
     $product = Product::factory()->create([
         'tenant_id' => $this->tenant->id,
         'name' => 'Nasi Goreng',
         'price' => 10000,
     ]);
+
+    $shiftDate = $this->shift->start_time->format('Y-m-d');
 
     // Create staging data
     $tempOrder = TempOrder::create([
@@ -91,7 +106,7 @@ test('can commit staging orders to main orders table', function () {
         'tax_amount' => 1000,
         'service_charge' => 500,
         'total_amount' => 11500,
-        'date' => '2026-05-28',
+        'date' => $shiftDate,
     ]);
 
     TempOrderItem::create([
@@ -106,7 +121,7 @@ test('can commit staging orders to main orders table', function () {
 
     $response = $this->actingAs($this->cashier, 'sanctum')
         ->postJson('/api/v1/orders/import/confirm', [
-            'dates' => ['2026-05-28'],
+            'dates' => [$shiftDate],
         ]);
 
     $response->assertSuccessful();
@@ -135,7 +150,94 @@ test('can commit staging orders to main orders table', function () {
         ->and(TempOrderItem::count())->toBe(0);
 });
 
+test('cannot commit staging orders when temp order date does not match active shift date', function () {
+    /** @var TestCase $this */
+    // Staging date is 2026-10-02 while active shift is today
+    $tempOrder = TempOrder::create([
+        'tenant_id' => $this->tenant->id,
+        'user_id' => $this->cashier->id,
+        'order_number' => 'MISMATCH-001',
+        'table_number' => '1',
+        'subtotal' => 10000,
+        'tax_amount' => 1000,
+        'service_charge' => 500,
+        'total_amount' => 11500,
+        'date' => '2026-10-02',
+    ]);
+
+    TempOrderItem::create([
+        'temp_order_id' => $tempOrder->id,
+        'product_name' => 'Nasi Goreng',
+        'price' => 10000,
+        'quantity' => 1,
+        'subtotal' => 10000,
+        'tax_amount' => 1000,
+        'service_charge' => 500,
+    ]);
+
+    $response = $this->actingAs($this->cashier, 'sanctum')
+        ->postJson('/api/v1/orders/import/confirm', [
+            'dates' => ['2026-10-02'],
+        ]);
+
+    $response->assertStatus(400);
+    $response->assertJsonFragment(['status' => 'error']);
+    expect($response->json('message'))->toContain('tidak sama dengan tanggal shift aktif');
+});
+
+test('can delete mismatched staging orders via endpoint', function () {
+    /** @var TestCase $this */
+    $shiftDate = $this->shift->start_time->format('Y-m-d');
+
+    // Matching order
+    $matchingOrder = TempOrder::create([
+        'tenant_id' => $this->tenant->id,
+        'user_id' => $this->cashier->id,
+        'order_number' => 'MATCH-001',
+        'table_number' => '1',
+        'subtotal' => 10000,
+        'total_amount' => 10000,
+        'date' => $shiftDate,
+    ]);
+    TempOrderItem::create([
+        'temp_order_id' => $matchingOrder->id,
+        'product_name' => 'Kopi',
+        'price' => 10000,
+        'quantity' => 1,
+        'subtotal' => 10000,
+    ]);
+
+    // Mismatched order (different date)
+    $mismatchedOrder = TempOrder::create([
+        'tenant_id' => $this->tenant->id,
+        'user_id' => $this->cashier->id,
+        'order_number' => 'MISMATCH-DELETE',
+        'table_number' => '1',
+        'subtotal' => 20000,
+        'total_amount' => 20000,
+        'date' => '2026-10-02',
+    ]);
+    TempOrderItem::create([
+        'temp_order_id' => $mismatchedOrder->id,
+        'product_name' => 'Teh',
+        'price' => 20000,
+        'quantity' => 1,
+        'subtotal' => 20000,
+    ]);
+
+    $response = $this->actingAs($this->cashier, 'sanctum')
+        ->deleteJson('/api/v1/orders/import/mismatched-records');
+
+    $response->assertSuccessful();
+    $response->assertJsonPath('data.deleted_count', 1);
+
+    // Matching order must still exist, mismatched must be gone
+    expect(TempOrder::where('order_number', 'MATCH-001')->exists())->toBeTrue()
+        ->and(TempOrder::where('order_number', 'MISMATCH-DELETE')->exists())->toBeFalse();
+});
+
 test('cannot commit staging orders without open shift', function () {
+    /** @var TestCase $this */
     $this->shift->update(['status' => 'closed']);
 
     $response = $this->actingAs($this->cashier, 'sanctum')
@@ -147,6 +249,7 @@ test('cannot commit staging orders without open shift', function () {
 });
 
 test('staging summary automatically purges empty or 0-amount orders', function () {
+    /** @var TestCase $this */
     // Order 1: valid
     $validOrder = TempOrder::create([
         'tenant_id' => $this->tenant->id,
@@ -208,6 +311,7 @@ test('staging summary automatically purges empty or 0-amount orders', function (
 });
 
 test('cannot commit empty or 0-amount orders to main database', function () {
+    /** @var TestCase $this */
     // Create zero amount temp order
     $tempOrder = TempOrder::create([
         'tenant_id' => $this->tenant->id,
@@ -233,6 +337,7 @@ test('cannot commit empty or 0-amount orders to main database', function () {
 });
 
 test('can clear staging records via endpoint', function () {
+    /** @var TestCase $this */
     TempOrder::create([
         'tenant_id' => $this->tenant->id,
         'user_id' => $this->cashier->id,
@@ -249,3 +354,102 @@ test('can clear staging records via endpoint', function () {
     $response->assertSuccessful();
     expect(TempOrder::where('tenant_id', $this->tenant->id)->count())->toBe(0);
 });
+
+test('cannot upload excel when no open shift exists', function () {
+    /** @var TestCase $this */
+    $this->shift->update(['status' => 'closed']);
+
+    $excelPath = createSampleExcelFile(now()->format('d/m/Y'));
+    $file = new UploadedFile($excelPath, 'test.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
+
+    $response = $this->actingAs($this->cashier, 'sanctum')
+        ->postJson('/api/v1/orders/import', ['file' => $file]);
+
+    @unlink($excelPath);
+
+    $response->assertStatus(400);
+    $response->assertJsonFragment(['status' => 'error']);
+});
+
+test('cannot upload excel when open shift is not for today', function () {
+    /** @var TestCase $this */
+    $this->shift->update(['start_time' => now()->subDays(2)]);
+
+    $excelPath = createSampleExcelFile(now()->format('d/m/Y'));
+    $file = new UploadedFile($excelPath, 'test.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
+
+    $response = $this->actingAs($this->cashier, 'sanctum')
+        ->postJson('/api/v1/orders/import', ['file' => $file]);
+
+    @unlink($excelPath);
+
+    $response->assertStatus(400);
+    $response->assertJsonFragment(['status' => 'error']);
+});
+
+test('cannot upload excel when transaction date in file does not match active shift date', function () {
+    /** @var TestCase $this */
+    // Active shift is today, but file has past date
+    $excelPath = createSampleExcelFile('01/01/2025');
+    $file = new UploadedFile($excelPath, 'test.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
+
+    $response = $this->actingAs($this->cashier, 'sanctum')
+        ->postJson('/api/v1/orders/import', ['file' => $file]);
+
+    @unlink($excelPath);
+
+    $response->assertStatus(400);
+    $response->assertJsonFragment(['status' => 'error']);
+});
+
+test('can upload excel and temp_orders date is verified and matched to active shift date', function () {
+    /** @var TestCase $this */
+    $todayDateFormatted = now()->format('d/m/Y');
+    $excelPath = createSampleExcelFile($todayDateFormatted, 'VALID-999');
+    $file = new UploadedFile($excelPath, 'test.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true);
+
+    $response = $this->actingAs($this->cashier, 'sanctum')
+        ->postJson('/api/v1/orders/import', ['file' => $file]);
+
+    @unlink($excelPath);
+
+    $response->assertSuccessful();
+
+    $todayYmd = now()->format('Y-m-d');
+    $tempOrder = TempOrder::where('tenant_id', $this->tenant->id)
+        ->where('order_number', 'VALID-999')
+        ->first();
+
+    expect($tempOrder)->not->toBeNull()
+        ->and($tempOrder->date->format('Y-m-d'))->toBe($todayYmd);
+});
+
+test('staging summary returns active shift information', function () {
+    /** @var TestCase $this */
+    $response = $this->actingAs($this->cashier, 'sanctum')
+        ->getJson('/api/v1/orders/import/summary');
+
+    $response->assertSuccessful();
+    $response->assertJsonPath('data.active_shift.id', $this->shift->id);
+    $response->assertJsonPath('data.active_shift.is_today', true);
+});
+
+function createSampleExcelFile(string $date, string $orderNumber = 'TEST-001'): string
+{
+    $spreadsheet = new Spreadsheet;
+    $sheet = $spreadsheet->getActiveSheet();
+    $sheet->setTitle('Input');
+
+    $sheet->setCellValue('H5', $orderNumber);
+    $sheet->setCellValue('D5', $date);
+    $sheet->setCellValue('L5', '1');
+    $sheet->setCellValue('X5', 'Nasi Goreng');
+    $sheet->setCellValue('Y5', '1');
+    $sheet->setCellValue('Z5', '25000');
+
+    $writer = new Xlsx($spreadsheet);
+    $filePath = tempnam(sys_get_temp_dir(), 'test_excel_').'.xlsx';
+    $writer->save($filePath);
+
+    return $filePath;
+}

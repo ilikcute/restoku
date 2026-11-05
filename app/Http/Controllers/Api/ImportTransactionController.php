@@ -34,7 +34,7 @@ class ImportTransactionController extends BaseApiController
         } catch (\Exception $e) {
             Log::error('Import Controller Error: '.$e->getMessage());
 
-            return $this->errorResponse('Gagal mengimpor file: '.$e->getMessage(), 500);
+            return $this->errorResponse($e->getMessage(), 400);
         }
     }
 
@@ -79,7 +79,7 @@ class ImportTransactionController extends BaseApiController
         } catch (\Exception $e) {
             Log::error('Confirm Import Error: '.$e->getMessage());
 
-            return $this->errorResponse('Gagal memindahkan transaksi: '.$e->getMessage(), 500);
+            return $this->errorResponse('Gagal memindahkan transaksi: '.$e->getMessage(), 400);
         }
     }
 
@@ -112,6 +112,24 @@ class ImportTransactionController extends BaseApiController
             Log::error('Delete Empty Records Error: '.$e->getMessage());
 
             return $this->errorResponse('Gagal menghapus data kosong: '.$e->getMessage(), 500);
+        }
+    }
+
+    public function deleteMismatchedRecords(Request $request)
+    {
+        try {
+            $user = $request->user();
+            $deleted = $this->importService->deleteMismatchedOrders($user);
+            $summary = $this->importService->getImportSummary($user);
+
+            return $this->successResponse([
+                'deleted_count' => $deleted,
+                'summary' => $summary,
+            ], "Berhasil membersihkan $deleted data transaksi dengan tanggal yang tidak sesuai shift aktif.");
+        } catch (\Exception $e) {
+            Log::error('Delete Mismatched Records Error: '.$e->getMessage());
+
+            return $this->errorResponse('Gagal membersihkan data tanggal berbeda: '.$e->getMessage(), 500);
         }
     }
 }
