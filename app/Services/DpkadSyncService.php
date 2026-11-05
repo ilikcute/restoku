@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Order;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -10,22 +11,28 @@ class DpkadSyncService
 {
     /**
      * Sync multiple orders to DPKAD database.
+     *
+     * @param  array<int>  $orderIds
+     * @return array<string, int>
      */
     public function syncOrders(array $orderIds, bool $force = false): array
     {
         // Pastikan database dpkad siap
         $this->ensureDpkadTablesExist();
 
+        /** @var Collection<int, Order> $orders */
         $orders = Order::with('items')->whereIn('id', $orderIds)->get();
         $syncedCount = 0;
 
         foreach ($orders as $order) {
+            /** @var Order $order */
             // Lewati jika sudah pernah disinkronkan di DB lokal kecuali jika $force = true
             if ($order->is_synced_to_dpkad && ! $force) {
                 continue;
             }
 
             DB::transaction(function () use ($order, &$syncedCount) {
+                /** @var Order $order */
                 // Cek apakah sudah ada di database dpkad (Idempotency)
                 $exists = DB::connection('dpkad')->table('orders')
                     ->where('external_order_id', $order->id)
