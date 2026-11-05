@@ -121,6 +121,7 @@ test('can commit staging orders to main orders table', function () {
     $this->assertDatabaseHas('orders', [
         'tenant_id' => $this->tenant->id,
         'order_number' => 'TEST-001',
+        'customer_name' => '-',
         'total_amount' => 11500,
     ]);
 

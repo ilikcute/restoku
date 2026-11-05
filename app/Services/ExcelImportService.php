@@ -308,7 +308,7 @@ class ExcelImportService
                     'shift_id' => $shiftId,
                     'user_id' => $user->id,
                     'order_number' => $tempOrder->order_number,
-                    'customer_name' => 'Imported',
+                    'customer_name' => '-',
                     'table_number' => $tempOrder->table_number,
                     'subtotal' => $tempOrder->subtotal,
                     'tax_amount' => $tempOrder->tax_amount,
