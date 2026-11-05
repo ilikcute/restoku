@@ -1,0 +1,1 @@
+function e(e){let t=e?.data?.data;return{items:Array.isArray(t)?t:t?.data||[],meta:t?.meta||null,links:t?.links||null}}function t(e){return e?.data?.data??null}export{t as n,e as t};
