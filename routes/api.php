@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DailyClosingController;
@@ -51,6 +52,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('/login', [AuthController::class, 'login'])
             ->middleware('throttle:login')
             ->name('auth.login');
+        Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])
+            ->middleware('throttle:6,1')
+            ->name('auth.forgot-password');
 
         // Protected Auth Routes
         Route::middleware('auth:sanctum')->group(function () {
@@ -73,6 +77,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             ->middleware('permission:view-products');
         Route::apiResource('categories', CategoryController::class)
             ->middleware('permission:view-categories');
+        Route::apiResource('brands', BrandController::class)
+            ->middleware('permission:view-categories|view-master-data');
         Route::apiResource('units', UnitController::class)
             ->middleware('permission:view-units');
         Route::get('/products/next-code', [ProductController::class, 'getNextCode'])
@@ -115,6 +121,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('/orders/import/confirm', [ImportTransactionController::class, 'confirmImport'])->middleware('permission:view-orders');
 
         Route::get('/orders/{order}/receipt', [OrderController::class, 'downloadReceipt'])->middleware('permission:view-orders');
+        Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->middleware('permission:view-orders');
         Route::apiResource('orders', OrderController::class)->only(['index', 'store', 'show'])->middleware('permission:view-orders');
         Route::get('/orders/pending/{token}', [PublicMenuController::class, 'fetchOrder'])->middleware('permission:view-pos');
 

@@ -32,6 +32,11 @@ test('export excel does not expose internal exception details', function () {
             return collect();
         }
 
+        public function getFixedDpkadOrders(int $tenantId, string $startDate, string $endDate): Collection
+        {
+            return collect();
+        }
+
         public function getDailyChart(int $tenantId, string $startDate, string $endDate): Collection
         {
             return collect();

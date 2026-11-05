@@ -27,7 +27,9 @@ class OrderController extends BaseApiController implements HasMiddleware
 
     public function index(Request $request)
     {
-        $orders = $this->orderRepository->getAllByTenant($request->user()->tenant_id, 20);
+        $perPage = (int) $request->query('per_page', 20);
+        $status = $request->query('status');
+        $orders = $this->orderRepository->getAllByTenant($request->user()->tenant_id, $perPage, $status);
 
         return $this->successResponse(OrderResource::collection($orders)->response()->getData(true));
     }
@@ -65,6 +67,19 @@ class OrderController extends BaseApiController implements HasMiddleware
         $this->authorizeTenant($order);
 
         return $this->successResponse(new OrderResource($order->load(['items.product', 'user', 'shift'])));
+    }
+
+    public function updateStatus(Request $request, Order $order)
+    {
+        $this->authorizeTenant($order);
+
+        $validated = $request->validate([
+            'status' => 'required|in:pending,preparing,ready,completed,cancelled',
+        ]);
+
+        $order->update(['status' => $validated['status']]);
+
+        return $this->successResponse(new OrderResource($order->load(['items.product', 'user', 'shift'])), 'Status order berhasil diperbarui.');
     }
 
     public function downloadReceipt(Order $order)

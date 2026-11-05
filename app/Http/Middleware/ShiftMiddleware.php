@@ -13,10 +13,11 @@ class ShiftMiddleware
     {
         $user = $request->user();
 
-        // Cari shift aktif (untuk semua role)
+        // Cari shift aktif (untuk semua role) — max 24 jam sejak dibuka
         $activeShift = Shift::where('user_id', $user->id)
             ->where('tenant_id', $user->tenant_id)
             ->where('status', 'open')
+            ->where('start_time', '>=', now()->subHours(24))
             ->first();
 
         if ($activeShift) {

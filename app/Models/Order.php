@@ -32,6 +32,8 @@ class Order extends Model
         'return_date',
         'return_user_id',
         'payment_method',
+        'cash_amount',
+        'non_cash_amount',
         'paid_amount',
         'change_amount',
         'status',

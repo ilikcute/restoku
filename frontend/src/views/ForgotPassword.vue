@@ -61,6 +61,10 @@
                                 </div>
                             </div>
 
+                            <div v-if="errorMessage" class="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs font-semibold">
+                                {{ errorMessage }}
+                            </div>
+
                             <!-- Action Button -->
                             <button
                                 type="submit"
@@ -148,6 +152,7 @@
 
 <script setup>
 import { reactive, ref } from "vue";
+import api from "@/api/axios";
 
 const form = reactive({
     email: "",
@@ -155,15 +160,20 @@ const form = reactive({
 
 const loading = ref(false);
 const isSent = ref(false);
+const errorMessage = ref("");
 
-const handleReset = () => {
+const handleReset = async () => {
     if (!form.email) return;
     loading.value = true;
+    errorMessage.value = "";
 
-    // Simulate API delay
-    setTimeout(() => {
-        loading.value = false;
+    try {
+        await api.post("/auth/forgot-password", { email: form.email });
         isSent.value = true;
-    }, 1000);
+    } catch (err) {
+        errorMessage.value = err.response?.data?.message || "Gagal mengirim link reset password. Silakan coba lagi.";
+    } finally {
+        loading.value = false;
+    }
 };
 </script>

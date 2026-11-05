@@ -32,7 +32,7 @@ class PublicMenuController extends BaseApiController
         }
 
         if (! $tenantId) {
-            $tenantId = 1; // Fallback ke tenant 1 berdasarkan data di DB
+            return $this->errorResponse('Parameter tenant_id diperlukan untuk mengakses menu.', 400);
         }
 
         $products = $this->publicMenuRepository->getActiveProducts((int) $tenantId);

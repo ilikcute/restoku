@@ -4,7 +4,6 @@ namespace App\Repositories;
 
 use App\Interfaces\UserRepositoryInterface;
 use App\Models\User;
-use Exception;
 use Illuminate\Support\Facades\DB;
 
 class UserRepository implements UserRepositoryInterface
@@ -17,7 +16,7 @@ class UserRepository implements UserRepositoryInterface
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -37,8 +36,7 @@ class UserRepository implements UserRepositoryInterface
 
     public function create(array $data)
     {
-        DB::beginTransaction();
-        try {
+        return DB::transaction(function () use ($data) {
             $user = User::create($data);
 
             if (isset($data['roles'])) {
@@ -49,19 +47,13 @@ class UserRepository implements UserRepositoryInterface
                 $user->syncPermissions($data['permissions']);
             }
 
-            DB::commit();
-
             return $user;
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw new Exception($e->getMessage());
-        }
+        });
     }
 
     public function update(string $id, array $data)
     {
-        DB::beginTransaction();
-        try {
+        return DB::transaction(function () use ($id, $data) {
             $user = User::findOrFail($id);
             $user->update($data);
 
@@ -73,27 +65,17 @@ class UserRepository implements UserRepositoryInterface
                 $user->syncPermissions($data['permissions']);
             }
 
-            DB::commit();
-
             return $user;
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw new Exception($e->getMessage());
-        }
+        });
     }
 
     public function delete(string $id)
     {
-        DB::beginTransaction();
-        try {
+        return DB::transaction(function () use ($id) {
             $user = User::findOrFail($id);
             $user->delete();
-            DB::commit();
 
             return $user;
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw new Exception($e->getMessage());
-        }
+        });
     }
 }

@@ -24,8 +24,10 @@ class SecureHeaders
         // Mencegah clickjacking — halaman tidak boleh di-embed dalam iframe dari domain lain
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
 
-        // Paksa browser menggunakan HTTPS selama 1 tahun (aktifkan hanya jika sudah pakai SSL)
-        // $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+        // Paksa browser menggunakan HTTPS di production
+        if (app()->isProduction()) {
+            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+        }
 
         // Kontrol informasi referrer yang dikirim saat navigasi
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -41,7 +43,7 @@ class SecureHeaders
         $response->headers->set(
             'Content-Security-Policy',
             "default-src 'self' 'unsafe-inline'; ".
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; ".
+            "script-src 'self' 'unsafe-inline'; ".
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; ".
             "font-src 'self' https://fonts.gstatic.com data:; ".
             "img-src 'self' data: blob: http: https: *; ".

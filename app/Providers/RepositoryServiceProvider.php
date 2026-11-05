@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Interfaces\AuthRepositoryInterface;
+use App\Interfaces\BrandRepositoryInterface;
 use App\Interfaces\CategoryRepositoryInterface;
 use App\Interfaces\CustomerRepositoryInterface;
 use App\Interfaces\DailyClosingRepositoryInterface;
@@ -25,6 +26,7 @@ use App\Interfaces\UnitRepositoryInterface;
 use App\Interfaces\UserRepositoryInterface;
 use App\Interfaces\RoleRepositoryInterface;
 use App\Repositories\AuthRepository;
+use App\Repositories\BrandRepository;
 use App\Repositories\CategoryRepository;
 use App\Repositories\CustomerRepository;
 use App\Repositories\DailyClosingRepository;
@@ -56,6 +58,7 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
         $this->app->bind(ProductRepositoryInterface::class, ProductRepository::class);
         $this->app->bind(CategoryRepositoryInterface::class, CategoryRepository::class);
+        $this->app->bind(BrandRepositoryInterface::class, BrandRepository::class);
         $this->app->bind(UnitRepositoryInterface::class, UnitRepository::class);
         $this->app->bind(SupplierRepositoryInterface::class, SupplierRepository::class);
         $this->app->bind(CustomerRepositoryInterface::class, CustomerRepository::class);

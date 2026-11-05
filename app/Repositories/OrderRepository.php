@@ -22,12 +22,19 @@ class OrderRepository implements OrderRepositoryInterface
         protected OrderService $orderService,
     ) {}
 
-    public function getAllByTenant(int $tenantId, int $perPage = 20)
+    public function getAllByTenant(int $tenantId, int $perPage = 20, ?string $status = null)
     {
-        return Order::where('tenant_id', $tenantId)
-            ->with(['items.product', 'user'])
-            ->latest()
-            ->paginate($perPage);
+        $query = Order::where('tenant_id', $tenantId)
+            ->with(['items.product', 'user']);
+
+        if ($status) {
+            $statuses = array_filter(array_map('trim', explode(',', $status)));
+            if (! empty($statuses)) {
+                $query->whereIn('status', $statuses);
+            }
+        }
+
+        return $query->latest()->paginate($perPage);
     }
 
     public function processOrder(int $tenantId, int $userId, Shift $shift, array $validated, string $idempotencyKey)
@@ -74,14 +81,28 @@ class OrderRepository implements OrderRepositoryInterface
 
                 $paidAmount = $validated['paid_amount'] ?? 0;
                 $changeAmount = $paidAmount - $totals['grand_total'];
+                $cashAmount = 0.0;
+                $nonCashAmount = 0.0;
 
-                if ($changeAmount < 0 && $validated['payment_method'] === 'cash') {
-                    throw new \Exception('Uang pembayaran tidak boleh kurang dari total tagihan (Rp '.number_format($totals['grand_total'], 0, ',', '.').').', 422);
-                }
+                if ($validated['payment_method'] === 'cash') {
+                    if ($changeAmount < 0) {
+                        throw new \Exception('Uang pembayaran tidak boleh kurang dari total tagihan (Rp '.number_format($totals['grand_total'], 0, ',', '.').').', 422);
+                    }
+                    $cashAmount = $totals['grand_total'];
+                } elseif ($validated['payment_method'] === 'split') {
+                    $cashAmount = (float) ($validated['cash_amount'] ?? 0);
+                    $nonCashAmount = (float) ($validated['non_cash_amount'] ?? 0);
+                    $totalSplit = $cashAmount + $nonCashAmount;
 
-                if ($validated['payment_method'] !== 'cash') {
+                    if ($totalSplit < $totals['grand_total']) {
+                        throw new \Exception('Total kombinasi split payment (Rp '.number_format($totalSplit, 0, ',', '.').') kurang dari total tagihan (Rp '.number_format($totals['grand_total'], 0, ',', '.').').', 422);
+                    }
+                    $paidAmount = $totalSplit;
+                    $changeAmount = max(0, $paidAmount - $totals['grand_total']);
+                } else {
                     $paidAmount = $totals['grand_total'];
                     $changeAmount = 0;
+                    $nonCashAmount = $totals['grand_total'];
                 }
 
                 $orderNumber = $this->orderService->generateOrderNumber($tenantId);
@@ -108,6 +129,8 @@ class OrderRepository implements OrderRepositoryInterface
                     'paid_amount' => $paidAmount,
                     'change_amount' => $changeAmount,
                     'payment_method' => $validated['payment_method'],
+                    'cash_amount' => $cashAmount,
+                    'non_cash_amount' => $nonCashAmount,
                     'status' => 'completed',
                     'notes' => $validated['notes'] ?? null,
                 ]);
@@ -130,6 +153,12 @@ class OrderRepository implements OrderRepositoryInterface
                 $this->inventoryService->adjustStockFromOrder($order, $userId, $validated['account_id']);
 
                 $shift->increment('total_sales', $order->total_amount);
+                if ($cashAmount > 0) {
+                    $shift->increment('cash_sales', $cashAmount);
+                }
+                if ($nonCashAmount > 0) {
+                    $shift->increment('non_cash_sales', $nonCashAmount);
+                }
 
                 try {
                     $this->printerService->printOrder($order);

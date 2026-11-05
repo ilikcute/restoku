@@ -7,6 +7,7 @@ use App\Interfaces\AuthRepositoryInterface;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -90,6 +91,14 @@ class AuthService
             UserRole::CASHIER => ['pos:cashier'],
             default => [],
         };
+    }
+
+    /**
+     * Send password reset link to user email
+     */
+    public function sendResetLink(array $credentials): string
+    {
+        return Password::sendResetLink($credentials);
     }
 
     /**

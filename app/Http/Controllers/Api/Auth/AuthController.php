@@ -44,6 +44,24 @@ class AuthController extends BaseApiController
     }
 
     /**
+     * Send password reset link
+     */
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $this->authService->sendResetLink($request->only('email'));
+
+        // Always return success message to avoid email enumeration
+        return $this->successResponse(
+            null,
+            'Jika email terdaftar di sistem, tautan instruksi reset password telah dikirimkan.'
+        );
+    }
+
+    /**
      * Get current user profile
      */
     public function me(Request $request): JsonResponse

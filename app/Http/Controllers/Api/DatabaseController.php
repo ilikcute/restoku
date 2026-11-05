@@ -2,49 +2,52 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\Tenant;
 use App\Models\Category;
-use App\Models\Unit;
 use App\Models\Product;
 use App\Models\Supplier;
+use App\Models\Tenant;
+use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Schema;
 
 class DatabaseController extends BaseApiController
 {
     public function export(Request $request)
     {
         $tenantId = $request->user()->tenant_id;
-        
+
         $data = [
             'tenant' => Tenant::find($tenantId),
             'categories' => Category::where('tenant_id', $tenantId)->get(),
             'units' => Unit::where('tenant_id', $tenantId)->get(),
             'suppliers' => Supplier::where('tenant_id', $tenantId)->get(),
-            'products' => Product::where('tenant_id', $tenantId)->get(),
-            'users' => User::where('tenant_id', $tenantId)->get(),
+            // Include category/unit/supplier name for re-mapping on import
+            'products' => Product::with(['category:id,slug', 'unit:id,name', 'supplier:id,name'])
+                ->where('tenant_id', $tenantId)->get(),
+            // Exclude password hash and sensitive tokens from backup
+            'users' => User::where('tenant_id', $tenantId)
+                ->get(['id', 'name', 'email', 'phone', 'role', 'is_active', 'created_at']),
             'export_date' => now()->toDateTimeString(),
-            'version' => '1.0'
+            'version' => '1.0',
         ];
 
         return response()->json($data, 200, [
-            'Content-Disposition' => 'attachment; filename="restoku_backup_' . date('Y-m-d_H-i') . '.json"'
+            'Content-Disposition' => 'attachment; filename="restoku_backup_'.date('Y-m-d_H-i').'.json"',
         ]);
     }
 
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:json,txt'
+            'file' => 'required|file|mimes:json,txt|max:10240', // max 10MB
         ]);
 
         $json = file_get_contents($request->file('file')->getRealPath());
         $data = json_decode($json, true);
 
-        if (!$data || !isset($data['tenant'])) {
+        if (! $data || ! isset($data['tenant'])) {
             return $this->errorResponse('Invalid backup file format.', 422);
         }
 
@@ -91,17 +94,22 @@ class DatabaseController extends BaseApiController
                 $supMap = Supplier::where('tenant_id', $tenantId)->pluck('id', 'name')->toArray();
 
                 foreach ($data['products'] as $p) {
-                    // Try to match category by slug from backup data if possible, or just use name
-                    // In the backup, category_id might point to an old ID. 
-                    // Better if we had names in the backup for products.
-                    // Since we don't, we'll assume the backup's slug/name logic remains consistent.
-                    
-                    $pData = collect($p)->except(['id', 'tenant_id', 'category_id', 'unit_id', 'supplier_id', 'created_at', 'updated_at', 'deleted_at'])->toArray();
-                    
-                    // Note: This simplified version assumes IDs in backup won't match. 
-                    // A real robust version would need name/slug mapping for related models.
-                    // For now we'll just try to create/update by code.
-                    
+                    $pData = collect($p)->except([
+                        'id', 'tenant_id', 'category_id', 'unit_id', 'supplier_id',
+                        'created_at', 'updated_at', 'deleted_at', 'category', 'unit', 'supplier',
+                    ])->toArray();
+
+                    // Re-map relasi berdasarkan slug/name yang disimpan di backup v1.0+
+                    if (! empty($p['category']['slug'])) {
+                        $pData['category_id'] = $catMap[$p['category']['slug']] ?? null;
+                    }
+                    if (! empty($p['unit']['name'])) {
+                        $pData['unit_id'] = $unitMap[$p['unit']['name']] ?? null;
+                    }
+                    if (! empty($p['supplier']['name'])) {
+                        $pData['supplier_id'] = $supMap[$p['supplier']['name']] ?? null;
+                    }
+
                     Product::updateOrCreate(
                         ['tenant_id' => $tenantId, 'code' => $p['code']],
                         $pData
@@ -110,10 +118,12 @@ class DatabaseController extends BaseApiController
             }
 
             DB::commit();
+
             return $this->successResponse(null, 'Database imported successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return $this->errorResponse('Import failed: ' . $e->getMessage(), 500);
+
+            return $this->errorResponse('Import failed: '.$e->getMessage(), 500);
         }
     }
 }

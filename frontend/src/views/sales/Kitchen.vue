@@ -350,27 +350,48 @@ function toggleItemDone(order, idx) {
   }
 }
 
-function markPreparing(order) {
+async function markPreparing(order) {
   const list = allOrders.value.length > 0 ? allOrders.value : mockKitchenOrders.value;
   const target = list.find(o => o.id === order.id);
   if (target) target.status = 'preparing';
+  try {
+    if (order.id && typeof order.id === 'number') {
+      await orderApi.updateStatus(order.id, 'preparing');
+    }
+  } catch (e) {
+    console.error('Failed to update kitchen order to preparing:', e);
+  }
 }
 
-function markReady(order) {
+async function markReady(order) {
   const list = allOrders.value.length > 0 ? allOrders.value : mockKitchenOrders.value;
   const target = list.find(o => o.id === order.id);
   if (target) {
     target.status = 'ready';
     target.items.forEach(i => i.done = true);
   }
+  try {
+    if (order.id && typeof order.id === 'number') {
+      await orderApi.updateStatus(order.id, 'ready');
+    }
+  } catch (e) {
+    console.error('Failed to update kitchen order to ready:', e);
+  }
 }
 
-function markServed(order) {
+async function markServed(order) {
   const list = allOrders.value.length > 0 ? allOrders.value : mockKitchenOrders.value;
   const idx = list.findIndex(o => o.id === order.id);
   if (idx !== -1) {
     list.splice(idx, 1);
     completedOrders.value.unshift({ id: order.id, order_number: order.order_number, completed_at: 'Just now' });
+  }
+  try {
+    if (order.id && typeof order.id === 'number') {
+      await orderApi.updateStatus(order.id, 'completed');
+    }
+  } catch (e) {
+    console.error('Failed to update kitchen order to completed:', e);
   }
 }
 

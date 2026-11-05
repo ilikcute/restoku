@@ -219,3 +219,54 @@ test('fixed promotion discount cannot make order total negative', function () {
         ->and((float) $order->paid_amount)->toBe(0.0)
         ->and((float) $this->shift->total_sales)->toBe(0.0);
 });
+
+test('order creation decrements stock for trackable product and records movement', function () {
+    $this->product->update([
+        'stock_type' => 'trackable',
+        'price' => 50000,
+    ]);
+
+    $stock = Stock::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'product_id' => $this->product->id,
+        'current_stock' => 15,
+    ]);
+
+    $response = $this->actingAs($this->cashier, 'sanctum')
+        ->postJson(route('api.v1.orders.store'), [
+            'idempotency_key' => (string) Str::uuid(),
+            'customer_name' => 'John Doe',
+            'account_id' => $this->account->id,
+            'items' => [
+                [
+                    'product_id' => $this->product->id,
+                    'quantity' => 3,
+                ],
+            ],
+            'payment_method' => 'cash',
+            'paid_amount' => 150000,
+        ]);
+
+    $response->assertCreated();
+
+    $stock->refresh();
+    expect((float) $stock->current_stock)->toBe(12.0);
+
+    expect(StockMovement::where('product_id', $this->product->id)->where('type', 'out')->exists())->toBeTrue();
+});
+
+test('can update order status via patch endpoint', function () {
+    $order = Order::factory()->create([
+        'tenant_id' => $this->tenant->id,
+        'user_id' => $this->cashier->id,
+        'status' => 'pending',
+    ]);
+
+    $response = $this->actingAs($this->cashier, 'sanctum')
+        ->patchJson("/api/v1/orders/{$order->id}/status", [
+            'status' => 'preparing',
+        ]);
+
+    $response->assertOk();
+    expect($order->fresh()->status)->toBe('preparing');
+});
