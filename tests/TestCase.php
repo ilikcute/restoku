@@ -13,6 +13,7 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
  * @property Tenant $tenant
  * @property User $cashier
  * @property User $user
+ * @property User $admin
  * @property Shift $shift
  * @property Account $account
  * @property Product $product

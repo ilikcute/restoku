@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Order;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class DpkadReconciliationService
@@ -25,42 +27,92 @@ class DpkadReconciliationService
         $startDateTime = Carbon::parse($startDate)->startOfDay()->toDateTimeString();
         $endDateTime = Carbon::parse($endDate)->endOfDay()->toDateTimeString();
 
-        // 1. Ambil orders Restoku
-        $restokuOrders = Order::with('items')
+        $restokuOrders = $this->getRestokuOrders($tenantId, $startDateTime, $endDateTime);
+        $orderIds = $restokuOrders->pluck('id')->all();
+        $orderNumbers = $restokuOrders->pluck('order_number')->all();
+
+        $dpkadOrders = $this->getDpkadOrders($startDateTime, $endDateTime, $orderIds, $orderNumbers);
+        $dpkadOrderIds = $dpkadOrders->pluck('id')->all();
+
+        $dpkadItemsGrouped = $this->getDpkadItemsGrouped($dpkadOrderIds);
+
+        [$comparisonList, $counts] = $this->compareOrders($restokuOrders, $dpkadOrders, $dpkadItemsGrouped);
+        $summary = $this->buildSummary($restokuOrders, $dpkadOrders, $dpkadItemsGrouped, $counts);
+
+        return [
+            'summary' => $summary,
+            'orders' => $comparisonList,
+            'filters' => [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ],
+        ];
+    }
+
+    /**
+     * Get completed Restoku orders with their items.
+     *
+     * @return EloquentCollection<int, Order>
+     */
+    protected function getRestokuOrders(int $tenantId, string $startDateTime, string $endDateTime): EloquentCollection
+    {
+        return Order::with('items')
             ->where('tenant_id', $tenantId)
             ->where('status', 'completed')
             ->whereBetween('created_at', [$startDateTime, $endDateTime])
             ->orderBy('created_at', 'desc')
             ->get();
+    }
 
-        $restokuOrderIds = $restokuOrders->pluck('id')->toArray();
-        $restokuOrderNumbers = $restokuOrders->pluck('order_number')->toArray();
-
-        // 2. Ambil orders resto_dpkad
-        $dpkadOrdersQuery = DB::connection('dpkad')->table('orders')
-            ->where(function ($q) use ($startDateTime, $endDateTime, $restokuOrderIds, $restokuOrderNumbers) {
+    /**
+     * Get orders from resto_dpkad matching date range or order ids.
+     *
+     * @param  array<int, int>  $orderIds
+     * @param  array<int, string>  $orderNumbers
+     */
+    protected function getDpkadOrders(string $startDateTime, string $endDateTime, array $orderIds, array $orderNumbers): Collection
+    {
+        return DB::connection('dpkad')->table('orders')
+            ->where(function ($q) use ($startDateTime, $endDateTime, $orderIds, $orderNumbers) {
                 $q->whereBetween('created_at', [$startDateTime, $endDateTime]);
-                if (! empty($restokuOrderIds)) {
-                    $q->orWhereIn('external_order_id', $restokuOrderIds);
+                if (! empty($orderIds)) {
+                    $q->orWhereIn('external_order_id', $orderIds);
                 }
-                if (! empty($restokuOrderNumbers)) {
-                    $q->orWhereIn('order_number', $restokuOrderNumbers);
+                if (! empty($orderNumbers)) {
+                    $q->orWhereIn('order_number', $orderNumbers);
                 }
-            });
+            })
+            ->get();
+    }
 
-        $dpkadOrders = $dpkadOrdersQuery->get();
-        $dpkadOrderIds = $dpkadOrders->pluck('id')->toArray();
-
-        // 3. Ambil order_items resto_dpkad
-        $dpkadItemsGrouped = collect();
-        if (! empty($dpkadOrderIds)) {
-            $dpkadItemsGrouped = DB::connection('dpkad')->table('order_items')
-                ->whereIn('order_id', $dpkadOrderIds)
-                ->get()
-                ->groupBy('order_id');
+    /**
+     * Get order_items from resto_dpkad grouped by order_id.
+     *
+     * @param  array<int, int>  $dpkadOrderIds
+     */
+    protected function getDpkadItemsGrouped(array $dpkadOrderIds): Collection
+    {
+        if (empty($dpkadOrderIds)) {
+            return collect();
         }
 
-        // Mapping DPKAD
+        return DB::connection('dpkad')->table('order_items')
+            ->whereIn('order_id', $dpkadOrderIds)
+            ->get()
+            ->groupBy('order_id');
+    }
+
+    /**
+     * Compare orders and order_items between Restoku and DPKAD.
+     *
+     * @param  EloquentCollection<int, Order>  $restokuOrders
+     * @return array{0: array<int, array<string, mixed>>, 1: array<string, int>}
+     */
+    protected function compareOrders(
+        EloquentCollection $restokuOrders,
+        Collection $dpkadOrders,
+        Collection $dpkadItemsGrouped
+    ): array {
         $dpkadByExternalId = $dpkadOrders->keyBy('external_order_id');
         $dpkadByOrderNumber = $dpkadOrders->keyBy('order_number');
 
@@ -68,7 +120,6 @@ class DpkadReconciliationService
         $matchedCount = 0;
         $mismatchedCount = 0;
         $notInDpkadCount = 0;
-
         $processedDpkadIds = [];
 
         foreach ($restokuOrders as $order) {
@@ -105,6 +156,7 @@ class DpkadReconciliationService
 
             if ($dpkadOrder) {
                 $processedDpkadIds[] = $dpkadOrder->id;
+                /** @var Collection $items */
                 $items = $dpkadItemsGrouped->get($dpkadOrder->id, collect());
 
                 $dpkadSubtotal = (float) $dpkadOrder->subtotal;
@@ -176,6 +228,7 @@ class DpkadReconciliationService
                 continue;
             }
 
+            /** @var Collection $items */
             $items = $dpkadItemsGrouped->get($dOrder->id, collect());
             $dpkadSubtotal = (float) $dOrder->subtotal;
             $dpkadTax = (float) $dOrder->tax_amount;
@@ -218,7 +271,29 @@ class DpkadReconciliationService
             $notInRestokuCount++;
         }
 
-        // Summary Aggregations
+        $counts = [
+            'matched' => $matchedCount,
+            'mismatched' => $mismatchedCount,
+            'not_in_dpkad' => $notInDpkadCount,
+            'not_in_restoku' => $notInRestokuCount,
+        ];
+
+        return [$comparisonList, $counts];
+    }
+
+    /**
+     * Build aggregated summary comparison.
+     *
+     * @param  EloquentCollection<int, Order>  $restokuOrders
+     * @param  array<string, int>  $counts
+     * @return array<string, mixed>
+     */
+    protected function buildSummary(
+        EloquentCollection $restokuOrders,
+        Collection $dpkadOrders,
+        Collection $dpkadItemsGrouped,
+        array $counts
+    ): array {
         $restokuTotalOrders = $restokuOrders->count();
         $dpkadTotalOrders = $dpkadOrders->count();
 
@@ -246,51 +321,44 @@ class DpkadReconciliationService
         $isBalanced = (
             $restokuTotalOrders === $dpkadTotalOrders &&
             abs($restokuTotalAmount - $dpkadTotalAmount) < 0.01 &&
-            $mismatchedCount === 0 &&
-            $notInDpkadCount === 0 &&
-            $notInRestokuCount === 0
+            $counts['mismatched'] === 0 &&
+            $counts['not_in_dpkad'] === 0 &&
+            $counts['not_in_restoku'] === 0
         );
 
         return [
-            'summary' => [
-                'is_balanced' => $isBalanced,
-                'orders' => [
-                    'restoku_count' => $restokuTotalOrders,
-                    'dpkad_count' => $dpkadTotalOrders,
-                    'diff_count' => $restokuTotalOrders - $dpkadTotalOrders,
-                    'matched_count' => $matchedCount,
-                    'mismatched_count' => $mismatchedCount,
-                    'not_in_dpkad_count' => $notInDpkadCount,
-                    'not_in_restoku_count' => $notInRestokuCount,
-                    'restoku_total' => $restokuTotalAmount,
-                    'dpkad_total' => $dpkadTotalAmount,
-                    'diff_total' => round($restokuTotalAmount - $dpkadTotalAmount, 2),
-                    'restoku_subtotal' => $restokuTotalSubtotal,
-                    'dpkad_subtotal' => $dpkadTotalSubtotal,
-                    'diff_subtotal' => round($restokuTotalSubtotal - $dpkadTotalSubtotal, 2),
-                    'restoku_tax' => $restokuTotalTax,
-                    'dpkad_tax' => $dpkadTotalTax,
-                    'diff_tax' => round($restokuTotalTax - $dpkadTotalTax, 2),
-                    'restoku_service' => $restokuTotalService,
-                    'dpkad_service' => $dpkadTotalService,
-                    'diff_service' => round($restokuTotalService - $dpkadTotalService, 2),
-                ],
-                'order_items' => [
-                    'restoku_count' => $restokuTotalItemsCount,
-                    'dpkad_count' => $dpkadTotalItemsCount,
-                    'diff_count' => $restokuTotalItemsCount - $dpkadTotalItemsCount,
-                    'restoku_qty' => $restokuTotalItemsQty,
-                    'dpkad_qty' => $dpkadTotalItemsQty,
-                    'diff_qty' => $restokuTotalItemsQty - $dpkadTotalItemsQty,
-                    'restoku_subtotal' => $restokuTotalItemsSubtotal,
-                    'dpkad_subtotal' => $dpkadTotalItemsSubtotal,
-                    'diff_subtotal' => round($restokuTotalItemsSubtotal - $dpkadTotalItemsSubtotal, 2),
-                ],
+            'is_balanced' => $isBalanced,
+            'orders' => [
+                'restoku_count' => $restokuTotalOrders,
+                'dpkad_count' => $dpkadTotalOrders,
+                'diff_count' => $restokuTotalOrders - $dpkadTotalOrders,
+                'matched_count' => $counts['matched'],
+                'mismatched_count' => $counts['mismatched'],
+                'not_in_dpkad_count' => $counts['not_in_dpkad'],
+                'not_in_restoku_count' => $counts['not_in_restoku'],
+                'restoku_total' => $restokuTotalAmount,
+                'dpkad_total' => $dpkadTotalAmount,
+                'diff_total' => round($restokuTotalAmount - $dpkadTotalAmount, 2),
+                'restoku_subtotal' => $restokuTotalSubtotal,
+                'dpkad_subtotal' => $dpkadTotalSubtotal,
+                'diff_subtotal' => round($restokuTotalSubtotal - $dpkadTotalSubtotal, 2),
+                'restoku_tax' => $restokuTotalTax,
+                'dpkad_tax' => $dpkadTotalTax,
+                'diff_tax' => round($restokuTotalTax - $dpkadTotalTax, 2),
+                'restoku_service' => $restokuTotalService,
+                'dpkad_service' => $dpkadTotalService,
+                'diff_service' => round($restokuTotalService - $dpkadTotalService, 2),
             ],
-            'orders' => $comparisonList,
-            'filters' => [
-                'start_date' => $startDate,
-                'end_date' => $endDate,
+            'order_items' => [
+                'restoku_count' => $restokuTotalItemsCount,
+                'dpkad_count' => $dpkadTotalItemsCount,
+                'diff_count' => $restokuTotalItemsCount - $dpkadTotalItemsCount,
+                'restoku_qty' => $restokuTotalItemsQty,
+                'dpkad_qty' => $dpkadTotalItemsQty,
+                'diff_qty' => $restokuTotalItemsQty - $dpkadTotalItemsQty,
+                'restoku_subtotal' => $restokuTotalItemsSubtotal,
+                'dpkad_subtotal' => $dpkadTotalItemsSubtotal,
+                'diff_subtotal' => round($restokuTotalItemsSubtotal - $dpkadTotalItemsSubtotal, 2),
             ],
         ];
     }
@@ -306,4 +374,3 @@ class DpkadReconciliationService
         return $this->dpkadSyncService->syncOrders($orderIds, true);
     }
 }
-
