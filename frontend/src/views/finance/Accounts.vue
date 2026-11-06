@@ -268,6 +268,7 @@ import Button from "primevue/button";
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
 import InputNumber from "primevue/inputnumber";
+import { money } from "@/utils/formatters";
 import Checkbox from "primevue/checkbox";
 import Card from "primevue/card";
 
@@ -285,10 +286,6 @@ const form = reactive({
     balance: 0,
     is_active: true,
 });
-
-function money(value) {
-    return Number(value || 0).toLocaleString("id-ID");
-}
 
 async function load() {
     loading.value = true;

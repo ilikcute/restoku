@@ -114,10 +114,7 @@
               :placeholder="'Belum ada data transaksi'"
             >
               <template #empty>
-                <div class="text-center py-12 text-slate-400">
-                  <i class="pi pi-shopping-cart text-6xl mb-4 opacity-20"></i>
-                  <p>Cari transaksi untuk melihat daftar barang.</p>
-                </div>
+                <EmptyState icon="pi pi-shopping-cart" message="Cari transaksi untuk melihat daftar barang." />
               </template>
               <Column field="product_name" header="Nama Barang">
                 <template #body="{ data }">
@@ -171,6 +168,7 @@
 import { ref, computed, onMounted, reactive } from 'vue';
 import AppDataTable from '@/components/AppDataTable.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
+import EmptyState from '@/components/ui/EmptyState.vue';
 import { useI18n } from 'vue-i18n';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
@@ -178,6 +176,7 @@ import { returnsApi } from '@/api/returns';
 import { financeApi } from '@/api/finance';
 import AppPage from '@/components/layout/AppPage.vue';
 import Card from 'primevue/card';
+import { money, formatDate } from '@/utils/formatters';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Column from 'primevue/column';
@@ -260,21 +259,6 @@ async function loadAccounts() {
   } catch (error) {
     console.error('Failed to load accounts', error);
   }
-}
-
-function formatDate(date) {
-  if (!date) return '-';
-  return new Date(date).toLocaleString('id-ID', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-}
-
-function money(value) {
-  return Number(value || 0).toLocaleString('id-ID');
 }
 
 function confirmSave() {

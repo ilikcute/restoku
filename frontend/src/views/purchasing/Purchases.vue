@@ -237,6 +237,7 @@ import Select from 'primevue/select';
 import InputNumber from 'primevue/inputnumber';
 import DatePicker from 'primevue/datepicker';
 import Card from 'primevue/card';
+import { money, formatDate, downloadBlob } from '@/utils/formatters';
 
 const { t: $t } = useI18n();
 const toast = useToast();
@@ -255,19 +256,6 @@ const form = reactive({ supplier_id: null, payment_method: 'cash', account_id: n
 const totalAmount = computed(() => {
   return form.items.reduce((total, i) => total + (i.quantity * i.cost_price), 0);
 });
-
-function money(value) {
-  return Number(value || 0).toLocaleString('id-ID');
-}
-
-function formatDate(date) {
-  if (!date) return '-';
-  return new Date(date).toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric'
-  });
-}
 
 function productName(id) {
   return products.value.find((product) => product.id === id)?.name || '-';
@@ -331,13 +319,7 @@ async function downloadPdf(purchase) {
       responseType: 'blob'
     });
 
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `Purchase_${purchase.purchase_number}.pdf`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    downloadBlob(response.data, `Purchase_${purchase.purchase_number}.pdf`);
   } catch (error) {
     toast.add({ severity: 'error', summary: 'Gagal', detail: 'Gagal mengunduh PDF.', life: 3000 });
   }

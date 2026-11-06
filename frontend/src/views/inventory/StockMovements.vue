@@ -3,50 +3,18 @@
         :title="$t('inventory.audit_report')"
         :breadcrumb="[$t('common.inventory'), $t('inventory.movements')]"
     >
-        <div class="space-y-1">
-            <!-- Filters -->
-            <div
-                class="flex gap-3 bg-slate-50/50 p-1 rounded-2xl border border-slate-100"
-            >
-                <!-- Date Group -->
-                <div class="flex items-center gap-3">
-                    <label
-                        class="text-xs font-bold text-slate-500 uppercase whitespace-nowrap"
-                        >{{ $t("inventory.period") }}</label
-                    >
-                    <DatePicker
-                        v-model="dates"
-                        selectionMode="range"
-                        :manualInput="false"
-                        showIcon
-                        iconDisplay="input"
-                        class="flex-1 !rounded-xl"
-                    />
-                </div>
-
-                <!-- Search Group -->
-                <div class="flex items-center gap-3 flex-1">
-                    <label
-                        class="text-xs font-bold text-slate-500 uppercase whitespace-nowrap"
-                        >{{ $t("inventory.search_product") }}</label
-                    >
-                    <span class="p-input-icon-left w-full">
-                        <InputText
-                            v-model="search"
-                            class="w-full !rounded-xl"
-                            :placeholder="$t('inventory.search_product')"
-                        />
-                    </span>
-                </div>
-
-                <Button
-                    :label="$t('common.search')"
-                    icon="pi pi-search"
-                    @click="loadData"
-                    :loading="loading"
-                    class="!rounded-xl shadow-sm"
-                />
-            </div>
+        <div class="space-y-4">
+            <!-- Reusable Filter Bar -->
+            <ReportFilterBar
+                v-model="dates"
+                :periodLabel="$t('inventory.period')"
+                :buttonLabel="$t('common.search')"
+                :loading="loading"
+                showSearch
+                v-model:searchValue="search"
+                :searchPlaceholder="$t('inventory.search_product')"
+                @search="loadData"
+            />
 
             <!-- Audit Table -->
             <Card class="border-none shadow-sm overflow-hidden">
@@ -61,9 +29,7 @@
                         v-model:first="first"
                     >
                         <template #empty>
-                            <div class="p-4 text-center text-slate-500">
-                                {{ $t("common.no_data") }}
-                            </div>
+                            <EmptyState :message="$t('common.no_data')" />
                         </template>
 
                         <Column
@@ -259,17 +225,18 @@
 import { ref, onMounted, computed, watch } from "vue";
 import AppDataTable from "@/components/AppDataTable.vue";
 import StatusBadge from "@/components/StatusBadge.vue";
+import ReportFilterBar from "@/components/report/ReportFilterBar.vue";
+import EmptyState from "@/components/ui/EmptyState.vue";
 import { useI18n } from "vue-i18n";
 import { inventoryApi } from "@/api/inventory";
 import AppPage from "@/components/layout/AppPage.vue";
 import Card from "primevue/card";
 import Column from "primevue/column";
 import Button from "primevue/button";
-import DatePicker from "primevue/datepicker";
-import InputText from "primevue/inputtext";
 import Dialog from "primevue/dialog";
 import Tag from "primevue/tag";
 import { useToast } from "primevue/usetoast";
+import { formatDate, formatDatePayload } from "@/utils/formatters";
 
 const { t: $t } = useI18n();
 const toast = useToast();
@@ -307,13 +274,7 @@ function formatQty(val) {
 }
 
 function formatFullDate(date) {
-    return new Date(date).toLocaleString("id-ID", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-    });
+    return formatDate(date, true);
 }
 
 function translateType(type, ref) {
@@ -342,25 +303,14 @@ function isAddition(type) {
     return type === "in" || type === "adjustment_in" || type === "initial";
 }
 
-const formatDate = (date) => {
-    if (!date) return null;
-    const d = new Date(date);
-    let month = "" + (d.getMonth() + 1);
-    let day = "" + d.getDate();
-    let year = d.getFullYear();
-    if (month.length < 2) month = "0" + month;
-    if (day.length < 2) day = "0" + day;
-    return [year, month, day].join("-");
-};
-
 async function loadData() {
     if (!dates.value || !dates.value[0] || !dates.value[1]) return;
 
     loading.value = true;
     try {
         const params = {
-            start_date: formatDate(dates.value[0]),
-            end_date: formatDate(dates.value[1]),
+            start_date: formatDatePayload(dates.value[0]),
+            end_date: formatDatePayload(dates.value[1]),
         };
         if (search.value) params.q = search.value;
 
@@ -385,8 +335,8 @@ async function showDetail(product) {
 
     try {
         const params = {
-            start_date: formatDate(dates.value[0]),
-            end_date: formatDate(dates.value[1]),
+            start_date: formatDatePayload(dates.value[0]),
+            end_date: formatDatePayload(dates.value[1]),
         };
         const response = await inventoryApi.getMovementDetail(
             product.product_id,

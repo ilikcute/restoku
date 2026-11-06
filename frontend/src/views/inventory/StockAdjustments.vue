@@ -250,6 +250,7 @@ import Dialog from "primevue/dialog";
 import Select from "primevue/select";
 import InputNumber from "primevue/inputnumber";
 import Textarea from "primevue/textarea";
+import { formatDate, money as formatNumber } from "@/utils/formatters";
 
 const { t: $t } = useI18n();
 const toast = useToast();
@@ -369,19 +370,6 @@ function calculateDiff(item) {
 
 function nameById(id) {
     return products.value.find((p) => p.id === id)?.name || "-";
-}
-
-function formatNumber(val) {
-    return new Intl.NumberFormat("id-ID").format(val || 0);
-}
-
-function formatDate(dateStr) {
-    if (!dateStr) return "-";
-    return new Date(dateStr).toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-    });
 }
 
 function statusLabel(status) {

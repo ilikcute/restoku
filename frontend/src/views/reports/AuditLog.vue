@@ -18,10 +18,7 @@
           <AppDataTable :value="activities" class="app-table" stripedRows responsiveLayout="scroll" :loading="loading"
             lazy :paginator="true" :rows="rows" :totalRecords="totalRecords" @page="onPage($event)">
             <template #empty>
-              <div class="text-center py-12">
-                <i class="pi pi-history text-4xl text-slate-200 mb-3 block"></i>
-                <div class="text-slate-400">Belum ada rekaman aktivitas.</div>
-              </div>
+              <EmptyState icon="pi pi-history" message="Belum ada rekaman aktivitas." />
             </template>
 
             <Column field="created_at" header="Waktu" class="w-48">
@@ -132,7 +129,7 @@
 <script setup>
 import axios from '@/api/axios';
 import AppDataTable from '@/components/AppDataTable.vue';
-import StatusBadge from '@/components/StatusBadge.vue';
+import EmptyState from '@/components/ui/EmptyState.vue';
 import { ref, onMounted, computed } from 'vue';
 import AppPage from '@/components/layout/AppPage.vue';
 import Card from 'primevue/card';
@@ -142,6 +139,7 @@ import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
 import Avatar from 'primevue/avatar';
 import { useToast } from 'primevue/usetoast';
+import { formatDate } from '@/utils/formatters';
 
 const toast = useToast();
 const loading = ref(false);
@@ -173,10 +171,7 @@ const changeRows = computed(() => {
 });
 
 function formatDateTime(str) {
-  return new Date(str).toLocaleString('id-ID', {
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit'
-  });
+  return formatDate(str, true);
 }
 
 function timeAgo(str) {

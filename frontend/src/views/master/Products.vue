@@ -118,6 +118,7 @@ import ProductDetailModal from '@/components/master/ProductDetailModal.vue';
 import AppPage from '@/components/layout/AppPage.vue';
 import AppDataTable from '@/components/AppDataTable.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
+import { money, downloadBlob } from '@/utils/formatters';
 
 const { t: $t } = useI18n();
 const toast = useToast();
@@ -161,10 +162,6 @@ watch(filters, () => {
 }, { deep: true });
 
 // --- Helpers ---
-function money(value) {
-  return Number(value || 0).toLocaleString('id-ID');
-}
-
 function getImageUrl(path) {
   if (!path) return '';
   const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -244,13 +241,7 @@ async function handleImport(event) {
 async function downloadTemplate() {
   try {
     const response = await productApi.downloadTemplate();
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'template_import_produk.xlsx');
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    downloadBlob(response.data, 'template_import_produk.xlsx');
   } catch (error) {
     console.error('Download Error:', error);
     toast.add({ severity: 'error', summary: 'Gagal Download Template', life: 3000 });
@@ -260,13 +251,7 @@ async function downloadTemplate() {
 async function exportProducts() {
   try {
     const response = await productApi.export();
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `export_produk_${new Date().toISOString().split('T')[0]}.xlsx`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    downloadBlob(response.data, `export_produk_${new Date().toISOString().split('T')[0]}.xlsx`);
     toast.add({ severity: 'success', summary: 'Export Berhasil', life: 3000 });
   } catch (error) {
     console.error('Export Error:', error);

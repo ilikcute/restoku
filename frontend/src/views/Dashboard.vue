@@ -1,27 +1,17 @@
 <template>
   <div class="space-y-6">
     <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-      <Card v-for="card in cards" :key="card.label"
-        class="!bg-white border !border-slate-100 shadow-sm !rounded-3xl overflow-hidden hover:shadow-md transition-shadow duration-300">
-        <template #content>
-          <div class="flex flex-col p-2 space-y-4">
-            <p class="text-sm font-semibold text-slate-500">{{ $t(card.label) }}</p>
-            <div class="flex items-end justify-between">
-              <p class="text-3xl font-extrabold text-slate-800 tracking-tight">{{ card.value }}</p>
-              <div :class="['flex items-center justify-center w-12 h-12 rounded-2xl bg-opacity-20', card.bg]">
-                <i :class="[card.icon, card.color, 'text-2xl']" />
-              </div>
-            </div>
-            <div class="flex items-center gap-1 mt-2">
-              <i
-                :class="['pi text-xs', card.trend === 'up' ? 'pi-arrow-up text-emerald-500' : 'pi-arrow-down text-red-500']"></i>
-              <span :class="['text-xs font-bold', card.trend === 'up' ? 'text-emerald-500' : 'text-red-500']">{{
-                card.percent }}%</span>
-              <span class="text-xs text-slate-400">{{ $t('dashboard.vs_last_day') }}</span>
-            </div>
-          </div>
-        </template>
-      </Card>
+      <MetricCard
+        v-for="card in cards"
+        :key="card.label"
+        :title="$t(card.label)"
+        :value="card.value"
+        :icon="card.icon"
+        :color="card.colorKey"
+        :trend="card.trend"
+        :percent="card.percent"
+        :trendText="$t('dashboard.vs_last_day')"
+      />
     </div>
 
     <!-- Middle Section: Chart & Trending Menu side by side -->
@@ -139,6 +129,8 @@
 import { computed, onMounted, ref } from 'vue';
 import AppDataTable from '@/components/AppDataTable.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
+import MetricCard from '@/components/ui/MetricCard.vue';
+import { money } from '@/utils/formatters';
 import { useRouter } from 'vue-router';
 import { useDashboardStore } from '@/stores/dashboard';
 import { inventoryApi } from '@/api/inventory';
@@ -172,8 +164,7 @@ const cards = computed(() => {
       label: 'dashboard.total_menu',
       value: dashboardStore.totalProducts,
       icon: 'pi pi-box',
-      color: 'text-indigo-600',
-      bg: 'bg-indigo-100',
+      colorKey: 'indigo',
       trend: 'up',
       percent: '0'
     },
@@ -181,8 +172,7 @@ const cards = computed(() => {
       label: 'dashboard.orders_today',
       value: dashboardStore.salesCountToday,
       icon: 'pi pi-shopping-bag',
-      color: 'text-blue-600',
-      bg: 'bg-blue-100',
+      colorKey: 'blue',
       trend: ordersTrend.trend,
       percent: ordersTrend.percent
     },
@@ -190,8 +180,7 @@ const cards = computed(() => {
       label: 'dashboard.unique_customers',
       value: dashboardStore.totalCustomers,
       icon: 'pi pi-users',
-      color: 'text-emerald-600',
-      bg: 'bg-emerald-100',
+      colorKey: 'emerald',
       trend: customersTrend.trend,
       percent: customersTrend.percent
     },
@@ -199,8 +188,7 @@ const cards = computed(() => {
       label: 'dashboard.revenue_today',
       value: `Rp ${money(dashboardStore.salesToday)}`,
       icon: 'pi pi-wallet',
-      color: 'text-red-600',
-      bg: 'bg-red-100',
+      colorKey: 'rose',
       trend: salesTrend.trend,
       percent: salesTrend.percent
     }
@@ -230,10 +218,6 @@ const chartOptions = {
     x: { grid: { display: false } }
   }
 };
-
-function money(value) {
-  return Number(value || 0).toLocaleString('id-ID');
-}
 
 async function loadLowStock() {
   loadingStock.value = true;

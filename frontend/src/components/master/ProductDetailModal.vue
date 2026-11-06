@@ -37,6 +37,7 @@ import Column from 'primevue/column';
 import AppDataTable from '@/components/AppDataTable.vue';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { money } from '@/utils/formatters';
 const { t: $t } = useI18n();
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -65,10 +66,6 @@ const detailRows = computed(() => {
     { field: 'stock', label: $t('common.stock'), value: product.stock?.current_stock || 0 }
   ];
 });
-
-function money(value) {
-  return Number(value || 0).toLocaleString('id-ID');
-}
 
 function getImageUrl(path) {
   if (!path) return '';

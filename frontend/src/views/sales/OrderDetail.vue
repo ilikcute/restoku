@@ -49,7 +49,9 @@
                         class="app-table"
                         stripedRows
                     >
-                        <template #empty>Tidak ada item.</template>
+                        <template #empty>
+                            <EmptyState message="Tidak ada item." />
+                        </template>
                         <Column :header="$t('sidebar.products')">
                             <template #body="{ data }">
                                 <div class="font-bold text-slate-900">
@@ -278,6 +280,7 @@
 import axios from "@/api/axios";
 import AppDataTable from '@/components/AppDataTable.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
+import EmptyState from '@/components/ui/EmptyState.vue';
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
@@ -289,27 +292,13 @@ import Column from "primevue/column";
 import Button from "primevue/button";
 import Tag from "primevue/tag";
 import { useToast } from "primevue/usetoast";
+import { money, formatDate, downloadBlob } from "@/utils/formatters";
 
 const { t: $t } = useI18n();
 const toast = useToast();
 const route = useRoute();
 const selected = ref(null);
 const loading = ref(false);
-
-function money(value) {
-    return Number(value || 0).toLocaleString("id-ID");
-}
-
-function formatDate(date) {
-    if (!date) return "-";
-    return new Date(date).toLocaleString("id-ID", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-    });
-}
 
 function getStatusSeverity(status) {
     switch (status) {
@@ -353,16 +342,7 @@ async function downloadReceipt() {
             },
         );
 
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute(
-            "download",
-            `Receipt_${selected.value.order_number}.pdf`,
-        );
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        downloadBlob(response.data, `Receipt_${selected.value.order_number}.pdf`);
     } catch (error) {
         console.error("Download failed", error);
         toast.add({

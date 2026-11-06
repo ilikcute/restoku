@@ -34,24 +34,7 @@
                 </Column>
                 <Column :header="$t('finance.type')" style="width: 120px">
                     <template #body="{ data }">
-                        <div
-                            :class="[
-                                'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-1.5',
-                                data.type === 'income'
-                                    ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                    : 'bg-rose-50 text-rose-600 border border-rose-100',
-                            ]"
-                        >
-                            <span
-                                :class="[
-                                    'w-1.5 h-1.5 rounded-full',
-                                    data.type === 'income'
-                                        ? 'bg-emerald-500'
-                                        : 'bg-rose-500',
-                                ]"
-                            ></span>
-                            {{ data.type === "income" ? "Masuk" : "Keluar" }}
-                        </div>
+                        <StatusBadge :status="data.type" />
                     </template>
                 </Column>
                 <Column :header="$t('common.category')">
@@ -337,6 +320,7 @@
 import { reactive, ref, computed, onMounted } from "vue";
 import AppDataTable from "@/components/AppDataTable.vue";
 import StatusBadge from "@/components/StatusBadge.vue";
+import { money, formatDate } from "@/utils/formatters";
 import { useI18n } from "vue-i18n";
 import { useToast } from "primevue/usetoast";
 import { financeApi } from "@/api/finance";
@@ -389,19 +373,6 @@ function openDialog() {
     form.description = "";
     dateValue.value = new Date();
     dialogOpen.value = true;
-}
-
-function money(value) {
-    return Number(value || 0).toLocaleString("id-ID");
-}
-
-function formatDate(date) {
-    if (!date) return "-";
-    return new Date(date).toLocaleDateString("id-ID", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-    });
 }
 
 async function loadRows() {

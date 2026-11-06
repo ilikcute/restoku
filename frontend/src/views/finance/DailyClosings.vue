@@ -187,6 +187,7 @@ import DatePicker from 'primevue/datepicker';
 import Textarea from 'primevue/textarea';
 import Card from 'primevue/card';
 import Tag from 'primevue/tag';
+import { money, formatDateId as formatDate, downloadBlob } from '@/utils/formatters';
 
 const { t: $t } = useI18n();
 const toast = useToast();
@@ -225,19 +226,6 @@ function showDetailForDate() {
   }
 }
 
-function money(value) {
-  return Number(value || 0).toLocaleString('id-ID');
-}
-
-function formatDate(date) {
-  if (!date) return '-';
-  return new Date(date).toLocaleDateString('id-ID', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-}
-
 function showDetail(closing) {
   selectedClosing.value = closing;
   detailVisible.value = true;
@@ -250,14 +238,7 @@ async function printDailyReport(id) {
       responseType: 'blob'
     });
     
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `Laporan_Closing_Harian_${id}.pdf`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    
+    downloadBlob(response.data, `Laporan_Closing_Harian_${id}.pdf`);
     toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Laporan harian siap dicetak.', life: 3000 });
   } catch (error) {
     console.error('Error fetching daily report:', error);

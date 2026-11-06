@@ -3,42 +3,18 @@
         :title="$t('sidebar.purchase_report')"
         :breadcrumb="[$t('common.reports'), $t('sidebar.purchase_report')]"
     >
-        <div class="space-y-1">
-            <!-- Filters -->
-            <div
-                class="flex flex-wrap items-center justify-between gap-4 bg-slate-50/50 p-2 rounded-2xl border border-slate-100"
-            >
-                <div class="flex items-center gap-3">
-                    <label
-                        class="text-xs font-bold text-slate-500 uppercase whitespace-nowrap"
-                        >{{ $t("reports.period") }}</label
-                    >
-                    <DatePicker
-                        v-model="dates"
-                        selectionMode="range"
-                        :manualInput="false"
-                        showIcon
-                        iconDisplay="input"
-                        class="w-72"
-                    />
-                    <label
-                        class="text-xs font-bold text-slate-500 uppercase whitespace-nowrap"
-                        >{{ $t("reports.search") }}</label
-                    >
-                    <InputText
-                        v-model="search"
-                        placeholder="Cari No. Pembelian atau Pemasok..."
-                        class="w-full"
-                    />
-                </div>
-                <Button
-                    :label="$t('reports.show')"
-                    icon="pi pi-search"
-                    @click="loadData"
-                    :loading="loading"
-                    class="!rounded-xl shadow-sm"
-                />
-            </div>
+        <div class="space-y-4">
+            <!-- Reusable Filter Bar -->
+            <ReportFilterBar
+                v-model="dates"
+                :periodLabel="$t('reports.period')"
+                :buttonLabel="$t('reports.show')"
+                :loading="loading"
+                showSearch
+                v-model:searchValue="search"
+                searchPlaceholder="Cari No. Pembelian atau Pemasok..."
+                @search="loadData"
+            />
 
             <!-- Purchase Report Table -->
             <Card class="border-none shadow-sm">
@@ -60,9 +36,9 @@
                         responsiveLayout="scroll"
                     >
                         <template #empty>
-                            <div class="text-center py-8 text-slate-400">
-                                Tidak ada data pembelian untuk periode ini.
-                            </div>
+                            <EmptyState
+                                message="Tidak ada data pembelian untuk periode ini."
+                            />
                         </template>
                         <Column
                             field="DT_RowIndex"
@@ -79,7 +55,7 @@
                         />
                         <Column header="Tanggal">
                             <template #body="{ data }">{{
-                                formatDateTime(data.purchase_date)
+                                formatDate(data.purchase_date, true)
                             }}</template>
                         </Column>
                         <Column header="Pemasok">
@@ -135,16 +111,17 @@
 <script setup>
 import axios from "@/api/axios";
 import AppDataTable from "@/components/AppDataTable.vue";
-import StatusBadge from "@/components/StatusBadge.vue";
-import { ref, onMounted, computed } from "vue";
-import { useRouter } from "vue-router";
 import AppPage from "@/components/layout/AppPage.vue";
+import ReportFilterBar from "@/components/report/ReportFilterBar.vue";
+import EmptyState from "@/components/ui/EmptyState.vue";
+import StatusBadge from "@/components/StatusBadge.vue";
 import Card from "primevue/card";
 import Button from "primevue/button";
-import DatePicker from "primevue/datepicker";
-import InputText from "primevue/inputtext";
 import Column from "primevue/column";
+import { ref, onMounted, computed } from "vue";
+import { useRouter } from "vue-router";
 import { useToast } from "primevue/usetoast";
+import { money, formatDate, formatDatePayload } from "@/utils/formatters";
 
 const toast = useToast();
 const router = useRouter();
@@ -173,33 +150,6 @@ const totalAmount = computed(() => {
     );
 });
 
-function money(value) {
-    if (value === undefined || value === null) return "0";
-    return Number(value).toLocaleString("id-ID");
-}
-
-const formatDate = (date) => {
-    if (!date) return null;
-    const d = new Date(date);
-    let month = "" + (d.getMonth() + 1);
-    let day = "" + d.getDate();
-    let year = d.getFullYear();
-
-    if (month.length < 2) month = "0" + month;
-    if (day.length < 2) day = "0" + day;
-
-    return [year, month, day].join("-");
-};
-
-const formatDateTime = (date) => {
-    if (!date) return "-";
-    return new Date(date).toLocaleString("id-ID", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-    });
-};
-
 async function loadData() {
     if (!dates.value || !dates.value[0] || !dates.value[1]) {
         toast.add({
@@ -213,8 +163,8 @@ async function loadData() {
 
     loading.value = true;
     const params = {
-        start_date: formatDate(dates.value[0]),
-        end_date: formatDate(dates.value[1]),
+        start_date: formatDatePayload(dates.value[0]),
+        end_date: formatDatePayload(dates.value[1]),
     };
 
     try {

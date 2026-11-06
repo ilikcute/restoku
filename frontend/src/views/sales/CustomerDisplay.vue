@@ -148,6 +148,7 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { promotionApi } from '@/api/master';
+import { money } from '@/utils/formatters';
 
 const authStore = useAuthStore();
 const tenant = computed(() => authStore.user?.relationships?.tenant?.data?.attributes || {});
@@ -163,10 +164,6 @@ const currentTime = ref('');
 const currentDate = ref('');
 
 let channel = null;
-
-function money(val) {
-  return Number(val || 0).toLocaleString('id-ID');
-}
 
 function updateClock() {
   const now = new Date();

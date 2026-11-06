@@ -142,6 +142,7 @@ import { publicApi } from '@/api/public';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Dialog from 'primevue/dialog';
+import { money } from '@/utils/formatters';
 
 const products = ref([]);
 const categories = ref(['Semua']);
@@ -296,10 +297,6 @@ function resetAll() {
   cart.value = [];
   customerName.value = '';
   showQR.value = false;
-}
-
-function money(val) {
-  return Number(val).toLocaleString('id-ID');
 }
 </script>
 

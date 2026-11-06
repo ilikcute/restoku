@@ -94,6 +94,7 @@ import { useConfirm } from "primevue/useconfirm";
 import { databaseApi } from "@/api/settings";
 import AppPage from "@/components/layout/AppPage.vue";
 import Button from "primevue/button";
+import { downloadBlob } from "@/utils/formatters";
 
 const toast = useToast();
 const confirm = useConfirm();
@@ -105,14 +106,8 @@ async function exportDatabase() {
     exporting.value = true;
     try {
         const response = await databaseApi.export();
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement("a");
-        link.href = url;
         const date = new Date().toISOString().split("T")[0];
-        link.setAttribute("download", `restoku_backup_${date}.json`);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
+        downloadBlob(response.data, `restoku_backup_${date}.json`);
         toast.add({
             severity: "success",
             summary: "Export Berhasil",

@@ -557,6 +557,7 @@ import { computed, ref, watch, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { useToast } from "primevue/usetoast";
 import { useAuthStore } from "@/stores/auth";
+import { money } from "@/utils/formatters";
 import echo from "@/echo";
 import { financeApi } from "@/api/finance";
 import { productApi, categoryApi, customerApi, promotionApi } from "@/api/master";
@@ -908,10 +909,6 @@ watch(showPayment, (val) => {
         }
     }
 });
-
-function money(value) {
-    return Number(value || 0).toLocaleString("id-ID");
-}
 
 function updateTime() {
     const now = new Date();

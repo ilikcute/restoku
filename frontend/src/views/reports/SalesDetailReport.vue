@@ -3,47 +3,21 @@
         :title="$t('sidebar.sales_report')"
         :breadcrumb="[$t('common.reports'), $t('sidebar.sales_report')]"
     >
-        <div class="space-y-1">
-            <!-- Filters -->
+        <div class="space-y-4">
+            <!-- Reusable Filter Bar -->
+            <ReportFilterBar
+                v-model="dates"
+                :periodLabel="$t('reports.period')"
+                :buttonLabel="$t('reports.show')"
+                :loading="loading"
+                showSearch
+                v-model:searchValue="search"
+                :searchPlaceholder="$t('reports.search_placeholder')"
+                @search="loadTransactions"
+            />
 
-            <div
-                class="flex flex-wrap items-center justify-between gap-4 bg-slate-50/50 p-2 rounded-2xl border border-slate-100"
-            >
-                <div class="flex items-center gap-3">
-                    <label
-                        class="text-xs font-bold text-slate-500 uppercase whitespace-nowrap"
-                        >{{ $t("reports.period") }}</label
-                    >
-                    <DatePicker
-                        v-model="dates"
-                        selectionMode="range"
-                        :manualInput="false"
-                        showIcon
-                        iconDisplay="input"
-                        class="w-72"
-                    />
-                    <label
-                        class="text-xs font-bold text-slate-500 uppercase whitespace-nowrap"
-                        >{{ $t("reports.search") }}</label
-                    >
-                    <InputText
-                        v-model="search"
-                        :placeholder="$t('reports.search_placeholder')"
-                        class="w-full"
-                    />
-                </div>
-                <Button
-                    :label="$t('reports.show')"
-                    icon="pi pi-search"
-                    @click="loadTransactions"
-                    :loading="loading"
-                    class="!rounded-xl shadow-sm"
-                />
-            </div>
-        </div>
-
-        <!-- Detailed Sales Report Table -->
-        <Card class="border-none shadow-sm">
+            <!-- Detailed Sales Report Table -->
+            <Card class="border-none shadow-sm">
             <template #title>
                 <div class="flex justify-between items-center px-2">
                     <span
@@ -122,9 +96,9 @@
                     responsiveLayout="scroll"
                 >
                     <template #empty>
-                        <div class="text-center py-8 text-slate-400">
-                            Tidak ada data transaksi untuk periode ini.
-                        </div>
+                        <EmptyState
+                            message="Tidak ada data transaksi untuk periode ini."
+                        />
                     </template>
                     <Column class="text-center w-12">
                         <template #header>
@@ -153,7 +127,7 @@
                     <Column field="order_number" header="No. Trans" />
                     <Column header="Tanggal">
                         <template #body="{ data }">{{
-                            formatDateTime(data.created_at)
+                            formatDate(data.created_at, true)
                         }}</template>
                     </Column>
                     <Column header="Karyawan">
@@ -218,23 +192,25 @@
                 </AppDataTable>
             </template>
         </Card>
+        </div>
     </AppPage>
 </template>
 
 <script setup>
 import axios from "@/api/axios";
 import AppDataTable from "@/components/AppDataTable.vue";
-import StatusBadge from "@/components/StatusBadge.vue";
-import { ref, onMounted, computed } from "vue";
-import { useRouter } from "vue-router";
 import AppPage from "@/components/layout/AppPage.vue";
+import ReportFilterBar from "@/components/report/ReportFilterBar.vue";
+import EmptyState from "@/components/ui/EmptyState.vue";
+import StatusBadge from "@/components/StatusBadge.vue";
 import Card from "primevue/card";
 import Button from "primevue/button";
-import DatePicker from "primevue/datepicker";
-import InputText from "primevue/inputtext";
 import Column from "primevue/column";
 import Checkbox from "primevue/checkbox";
+import { ref, onMounted, computed } from "vue";
+import { useRouter } from "vue-router";
 import { useToast } from "primevue/usetoast";
+import { money, formatDate, formatDatePayload, downloadBlob } from "@/utils/formatters";
 
 const toast = useToast();
 const router = useRouter();
@@ -329,35 +305,6 @@ const transactionsTotal = computed(() => {
     );
 });
 
-function money(value) {
-    if (value === undefined || value === null) return "0";
-    return Number(value).toLocaleString("id-ID");
-}
-
-const formatDate = (date) => {
-    if (!date) return null;
-    const d = new Date(date);
-    let month = "" + (d.getMonth() + 1);
-    let day = "" + d.getDate();
-    let year = d.getFullYear();
-
-    if (month.length < 2) month = "0" + month;
-    if (day.length < 2) day = "0" + day;
-
-    return [year, month, day].join("-");
-};
-
-const formatDateTime = (date) => {
-    if (!date) return "-";
-    return new Date(date).toLocaleString("id-ID", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-    });
-};
-
 async function syncToDpkad(order) {
     if (order.is_synced_to_dpkad) return;
 
@@ -405,8 +352,8 @@ async function loadTransactions() {
 
     loading.value = true;
     const params = {
-        start_date: formatDate(dates.value[0]),
-        end_date: formatDate(dates.value[1]),
+        start_date: formatDatePayload(dates.value[0]),
+        end_date: formatDatePayload(dates.value[1]),
     };
 
     try {
@@ -445,22 +392,14 @@ async function downloadFile(url, prefix) {
 
     loading.value = true;
     try {
-        const start = formatDate(dates.value[0]);
-        const end = formatDate(dates.value[1]);
+        const start = formatDatePayload(dates.value[0]);
+        const end = formatDatePayload(dates.value[1]);
         const response = await axios.get(url, {
             params: { start_date: start, end_date: end },
             responseType: "blob",
         });
 
-        const downloadUrl = window.URL.createObjectURL(
-            new Blob([response.data]),
-        );
-        const link = document.createElement("a");
-        link.href = downloadUrl;
-        link.setAttribute("download", `${prefix}_${start}_${end}.xlsx`);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
+        downloadBlob(response.data, `${prefix}_${start}_${end}.xlsx`);
     } catch (error) {
         toast.add({
             severity: "error",

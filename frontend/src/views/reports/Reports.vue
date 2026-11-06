@@ -3,57 +3,19 @@
         :title="$t('reports.title')"
         :breadcrumb="[$t('common.reports'), $t('sidebar.recap')]"
     >
-        <div class="space-y-1">
-            <!-- Filters -->
-            <div
-                class="flex flex-wrap items-center justify-between gap-4 bg-slate-50/50 p-1 rounded-2xl border border-slate-100"
-            >
-                <!-- Controls Left -->
-                <div class="flex flex-wrap items-center gap-4">
-                    <!-- Date Group -->
-                    <div class="flex items-center gap-3">
-                        <label
-                            class="text-xs font-bold text-slate-500 uppercase whitespace-nowrap"
-                        >
-                            {{ $t("reports.period") }}
-                        </label>
-                        <DatePicker
-                            v-model="dates"
-                            selectionMode="range"
-                            :manualInput="false"
-                            showIcon
-                            iconDisplay="input"
-                            class="w-72"
-                        />
-                    </div>
-
-                    <Button
-                        :label="$t('reports.show')"
-                        icon="pi pi-search"
-                        @click="loadAllData"
-                        :loading="loading"
-                        class="!rounded-xl shadow-sm"
-                    />
-                </div>
-
-                <!-- Controls Right (Export) -->
-                <div class="flex items-center gap-2">
-                    <Button
-                        label="Excel"
-                        icon="pi pi-file-excel"
-                        severity="success"
-                        @click="exportExcel"
-                        class="!rounded-xl shadow-sm"
-                    />
-                    <Button
-                        label="PDF"
-                        icon="pi pi-file-pdf"
-                        severity="danger"
-                        @click="exportPdf"
-                        class="!rounded-xl shadow-sm"
-                    />
-                </div>
-            </div>
+        <div class="space-y-4">
+            <!-- Reusable Filter & Export Bar -->
+            <ReportFilterBar
+                v-model="dates"
+                :periodLabel="$t('reports.period')"
+                :buttonLabel="$t('reports.show')"
+                :loading="loading"
+                showExportExcel
+                showExportPdf
+                @search="loadAllData"
+                @export-excel="exportExcel"
+                @export-pdf="exportPdf"
+            />
 
             <!-- KPI Board -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -353,16 +315,16 @@
 import { ref, onMounted, computed } from "vue";
 import AppDataTable from "@/components/AppDataTable.vue";
 import StatusBadge from "@/components/StatusBadge.vue";
+import ReportFilterBar from "@/components/report/ReportFilterBar.vue";
 import { useRouter } from "vue-router";
 import axios from "@/api/axios";
 import AppPage from "@/components/layout/AppPage.vue";
 import Card from "primevue/card";
-import Button from "primevue/button";
-import DatePicker from "primevue/datepicker";
 import Column from "primevue/column";
 import Tag from "primevue/tag";
 import Chart from "primevue/chart";
 import { useToast } from "primevue/usetoast";
+import { money, formatDate, formatDatePayload, downloadBlob } from "@/utils/formatters";
 
 const toast = useToast();
 const router = useRouter();
@@ -384,39 +346,10 @@ const summary = ref({
 const dailyData = ref([]);
 const topProducts = ref([]);
 
-function money(value) {
-    if (value === undefined || value === null) return "0";
-    return Number(value).toLocaleString("id-ID");
-}
-
 function calculateMargin(profit, revenue) {
     if (!revenue || revenue === 0) return 0;
     return ((profit / revenue) * 100).toFixed(1);
 }
-
-const formatDate = (date) => {
-    if (!date) return null;
-    const d = new Date(date);
-    let month = "" + (d.getMonth() + 1);
-    let day = "" + d.getDate();
-    let year = d.getFullYear();
-
-    if (month.length < 2) month = "0" + month;
-    if (day.length < 2) day = "0" + day;
-
-    return [year, month, day].join("-");
-};
-
-const formatDateTime = (date) => {
-    if (!date) return "-";
-    return new Date(date).toLocaleString("id-ID", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-    });
-};
 
 async function loadAllData() {
     if (!dates.value || !dates.value[0] || !dates.value[1]) {
@@ -431,11 +364,9 @@ async function loadAllData() {
 
     loading.value = true;
     const params = {
-        start_date: formatDate(dates.value[0]),
-        end_date: formatDate(dates.value[1]),
+        start_date: formatDatePayload(dates.value[0]),
+        end_date: formatDatePayload(dates.value[1]),
     };
-
-    console.log("Fetching report data with params:", params);
 
     try {
         const [resSummary, resChart, resTop] = await Promise.all([
@@ -496,62 +427,29 @@ const chartOptions = {
 };
 
 async function exportExcel() {
-    await downloadFile("/reports/export/excel", `Rekap_Keuangan`);
+    await downloadFile("/reports/export/excel", "Rekap_Keuangan", "xlsx");
 }
 
-async function downloadFile(url, prefix) {
+async function exportPdf() {
+    await downloadFile("/reports/export/pdf", "Rekap_Keuangan", "pdf");
+}
+
+async function downloadFile(url, prefix, type = "xlsx") {
     loading.value = true;
     try {
-        const start = formatDate(dates.value[0]);
-        const end = formatDate(dates.value[1]);
+        const start = formatDatePayload(dates.value[0]);
+        const end = formatDatePayload(dates.value[1]);
         const response = await axios.get(url, {
             params: { start_date: start, end_date: end },
             responseType: "blob",
         });
 
-        const downloadUrl = window.URL.createObjectURL(
-            new Blob([response.data]),
-        );
-        const link = document.createElement("a");
-        link.href = downloadUrl;
-        link.setAttribute("download", `${prefix}_${start}_${end}.xlsx`);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
+        downloadBlob(response.data, `${prefix}_${start}_${end}.${type}`);
     } catch (error) {
         toast.add({
             severity: "error",
             summary: "Gagal",
-            detail: "Gagal mengunduh file Excel.",
-            life: 3000,
-        });
-    } finally {
-        loading.value = false;
-    }
-}
-
-async function exportPdf() {
-    loading.value = true;
-    try {
-        const start = formatDate(dates.value[0]);
-        const end = formatDate(dates.value[1]);
-        const response = await axios.get("/reports/export/pdf", {
-            params: { start_date: start, end_date: end },
-            responseType: "blob",
-        });
-
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute("download", `Rekap_Keuangan_${start}_${end}.pdf`);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-    } catch (error) {
-        toast.add({
-            severity: "error",
-            summary: "Gagal",
-            detail: "Gagal mengunduh PDF.",
+            detail: "Gagal mengunduh file.",
             life: 3000,
         });
     } finally {

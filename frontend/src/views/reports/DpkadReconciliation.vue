@@ -4,49 +4,15 @@
     :breadcrumb="['Laporan', 'Rekonsiliasi DPKAD']"
   >
     <div class="space-y-4">
-      <!-- Filters and Actions Header -->
-      <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-        <div class="flex flex-wrap items-center gap-3">
-          <label class="text-xs font-bold text-slate-500 uppercase whitespace-nowrap">
-            Periode
-          </label>
-          <DatePicker
-            v-model="dates"
-            selectionMode="range"
-            :manualInput="false"
-            showIcon
-            iconDisplay="input"
-            class="w-64"
-            dateFormat="dd/mm/yy"
-          />
-          <div class="flex items-center gap-1.5">
-            <Button
-              label="Hari Ini"
-              size="small"
-              text
-              severity="secondary"
-              class="!text-xs !py-1 !px-2.5"
-              @click="setToday"
-            />
-            <Button
-              label="Bulan Ini"
-              size="small"
-              text
-              severity="secondary"
-              class="!text-xs !py-1 !px-2.5"
-              @click="setThisMonth"
-            />
-          </div>
-          <Button
-            label="Periksa Rekonsiliasi"
-            icon="pi pi-search"
-            @click="loadReconciliation"
-            :loading="loading"
-            class="!rounded-xl shadow-sm"
-          />
-        </div>
-
-        <div class="flex items-center gap-2">
+      <!-- Unified Filters and Actions Header -->
+      <ReportFilterBar
+        v-model="dates"
+        periodLabel="Periode"
+        buttonLabel="Periksa Rekonsiliasi"
+        :loading="loading"
+        @search="loadReconciliation"
+      >
+        <template #actions>
           <Button
             v-if="syncableCount > 0"
             :label="`Sinkronkan Semua Selisih (${syncableCount})`"
@@ -54,10 +20,10 @@
             severity="warning"
             @click="confirmSyncAll"
             :loading="syncingAll"
-            class="!rounded-xl shadow-sm"
+            class="!rounded-xl shadow-sm !text-xs !py-2"
           />
-        </div>
-      </div>
+        </template>
+      </ReportFilterBar>
 
       <!-- Balance Status Banner -->
       <div
@@ -114,162 +80,74 @@
         </div>
       </div>
 
-      <!-- Metric Summary Cards -->
+      <!-- Reusable Metric Summary Cards -->
       <div v-if="summary" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         <!-- Card 1: Orders Record Count -->
-        <Card class="border border-slate-100 shadow-sm !rounded-2xl">
-          <template #content>
-            <div class="flex items-start justify-between">
-              <div>
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Transaksi (Orders)</span>
-                <div class="mt-2 flex items-baseline gap-2">
-                  <span class="text-2xl font-black text-slate-800">{{ summary.orders.restoku_count }}</span>
-                  <span class="text-xs text-slate-400 font-medium">Restoku vs</span>
-                  <span class="text-2xl font-black text-slate-800">{{ summary.orders.dpkad_count }}</span>
-                  <span class="text-xs text-slate-400 font-medium">DPKAD</span>
-                </div>
-              </div>
-              <div
-                :class="[
-                  'w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold',
-                  summary.orders.diff_count === 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
-                ]"
-              >
-                <i class="pi pi-list"></i>
-              </div>
-            </div>
-            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-              <span class="text-slate-500 font-medium">Selisih Record:</span>
-              <span
-                :class="[
-                  'font-black',
-                  summary.orders.diff_count === 0 ? 'text-emerald-600' : 'text-rose-600'
-                ]"
-              >
-                {{ summary.orders.diff_count > 0 ? '+' : '' }}{{ summary.orders.diff_count }} Order
-              </span>
-            </div>
-            <div class="mt-1 flex items-center justify-between text-[11px] text-slate-400">
-              <span>Cocok: <b class="text-emerald-600">{{ summary.orders.matched_count }}</b></span>
-              <span>Beda: <b class="text-amber-600">{{ summary.orders.mismatched_count }}</b></span>
-              <span>Belum di DPKAD: <b class="text-rose-600">{{ summary.orders.not_in_dpkad_count }}</b></span>
-            </div>
-          </template>
-        </Card>
+        <MetricCard
+          title="Transaksi (Orders)"
+          :value="`${summary.orders.restoku_count} vs ${summary.orders.dpkad_count}`"
+          subtitle="Restoku vs DPKAD"
+          icon="pi pi-list"
+          :color="summary.orders.diff_count === 0 ? 'emerald' : 'rose'"
+          diffLabel="Selisih Record:"
+          :diffText="`${summary.orders.diff_count > 0 ? '+' : ''}${summary.orders.diff_count} Order`"
+          :diffType="summary.orders.diff_count === 0 ? 'positive' : 'negative'"
+        >
+          <div class="mt-2 pt-2 border-t border-slate-50 flex items-center justify-between text-[11px] text-slate-400">
+            <span>Cocok: <b class="text-emerald-600">{{ summary.orders.matched_count }}</b></span>
+            <span>Beda: <b class="text-amber-600">{{ summary.orders.mismatched_count }}</b></span>
+            <span>Belum di DPKAD: <b class="text-rose-600">{{ summary.orders.not_in_dpkad_count }}</b></span>
+          </div>
+        </MetricCard>
 
         <!-- Card 2: Order Items Count & Qty -->
-        <Card class="border border-slate-100 shadow-sm !rounded-2xl">
-          <template #content>
-            <div class="flex items-start justify-between">
-              <div>
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Item Produk (Items)</span>
-                <div class="mt-2 flex items-baseline gap-2">
-                  <span class="text-2xl font-black text-slate-800">{{ summary.order_items.restoku_count }}</span>
-                  <span class="text-xs text-slate-400 font-medium">Restoku vs</span>
-                  <span class="text-2xl font-black text-slate-800">{{ summary.order_items.dpkad_count }}</span>
-                  <span class="text-xs text-slate-400 font-medium">DPKAD</span>
-                </div>
-              </div>
-              <div
-                :class="[
-                  'w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold',
-                  summary.order_items.diff_count === 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
-                ]"
-              >
-                <i class="pi pi-box"></i>
-              </div>
-            </div>
-            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-              <span class="text-slate-500 font-medium">Selisih Baris / Qty:</span>
-              <span
-                :class="[
-                  'font-black',
-                  summary.order_items.diff_count === 0 && summary.order_items.diff_qty === 0 ? 'text-emerald-600' : 'text-rose-600'
-                ]"
-              >
-                {{ summary.order_items.diff_count }} baris ({{ summary.order_items.diff_qty }} pcs)
-              </span>
-            </div>
-            <div class="mt-1 flex items-center justify-between text-[11px] text-slate-400">
-              <span>Qty Restoku: <b class="text-slate-700">{{ summary.order_items.restoku_qty }} pcs</b></span>
-              <span>Qty DPKAD: <b class="text-slate-700">{{ summary.order_items.dpkad_qty }} pcs</b></span>
-            </div>
-          </template>
-        </Card>
+        <MetricCard
+          title="Item Produk (Items)"
+          :value="`${summary.order_items.restoku_count} vs ${summary.order_items.dpkad_count}`"
+          subtitle="Restoku vs DPKAD (Baris Item)"
+          icon="pi pi-box"
+          :color="summary.order_items.diff_count === 0 && summary.order_items.diff_qty === 0 ? 'emerald' : 'rose'"
+          diffLabel="Selisih Baris / Qty:"
+          :diffText="`${summary.order_items.diff_count} baris (${summary.order_items.diff_qty} pcs)`"
+          :diffType="summary.order_items.diff_count === 0 && summary.order_items.diff_qty === 0 ? 'positive' : 'negative'"
+        >
+          <div class="mt-2 pt-2 border-t border-slate-50 flex items-center justify-between text-[11px] text-slate-400">
+            <span>Qty Restoku: <b class="text-slate-700">{{ summary.order_items.restoku_qty }} pcs</b></span>
+            <span>Qty DPKAD: <b class="text-slate-700">{{ summary.order_items.dpkad_qty }} pcs</b></span>
+          </div>
+        </MetricCard>
 
         <!-- Card 3: Total Sales Amount -->
-        <Card class="border border-slate-100 shadow-sm !rounded-2xl">
-          <template #content>
-            <div class="flex items-start justify-between">
-              <div>
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Nominal (Grand Total)</span>
-                <div class="mt-2">
-                  <div class="text-lg font-black text-slate-800">Rp {{ money(summary.orders.restoku_total) }}</div>
-                  <div class="text-xs text-slate-400 font-medium">DPKAD: Rp {{ money(summary.orders.dpkad_total) }}</div>
-                </div>
-              </div>
-              <div
-                :class="[
-                  'w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold',
-                  Math.abs(summary.orders.diff_total) < 0.01 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
-                ]"
-              >
-                <i class="pi pi-money-bill"></i>
-              </div>
-            </div>
-            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-              <span class="text-slate-500 font-medium">Selisih Nominal:</span>
-              <span
-                :class="[
-                  'font-black',
-                  Math.abs(summary.orders.diff_total) < 0.01 ? 'text-emerald-600' : 'text-rose-600'
-                ]"
-              >
-                {{ summary.orders.diff_total > 0 ? '+' : '' }}Rp {{ money(summary.orders.diff_total) }}
-              </span>
-            </div>
-            <div class="mt-1 flex items-center justify-between text-[11px] text-slate-400">
-              <span>Subtotal Diff: Rp {{ money(summary.orders.diff_subtotal) }}</span>
-            </div>
-          </template>
-        </Card>
+        <MetricCard
+          title="Total Nominal (Grand Total)"
+          :value="`Rp ${money(summary.orders.restoku_total)}`"
+          :subtitle="`DPKAD: Rp ${money(summary.orders.dpkad_total)}`"
+          icon="pi pi-money-bill"
+          :color="Math.abs(summary.orders.diff_total) < 0.01 ? 'emerald' : 'rose'"
+          diffLabel="Selisih Nominal:"
+          :diffText="`${summary.orders.diff_total > 0 ? '+' : ''}Rp ${money(summary.orders.diff_total)}`"
+          :diffType="Math.abs(summary.orders.diff_total) < 0.01 ? 'positive' : 'negative'"
+        >
+          <div class="mt-2 pt-2 border-t border-slate-50 flex items-center justify-between text-[11px] text-slate-400">
+            <span>Subtotal Diff: Rp {{ money(summary.orders.diff_subtotal) }}</span>
+          </div>
+        </MetricCard>
 
         <!-- Card 4: Tax Amount -->
-        <Card class="border border-slate-100 shadow-sm !rounded-2xl">
-          <template #content>
-            <div class="flex items-start justify-between">
-              <div>
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pajak PB1 (Tax Amount)</span>
-                <div class="mt-2">
-                  <div class="text-lg font-black text-slate-800">Rp {{ money(summary.orders.restoku_tax) }}</div>
-                  <div class="text-xs text-slate-400 font-medium">DPKAD: Rp {{ money(summary.orders.dpkad_tax) }}</div>
-                </div>
-              </div>
-              <div
-                :class="[
-                  'w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold',
-                  Math.abs(summary.orders.diff_tax) < 0.01 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
-                ]"
-              >
-                <i class="pi pi-percentage"></i>
-              </div>
-            </div>
-            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-              <span class="text-slate-500 font-medium">Selisih Pajak:</span>
-              <span
-                :class="[
-                  'font-black',
-                  Math.abs(summary.orders.diff_tax) < 0.01 ? 'text-emerald-600' : 'text-rose-600'
-                ]"
-              >
-                {{ summary.orders.diff_tax > 0 ? '+' : '' }}Rp {{ money(summary.orders.diff_tax) }}
-              </span>
-            </div>
-            <div class="mt-1 flex items-center justify-between text-[11px] text-slate-400">
-              <span>Service Diff: Rp {{ money(summary.orders.diff_service) }}</span>
-            </div>
-          </template>
-        </Card>
+        <MetricCard
+          title="Pajak PB1 (Tax Amount)"
+          :value="`Rp ${money(summary.orders.restoku_tax)}`"
+          :subtitle="`DPKAD: Rp ${money(summary.orders.dpkad_tax)}`"
+          icon="pi pi-percentage"
+          :color="Math.abs(summary.orders.diff_tax) < 0.01 ? 'emerald' : 'rose'"
+          diffLabel="Selisih Pajak:"
+          :diffText="`${summary.orders.diff_tax > 0 ? '+' : ''}Rp ${money(summary.orders.diff_tax)}`"
+          :diffType="Math.abs(summary.orders.diff_tax) < 0.01 ? 'positive' : 'negative'"
+        >
+          <div class="mt-2 pt-2 border-t border-slate-50 flex items-center justify-between text-[11px] text-slate-400">
+            <span>Service Diff: Rp {{ money(summary.orders.diff_service) }}</span>
+          </div>
+        </MetricCard>
       </div>
 
       <!-- Main Comparison Data Table -->
@@ -337,10 +215,7 @@
             :rowsPerPageOptions="[15, 25, 50, 100]"
           >
             <template #empty>
-              <div class="text-center py-12">
-                <i class="pi pi-check-circle text-4xl text-emerald-300 mb-3 block"></i>
-                <div class="text-slate-500 font-medium">Tidak ada data transaksi yang cocok dengan filter.</div>
-              </div>
+              <EmptyState message="Tidak ada data transaksi yang cocok dengan filter." />
             </template>
 
             <!-- Column 1: Order Info -->
@@ -353,7 +228,7 @@
                     <span>{{ data.customer_name || 'Pelanggan Umum' }}</span>
                   </div>
                   <span class="text-[11px] text-slate-400 mt-0.5">
-                    {{ data.date ? formatDateFull(data.date) : '-' }}
+                    {{ data.date ? formatDate(data.date, true) : '-' }}
                   </span>
                 </div>
               </template>
@@ -440,37 +315,10 @@
               </template>
             </Column>
 
-            <!-- Column 5: Status -->
+            <!-- Column 5: Status with Reusable StatusBadge -->
             <Column header="Status" class="min-w-[130px]">
               <template #body="{ data }">
-                <span
-                  v-if="data.status === 'MATCH'"
-                  class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"
-                >
-                  <i class="pi pi-check text-[10px]"></i>
-                  Cocok
-                </span>
-                <span
-                  v-else-if="data.status === 'MISMATCH'"
-                  class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200"
-                >
-                  <i class="pi pi-exclamation-triangle text-[10px]"></i>
-                  Beda Nominal/Item
-                </span>
-                <span
-                  v-else-if="data.status === 'NOT_IN_DPKAD'"
-                  class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200"
-                >
-                  <i class="pi pi-clock text-[10px]"></i>
-                  Belum di DPKAD
-                </span>
-                <span
-                  v-else-if="data.status === 'NOT_IN_RESTOKU'"
-                  class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200"
-                >
-                  <i class="pi pi-question-circle text-[10px]"></i>
-                  Hanya di DPKAD
-                </span>
+                <StatusBadge :status="data.status" />
               </template>
             </Column>
 
@@ -522,7 +370,7 @@
             </div>
             <div class="text-right">
               <div class="text-xs font-bold text-slate-400 uppercase">Waktu Transaksi</div>
-              <div class="text-xs font-medium text-slate-700">{{ formatDateFull(selectedOrder.date) }}</div>
+              <div class="text-xs font-medium text-slate-700">{{ formatDate(selectedOrder.date, true) }}</div>
             </div>
           </div>
 
@@ -619,13 +467,17 @@
 import { ref, computed, onMounted } from 'vue';
 import AppPage from '@/components/layout/AppPage.vue';
 import AppDataTable from '@/components/AppDataTable.vue';
+import ReportFilterBar from '@/components/report/ReportFilterBar.vue';
+import MetricCard from '@/components/ui/MetricCard.vue';
+import EmptyState from '@/components/ui/EmptyState.vue';
+import StatusBadge from '@/components/StatusBadge.vue';
 import Card from 'primevue/card';
 import Button from 'primevue/button';
-import DatePicker from 'primevue/datepicker';
 import Column from 'primevue/column';
 import Dialog from 'primevue/dialog';
 import { useToast } from 'primevue/usetoast';
 import { reportsApi } from '@/api/reports';
+import { money, formatDate, formatDateId, formatDatePayload } from '@/utils/formatters';
 
 const toast = useToast();
 
@@ -670,56 +522,6 @@ const filteredOrders = computed(() => {
   }
   return orders.value;
 });
-
-function money(value) {
-  return Number(value || 0).toLocaleString('id-ID');
-}
-
-function formatDateId(dateStr) {
-  if (!dateStr) return '-';
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-}
-
-function formatDateFull(dateStr) {
-  if (!dateStr) return '-';
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function formatDatePayload(date) {
-  if (!date) return null;
-  const d = new Date(date);
-  let month = '' + (d.getMonth() + 1);
-  let day = '' + d.getDate();
-  const year = d.getFullYear();
-  if (month.length < 2) month = '0' + month;
-  if (day.length < 2) day = '0' + day;
-  return [year, month, day].join('-');
-}
-
-function setToday() {
-  const today = new Date();
-  dates.value = [today, today];
-  loadReconciliation();
-}
-
-function setThisMonth() {
-  const start = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-  const end = new Date();
-  dates.value = [start, end];
-  loadReconciliation();
-}
 
 async function loadReconciliation() {
   if (!dates.value || !dates.value[0] || !dates.value[1]) {
@@ -842,4 +644,3 @@ onMounted(() => {
   loadReconciliation();
 });
 </script>
-

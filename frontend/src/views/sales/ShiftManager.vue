@@ -317,6 +317,7 @@ import Card from 'primevue/card';
 import Tag from 'primevue/tag';
 import Avatar from 'primevue/avatar';
 import Dialog from 'primevue/dialog';
+import { money, formatDate, downloadBlob } from '@/utils/formatters';
 
 const { t: $t } = useI18n();
 const toast = useToast();
@@ -331,20 +332,6 @@ const closeForm = reactive({ ending_cash: 0, notes: '' });
 
 const detailVisible = ref(false);
 const selectedShift = ref(null);
-
-function money(value) {
-  return Number(value || 0).toLocaleString('id-ID');
-}
-
-function formatDate(date) {
-  if (!date) return '-';
-  return new Date(date).toLocaleString('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-}
 
 function calculateDuration(start, end) {
   if (!start || !end) return '-';
@@ -426,14 +413,7 @@ async function printShiftReport(id) {
       responseType: 'blob'
     });
     
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `Laporan_Shift_${id}.pdf`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    
+    downloadBlob(response.data, `Laporan_Shift_${id}.pdf`);
     toast.add({ severity: 'success', summary: 'Berhasil', detail: 'Laporan shift siap dicetak.', life: 3000 });
   } catch (error) {
     console.error('Error fetching shift report:', error);

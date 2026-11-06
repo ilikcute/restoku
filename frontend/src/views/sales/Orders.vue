@@ -116,6 +116,7 @@ import Column from "primevue/column";
 import Button from "primevue/button";
 import InputText from "primevue/inputtext";
 import Select from "primevue/select";
+import { money, formatDate } from "@/utils/formatters";
 
 const { t: $t } = useI18n();
 const router = useRouter();
@@ -132,21 +133,6 @@ const statusOptions = [
     { label: "Pending", value: "pending" },
     { label: "Cancelled", value: "cancelled" },
 ];
-
-function money(value) {
-    return Number(value || 0).toLocaleString("id-ID");
-}
-
-function formatDate(date) {
-    if (!date) return "-";
-    return new Date(date).toLocaleString("id-ID", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-    });
-}
 
 function onPage(event) {
     first.value = event.first;

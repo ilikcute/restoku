@@ -122,10 +122,7 @@
                     stripedRows
                 >
                     <template #empty>
-                        <div class="text-center py-8 text-slate-400">
-                            <i class="pi pi-inbox text-4xl mb-2"></i>
-                            <p>Data stok tidak ditemukan.</p>
-                        </div>
+                        <EmptyState icon="pi pi-inbox" message="Data stok tidak ditemukan." />
                     </template>
 
                     <Column header="No" class="w-16 text-center">
@@ -218,6 +215,7 @@
 
 <script setup>
 import { computed, ref, onMounted, watch } from "vue";
+import EmptyState from "@/components/ui/EmptyState.vue";
 import AppDataTable from "@/components/AppDataTable.vue";
 import StatusBadge from "@/components/StatusBadge.vue";
 import { useI18n } from "vue-i18n";

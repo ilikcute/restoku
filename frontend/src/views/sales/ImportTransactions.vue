@@ -326,6 +326,7 @@ import Button from 'primevue/button';
 import Checkbox from 'primevue/checkbox';
 import AppPage from '@/components/layout/AppPage.vue';
 import api from '@/api/axios';
+import { formatDateId as formatDate } from '@/utils/formatters';
 
 const toast = useToast();
 
@@ -561,16 +562,6 @@ const formatCurrency = (val) => {
         style: 'currency',
         currency: 'IDR',
         minimumFractionDigits: 0
-    });
-};
-
-const formatDate = (dateStr) => {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('id-ID', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
     });
 };
 

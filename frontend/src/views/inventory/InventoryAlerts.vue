@@ -20,21 +20,11 @@
                     stripedRows
                 >
                     <template #empty>
-                        <div class="text-center py-12 text-slate-400">
-                            <div
-                                class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4"
-                            >
-                                <i
-                                    class="pi pi-thumbs-up text-4xl text-green-500"
-                                ></i>
-                            </div>
-                            <p class="text-lg font-medium text-slate-600">
-                                Semua Terkendali!
-                            </p>
-                            <p>
-                                Tidak ada produk yang stoknya berlebih saat ini.
-                            </p>
-                        </div>
+                        <EmptyState
+                            icon="pi pi-thumbs-up"
+                            title="Semua Terkendali!"
+                            message="Tidak ada produk yang stoknya berlebih saat ini."
+                        />
                     </template>
 
                     <Column
@@ -142,7 +132,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import AppDataTable from "@/components/AppDataTable.vue";
-import StatusBadge from "@/components/StatusBadge.vue";
+import EmptyState from "@/components/ui/EmptyState.vue";
 import { inventoryApi } from "@/api/inventory";
 import AppPage from "@/components/layout/AppPage.vue";
 import Column from "primevue/column";
