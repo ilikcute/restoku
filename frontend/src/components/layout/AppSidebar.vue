@@ -61,7 +61,7 @@
                     v-if="group.label !== 'common.dashboard' && !isCollapsed"
                     class="px-3 pt-4 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400"
                 >
-                    {{ getSectionLabel(group.label) }}
+                    {{ $t(group.label) }}
                 </p>
                 <div
                     v-else-if="
@@ -77,7 +77,7 @@
                     v-if="group.label === 'common.dashboard'"
                     to="/dashboard"
                     :class="[
-                        'flex items-center gap-3 rounded-xl py-2.5 text-sm font-semibold transition-all duration-200',
+                        'flex items-center gap-3 rounded-xl py-2.5 text-sm font-semibold transition-all duration-200 group relative',
                         isCollapsed
                             ? 'justify-center px-0 mx-auto w-10 h-10'
                             : 'px-3',
@@ -324,19 +324,6 @@ const toggleGroup = (label) => {
 };
 
 const isGroupOpen = (label) => openGroups.value.has(label);
-
-// Section label mapping for display
-const sectionLabelMap = {
-    "common.master_data": "Master",
-    "common.inventory": "Inventory",
-    "common.sales": "Sales",
-    "common.purchasing": "Purchasing",
-    "common.finance": "Finance",
-    "common.reports": "Reports",
-    "common.settings": "Settings",
-};
-
-const getSectionLabel = (label) => sectionLabelMap[label] || label;
 
 const menuGroups = [
     {

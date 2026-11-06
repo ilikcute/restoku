@@ -40,16 +40,13 @@
                 <div class="font-bold text-lg">{{ $t('dashboard.trending_menu') }}</div>
                 <div class="text-xs text-slate-400 font-normal">{{ $t('dashboard.most_selling') }}</div>
               </div>
-              <Button label="Today" icon="pi pi-angle-down" iconPos="right" text
-                class="!text-slate-500 border border-slate-200 !rounded-xl !px-4 !py-2" />
             </div>
           </template>
           <template #content>
             <div class="pt-2 overflow-y-auto h-64 pr-2 custom-scrollbar">
-              <!-- Favorite Menu Items -->
               <div v-if="!dashboardStore.trendingProducts.length" class="text-center py-8 text-slate-400">
                 <i class="pi pi-inbox text-4xl mb-2"></i>
-                <p>{{ $t('pos.empty_cart') }}</p>
+                <p>{{ $t('common.no_data') }}</p>
               </div>
               <div v-for="(menu, i) in dashboardStore.trendingProducts" :key="i"
                 class="flex items-center gap-4 py-3 border-b border-slate-100 last:border-0">
@@ -80,18 +77,14 @@
             <div class="font-bold text-lg flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-red-500"></span> {{ $t('dashboard.live_order') }}
             </div>
-            <Button label="Today" icon="pi pi-angle-down" iconPos="right" text
-              class="!text-slate-500 border border-slate-200 !rounded-xl !px-4 !py-2" />
           </div>
         </template>
         <template #content>
           <div class="pt-2">
-            <!-- Using lowStock data as a placeholder for Live Order table layout -->
             <AppDataTable :value="dashboardStore.recentOrders" :loading="dashboardStore.loading"
               class="p-datatable-sm !border-t !border-slate-100">
               <Column field="order_number" :header="$t('dashboard.order_id')">
-                <template #body="{ data }"><span class="font-bold text-slate-700">{{ data.order_number
-                    }}</span></template>
+                <template #body="{ data }"><span class="font-bold text-slate-700">{{ data.order_number }}</span></template>
               </Column>
               <Column :header="$t('common.status')">
                 <template #body="{ data }">
@@ -103,13 +96,11 @@
               </Column>
               <Column :header="$t('checkout.customer')">
                 <template #body="{ data }">
-                  <span class="text-xs font-medium text-slate-600">{{ data.customer_name || $t('dashboard.walking_customer')
-                  }}</span>
+                  <span class="text-xs font-medium text-slate-600">{{ data.customer_name || $t('dashboard.walking_customer') }}</span>
                 </template>
               </Column>
               <Column field="total_amount" :header="$t('dashboard.amount')">
-                <template #body="{ data }"><span class="font-semibold text-slate-700">Rp {{ money(data.total_amount)
-                    }}</span></template>
+                <template #body="{ data }"><span class="font-semibold text-slate-700">Rp {{ money(data.total_amount) }}</span></template>
               </Column>
               <Column :header="$t('dashboard.details')">
                 <template #body="{ data }">
@@ -126,27 +117,21 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted } from 'vue';
 import AppDataTable from '@/components/AppDataTable.vue';
-import StatusBadge from '@/components/StatusBadge.vue';
 import MetricCard from '@/components/ui/MetricCard.vue';
 import { money } from '@/utils/formatters';
 import { useRouter } from 'vue-router';
 import { useDashboardStore } from '@/stores/dashboard';
-import { inventoryApi } from '@/api/inventory';
 import { useI18n } from 'vue-i18n';
 import Card from 'primevue/card';
 import Chart from 'primevue/chart';
 import Button from 'primevue/button';
 import Column from 'primevue/column';
-import Tag from 'primevue/tag';
 
 const router = useRouter();
 const dashboardStore = useDashboardStore();
 const { t: $t } = useI18n();
-
-const lowStocks = ref([]);
-const loadingStock = ref(false);
 
 const cards = computed(() => {
   const calcTrend = (today, yesterday) => {
@@ -219,28 +204,11 @@ const chartOptions = {
   }
 };
 
-async function loadLowStock() {
-  loadingStock.value = true;
-  try {
-    const response = await inventoryApi.getStocks();
-    // Ensure we are working with an array even if the API returns something else
-    const stocks = Array.isArray(response?.data?.data) ? response.data.data : [];
-    lowStocks.value = stocks.filter((stock) => stock.is_low_stock);
-  } catch (e) {
-    console.error('Failed to load stocks', e);
-  } finally {
-    loadingStock.value = false;
-  }
-}
-
 onMounted(async () => {
   try {
     await dashboardStore.fetchStats();
-    await loadLowStock();
   } catch (e) {
     console.error('Dashboard mount failed', e);
   }
 });
 </script>
-
-

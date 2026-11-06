@@ -211,6 +211,8 @@
     "pos": {
         "cart_items": "Keranjang Belanja",
         "empty_cart": "Keranjang masih kosong",
+        "no_products_found": "Produk tidak ditemukan",
+        "add_note": "Tambah Catatan",
         "order_type": "Tipe Pesanan",
         "subtotal": "Sub Total",
         "service_charge": "Service Charge",
@@ -260,7 +262,18 @@
         "or": "atau",
         "no_account": "Belum punya akun?",
         "register_here": "Daftar disini",
-        "available_on": "Tersedia untuk iOS, Mac, & Desktop"
+        "available_on": "Tersedia untuk iOS, Mac, & Desktop",
+        "register_title": "Buat Akun POS",
+        "register_subtitle": "Daftarkan toko Anda dan mulai kelola pesanan, inventori, dan keuangan dalam satu tempat.",
+        "register_button": "Daftar",
+        "phone_optional": "Telepon (Opsional)",
+        "store_name": "Nama Toko/Tenant",
+        "store_name_placeholder": "Contoh: Warung Makan Pak Budi",
+        "confirm_password": "Konfirmasi Password",
+        "password_mismatch": "Password tidak cocok",
+        "have_account": "Sudah punya akun?",
+        "login_here": "Masuk disini",
+        "remember_me": "Ingat saya"
     },
     "sales": {
         "order_history": "Riwayat Pesanan",

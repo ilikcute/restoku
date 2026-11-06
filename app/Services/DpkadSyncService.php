@@ -39,6 +39,12 @@ class DpkadSyncService
                     ->first();
 
                 if (! $exists) {
+                    $exists = DB::connection('dpkad')->table('orders')
+                        ->where('order_number', $order->order_number)
+                        ->first();
+                }
+
+                if (! $exists) {
                     // Simpan ke database dpkad
                     $dpkadOrderId = DB::connection('dpkad')->table('orders')->insertGetId([
                         'external_order_id' => $order->id,
@@ -69,6 +75,7 @@ class DpkadSyncService
                     DB::connection('dpkad')->table('orders')
                         ->where('id', $exists->id)
                         ->update([
+                            'external_order_id' => $order->id,
                             'order_number' => $order->order_number,
                             'customer_name' => $order->customer_name,
                             'subtotal' => $order->subtotal,

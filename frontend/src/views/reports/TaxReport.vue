@@ -116,9 +116,24 @@
                         </Column>
 
                         <Column
+                            field="tax"
+                            header="Tax (1%)"
+                            class="text-right font-medium text-slate-600"
+                        >
+                            <template #body="{ data }">
+                                Rp {{ money(data.tax) }}
+                            </template>
+                            <template #footer>
+                                <span class="font-bold text-slate-800">
+                                    Rp {{ money(totals.tax) }}
+                                </span>
+                            </template>
+                        </Column>
+
+                        <Column
                             field="service"
-                            header="Service Charge"
-                            class="text-right font-medium text-slate-500"
+                            header="Service (1%)"
+                            class="text-right font-medium text-slate-600"
                         >
                             <template #body="{ data }">
                                 Rp {{ money(data.service) }}
@@ -126,21 +141,6 @@
                             <template #footer>
                                 <span class="font-bold text-slate-800">
                                     Rp {{ money(totals.service) }}
-                                </span>
-                            </template>
-                        </Column>
-
-                        <Column
-                            field="tax"
-                            header="PB1 (10%)"
-                            class="text-right font-semibold text-emerald-600"
-                        >
-                            <template #body="{ data }">
-                                Rp {{ money(data.tax) }}
-                            </template>
-                            <template #footer>
-                                <span class="font-bold text-emerald-700">
-                                    Rp {{ money(totals.tax) }}
                                 </span>
                             </template>
                         </Column>
@@ -156,6 +156,21 @@
                             <template #footer>
                                 <span class="font-extrabold text-slate-900">
                                     Rp {{ money(totals.grand) }}
+                                </span>
+                            </template>
+                        </Column>
+
+                        <Column
+                            field="pb1"
+                            header="PB1 (40%)"
+                            class="text-right font-bold text-emerald-600"
+                        >
+                            <template #body="{ data }">
+                                Rp {{ money(data.pb1 ?? (data.subtotal ? data.subtotal * 0.4 : 0)) }}
+                            </template>
+                            <template #footer>
+                                <span class="font-bold text-emerald-700">
+                                    Rp {{ money(totals.pb1 || (totals.subtotal ? totals.subtotal * 0.4 : 0)) }}
                                 </span>
                             </template>
                         </Column>
@@ -242,18 +257,32 @@
                                 Rp {{ money(data.subtotal) }}
                             </template>
                         </Column>
-                        <Column field="tax" header="Pajak" class="text-right">
+                        <Column field="tax" header="Tax (1%)" class="text-right">
                             <template #body="{ data }">
                                 Rp {{ money(data.tax) }}
                             </template>
                         </Column>
+                        <Column field="service" header="Service (1%)" class="text-right">
+                            <template #body="{ data }">
+                                Rp {{ money(data.service) }}
+                            </template>
+                        </Column>
                         <Column
-                            field="total"
+                            field="grand_total"
                             header="Total"
                             class="text-right font-bold text-slate-800"
                         >
                             <template #body="{ data }">
-                                Rp {{ money(data.total) }}
+                                Rp {{ money(data.grand_total) }}
+                            </template>
+                        </Column>
+                        <Column
+                            field="pb1"
+                            header="PB1 (40%)"
+                            class="text-right font-bold text-emerald-600"
+                        >
+                            <template #body="{ data }">
+                                Rp {{ money(data.pb1 ?? (data.subtotal ? data.subtotal * 0.4 : 0)) }}
                             </template>
                         </Column>
                     </AppDataTable>
@@ -297,13 +326,15 @@ const allCategories = computed(() => {
 const totals = computed(() => {
     return reportData.value.reduce(
         (acc, day) => {
-            acc.subtotal += day.subtotal || 0;
-            acc.tax += day.tax || 0;
-            acc.service += day.service || 0;
-            acc.grand += day.grand_total || 0;
+            const pb1Val = Number(day.pb1 ?? (day.subtotal ? day.subtotal * 0.4 : 0)) || 0;
+            acc.subtotal += Number(day.subtotal) || 0;
+            acc.tax += Number(day.tax) || 0;
+            acc.service += Number(day.service) || 0;
+            acc.grand += Number(day.grand_total) || 0;
+            acc.pb1 += pb1Val;
             return acc;
         },
-        { subtotal: 0, tax: 0, service: 0, grand: 0 },
+        { subtotal: 0, tax: 0, service: 0, grand: 0, pb1: 0 },
     );
 });
 

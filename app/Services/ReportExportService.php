@@ -3,9 +3,9 @@
 namespace App\Services;
 
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Collection;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use Illuminate\Support\Collection;
 
 class ReportExportService
 {
@@ -18,8 +18,8 @@ class ReportExportService
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Rekapitulasi Keuangan');
 
-        $sheet->setCellValue('A1', 'LAPORAN REKAPITULASI KEUANGAN - ' . strtoupper($tenantName));
-        $sheet->setCellValue('A2', 'Periode: ' . $startDate . ' s/d ' . $endDate);
+        $sheet->setCellValue('A1', 'LAPORAN REKAPITULASI KEUANGAN - '.strtoupper($tenantName));
+        $sheet->setCellValue('A2', 'Periode: '.$startDate.' s/d '.$endDate);
         $sheet->mergeCells('A1:B1');
         $sheet->mergeCells('A2:B2');
 
@@ -49,7 +49,7 @@ class ReportExportService
 
         $numericRows = [5, 6, 7, 8, 9, 12, 13, 14, 15, 16];
         foreach ($numericRows as $row) {
-            $sheet->getStyle('B' . $row)->getNumberFormat()->setFormatCode('#,##0');
+            $sheet->getStyle('B'.$row)->getNumberFormat()->setFormatCode('#,##0');
         }
 
         return new Xlsx($spreadsheet);
@@ -88,14 +88,14 @@ class ReportExportService
                 (float) $order->tax_amount,
                 (float) $order->rounding,
                 (float) $order->total_amount,
-            ], null, 'A' . $row);
+            ], null, 'A'.$row);
             $row++;
         }
 
-        $sheet->setCellValue('A' . $row, 'GRAND TOTAL');
-        $sheet->mergeCells('A' . $row . ':I' . $row);
-        $sheet->setCellValue('J' . $row, $orders->sum('total_amount'));
-        $sheet->getStyle('A' . $row . ':J' . $row)->getFont()->setBold(true);
+        $sheet->setCellValue('A'.$row, 'GRAND TOTAL');
+        $sheet->mergeCells('A'.$row.':I'.$row);
+        $sheet->setCellValue('J'.$row, $orders->sum('total_amount'));
+        $sheet->getStyle('A'.$row.':J'.$row)->getFont()->setBold(true);
 
         return new Xlsx($spreadsheet);
     }
@@ -123,7 +123,7 @@ class ReportExportService
                 (float) $item->price,
                 (float) $item->quantity,
                 (float) $item->subtotal,
-            ], null, 'A' . $row);
+            ], null, 'A'.$row);
             $row++;
         }
 
@@ -155,7 +155,7 @@ class ReportExportService
                 (float) $salesTotal,
                 0,
                 (float) ($shift->ending_cash ?? 0),
-            ], null, 'A' . $row);
+            ], null, 'A'.$row);
             $row++;
         }
 
@@ -175,10 +175,10 @@ class ReportExportService
         foreach ($allCategories as $cat) {
             $headers[] = $cat;
         }
-        $headers = array_merge($headers, ['Subtotal', 'Service', 'Tax (PB1)', 'Grand Total']);
+        $headers = array_merge($headers, ['Subtotal', 'Tax (1%)', 'Service (1%)', 'Total', 'PB1 (40%)']);
 
         $sheet->fromArray($headers, null, 'A1');
-        $sheet->getStyle('A1:' . $sheet->getHighestColumn() . '1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:'.$sheet->getHighestColumn().'1')->getFont()->setBold(true);
 
         $row = 2;
         foreach ($grouped as $data) {
@@ -187,11 +187,12 @@ class ReportExportService
                 $rowData[] = (float) ($data['categories'][$cat] ?? 0);
             }
             $rowData[] = (float) $data['subtotal'];
-            $rowData[] = (float) $data['service'];
             $rowData[] = (float) $data['tax'];
+            $rowData[] = (float) $data['service'];
             $rowData[] = (float) $data['grand_total'];
+            $rowData[] = (float) ($data['pb1'] ?? round($data['subtotal'] * 0.40, 2));
 
-            $sheet->fromArray($rowData, null, 'A' . $row);
+            $sheet->fromArray($rowData, null, 'A'.$row);
             $row++;
         }
 

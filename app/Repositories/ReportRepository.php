@@ -77,12 +77,27 @@ class ReportRepository implements ReportRepositoryInterface
                 foreach ($dayOrders as $order) {
                     foreach ($order->items as $item) {
                         $catName = $item->product->category->name ?? 'Lain-lain';
-                        $categories[$catName] = ($categories[$catName] ?? 0) + $item->subtotal;
+                        $categories[$catName] = ($categories[$catName] ?? 0) + (float) $item->subtotal;
                     }
-                    $subtotal += $order->subtotal;
-                    $tax += $order->tax_amount;
-                    $service += $order->service_charge;
+                    $subtotal += (float) $order->subtotal;
+                    $tax += (float) $order->tax_amount;
+                    $service += (float) $order->service_charge;
                 }
+
+                // PB1 40% sesuai perhitungan template Excel / PBJT Hiburan
+                $pb1 = round($subtotal * 0.40, 2);
+
+                $invoices = $dayOrders->map(fn ($order) => [
+                    'id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'customer_name' => $order->customer_name,
+                    'payment_method' => $order->payment_method ?? 'cash',
+                    'subtotal' => (float) $order->subtotal,
+                    'tax' => (float) $order->tax_amount,
+                    'service' => (float) $order->service_charge,
+                    'grand_total' => (float) $order->total_amount,
+                    'pb1' => round((float) $order->subtotal * 0.40, 2),
+                ])->values()->all();
 
                 return [
                     'date' => $date,
@@ -92,6 +107,8 @@ class ReportRepository implements ReportRepositoryInterface
                     'tax' => $tax,
                     'service' => $service,
                     'grand_total' => $subtotal + $tax + $service,
+                    'pb1' => $pb1,
+                    'invoices' => $invoices,
                 ];
             })
             ->values();

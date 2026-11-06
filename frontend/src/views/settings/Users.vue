@@ -23,7 +23,7 @@
                 <template #body="{ data }">
                     <div class="flex items-center gap-3">
                         <img
-                            :src="data.attributes?.avatar_url"
+                            :src="data.attributes?.avatar_url || `https://ui-avatars.com/api/?name=${data.attributes?.name || 'User'}&background=f97316&color=fff&size=64`"
                             class="w-10 h-10 rounded-xl object-cover shadow-sm border border-slate-100"
                         />
                         <div class="flex flex-col">
@@ -182,7 +182,6 @@
 <script setup>
 import { reactive, ref } from "vue";
 import AppDataTable from "@/components/AppDataTable.vue";
-import StatusBadge from "@/components/StatusBadge.vue";
 import { useI18n } from "vue-i18n";
 import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";

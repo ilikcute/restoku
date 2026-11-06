@@ -39,17 +39,19 @@
                     <th>{{ $cat }}</th>
                 @endforeach
                 <th>Subtotal</th>
-                <th>Service</th>
-                <th>Pajak (PB1)</th>
-                <th>Grand Total</th>
+                <th>Tax (1%)</th>
+                <th>Service (1%)</th>
+                <th>Total</th>
+                <th>PB1 (40%)</th>
             </tr>
         </thead>
         <tbody>
             @php 
                 $totalSubtotal = 0; 
-                $totalService = 0; 
                 $totalTax = 0; 
+                $totalService = 0; 
                 $totalGrand = 0;
+                $totalPb1 = 0;
                 $catTotals = [];
                 foreach($allCategories as $cat) $catTotals[$cat] = 0;
             @endphp
@@ -64,15 +66,17 @@
                         <td>{{ number_format($val, 0, ',', '.') }}</td>
                     @endforeach
                     <td>{{ number_format($day['subtotal'], 0, ',', '.') }}</td>
+                    <td>{{ number_format($day['tax'], 0, ',', '.') }}</td>
                     <td>{{ number_format($day['service'], 0, ',', '.') }}</td>
-                    <td style="color: #c0392b; font-weight: bold;">{{ number_format($day['tax'], 0, ',', '.') }}</td>
                     <td style="background-color: #f9f9f9; font-weight: bold;">{{ number_format($day['grand_total'], 0, ',', '.') }}</td>
+                    <td style="color: #27ae60; font-weight: bold;">{{ number_format($day['pb1'] ?? ($day['subtotal'] * 0.4), 0, ',', '.') }}</td>
                 </tr>
                 @php 
                     $totalSubtotal += $day['subtotal'];
-                    $totalService += $day['service'];
                     $totalTax += $day['tax'];
+                    $totalService += $day['service'];
                     $totalGrand += $day['grand_total'];
+                    $totalPb1 += ($day['pb1'] ?? ($day['subtotal'] * 0.4));
                 @endphp
             @endforeach
         </tbody>
@@ -83,9 +87,10 @@
                     <td>{{ number_format($catTotals[$cat], 0, ',', '.') }}</td>
                 @endforeach
                 <td>{{ number_format($totalSubtotal, 0, ',', '.') }}</td>
-                <td>{{ number_format($totalService, 0, ',', '.') }}</td>
                 <td>{{ number_format($totalTax, 0, ',', '.') }}</td>
+                <td>{{ number_format($totalService, 0, ',', '.') }}</td>
                 <td>{{ number_format($totalGrand, 0, ',', '.') }}</td>
+                <td style="color: #27ae60;">{{ number_format($totalPb1, 0, ',', '.') }}</td>
             </tr>
         </tfoot>
     </table>
@@ -93,16 +98,24 @@
     <div class="footer-summary">
         <table>
             <tr>
-                <td class="label">Total DPP (Net)</td>
+                <td class="label">Total DPP (Subtotal)</td>
                 <td class="value">Rp {{ number_format($totalSubtotal, 0, ',', '.') }}</td>
             </tr>
             <tr>
-                <td class="label">Total Pajak (PB1)</td>
-                <td class="value" style="color: #c0392b;">Rp {{ number_format($totalTax, 0, ',', '.') }}</td>
+                <td class="label">Total Tax (1%)</td>
+                <td class="value">Rp {{ number_format($totalTax, 0, ',', '.') }}</td>
+            </tr>
+            <tr>
+                <td class="label">Total Service (1%)</td>
+                <td class="value">Rp {{ number_format($totalService, 0, ',', '.') }}</td>
             </tr>
             <tr class="grand-total">
-                <td class="label">TOTAL TERLAPOR</td>
+                <td class="label">TOTAL TRANSAKSI</td>
                 <td class="value">Rp {{ number_format($totalGrand, 0, ',', '.') }}</td>
+            </tr>
+            <tr>
+                <td class="label" style="color: #27ae60;">Total PB1 (40%)</td>
+                <td class="value" style="color: #27ae60; font-size: 13px;">Rp {{ number_format($totalPb1, 0, ',', '.') }}</td>
             </tr>
         </table>
     </div>

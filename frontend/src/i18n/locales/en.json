@@ -100,7 +100,18 @@
         "or": "or",
         "no_account": "Don't have an account?",
         "register_here": "Register here",
-        "available_on": "Available for iOS, Mac, & Desktop"
+        "available_on": "Available for iOS, Mac, & Desktop",
+        "register_title": "Create your POS account",
+        "register_subtitle": "Register your store and start managing orders, inventory, and finance in one place.",
+        "register_button": "Register",
+        "phone_optional": "Phone (Optional)",
+        "store_name": "Tenant/Store Name",
+        "store_name_placeholder": "e.g. My Awesome Cafe",
+        "confirm_password": "Confirm Password",
+        "password_mismatch": "Passwords do not match",
+        "have_account": "Already have an account?",
+        "login_here": "Login here",
+        "remember_me": "Remember me"
     },
     "dashboard": {
         "total_menu": "Total Menu",
@@ -121,6 +132,8 @@
     "pos": {
         "cart_items": "Shopping Cart",
         "empty_cart": "Cart is empty",
+        "no_products_found": "No products found",
+        "add_note": "Add Note",
         "order_type": "Order Type",
         "subtotal": "Sub Total",
         "service_charge": "Service Charge",

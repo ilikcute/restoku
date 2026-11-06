@@ -19,7 +19,7 @@
                             {{ $t("inventory.total_tracked") }}
                         </p>
                         <h3 class="text-2xl font-bold text-slate-800">
-                            {{ rows.length }}
+                            {{ totalTracked }}
                         </h3>
                     </div>
                 </div>
@@ -36,7 +36,7 @@
                             {{ $t("inventory.total_accumulation") }}
                         </p>
                         <h3 class="text-2xl font-bold text-slate-800">
-                            {{ totalStock }}
+                            {{ Number(totalStock).toLocaleString('id-ID') }}
                         </h3>
                     </div>
                 </div>
@@ -237,6 +237,8 @@ const totalStock = ref(0);
 const query = ref("");
 const selectedCategoryId = ref(null);
 const first = ref(0);
+
+const totalTracked = computed(() => rows.value.length);
 
 const filteredRows = computed(() => {
     return rows.value.filter((row) => {

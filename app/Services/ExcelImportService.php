@@ -174,19 +174,20 @@ class ExcelImportService
                             'cost_price' => 0,
                             'code' => 'AUTO-'.Str::upper(Str::random(6)),
                             'category_id' => $defaultCategory ? $defaultCategory->id : null,
-                            'tax_rate' => 0,
-                            'service_charge_rate' => 0,
+                            'tax_rate' => 1,
+                            'service_charge_rate' => 1,
                             'is_active' => true,
                             'stock_type' => 'unlimited',
                         ]);
                     }
 
-                    $taxRate = $product->tax_rate ?? 0;
-                    $serviceRate = $product->service_charge_rate ?? 0;
+                    // Sesuai template Excel Redjeki Semarang: Tax 1% dan Service Charge 1%
+                    $taxRate = 1.0;
+                    $serviceRate = 1.0;
 
                     $itemSubtotal = $item['subtotal'];
-                    $itemTax = ($itemSubtotal * $taxRate) / 100;
-                    $itemService = ($itemSubtotal * $serviceRate) / 100;
+                    $itemTax = round(($itemSubtotal * $taxRate) / 100, 2);
+                    $itemService = round(($itemSubtotal * $serviceRate) / 100, 2);
 
                     $orderTotal += $itemSubtotal;
                     $orderTax += $itemTax;
@@ -458,6 +459,8 @@ class ExcelImportService
                             'name' => $tempItem->product_name,
                             'price' => $tempItem->price,
                             'cost_price' => 0,
+                            'tax_rate' => 1,
+                            'service_charge_rate' => 1,
                             'is_active' => true,
                         ]);
                     }

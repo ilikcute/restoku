@@ -92,7 +92,7 @@
                         <div v-if="!products.length"
                             class="col-span-full flex flex-col items-center justify-center py-16 text-slate-400">
                             <i class="pi pi-search text-5xl mb-3 opacity-40"></i>
-                            <p>{{ $t("pos.empty_cart") }}</p>
+                            <p>{{ $t("pos.no_products_found") }}</p>
                         </div>
                         <div v-for="product in products" :key="product.id"
                             class="relative flex flex-col overflow-hidden transition-shadow bg-white border border-slate-200 rounded-2xl hover:shadow-md cursor-pointer group"
@@ -168,7 +168,7 @@
                                 Note: {{ item.notes }}
                             </div>
                             <button @click="editItemNote(item)" class="text-[9px] text-primary-600 underline">
-                                Add Note
+                                {{ $t('pos.add_note') }}
                             </button>
                         </div>
                         <div class="flex items-center gap-2">
@@ -213,8 +213,8 @@
 
         <!-- Payment Modal -->
         <Dialog v-model:visible="showPayment" :header="$t('checkout.process_payment')" modal
-            class="w-[900px] overflow-hidden" :pt="{ content: { class: 'p-0 overflow-hidden' } }">
-            <div class="flex h-[500px] max-h-[90vh] overflow-hidden">
+            class="w-full max-w-[900px] mx-4 overflow-hidden" :pt="{ content: { class: 'p-0 overflow-hidden' } }">
+            <div class="flex flex-col md:flex-row md:h-[500px] max-h-[90vh] overflow-y-auto md:overflow-hidden">
                 <!-- Left Side: Summary & Meta (40%) -->
                 <div class="w-[38%] bg-slate-50 p-4 border-r border-slate-100 flex flex-col gap-3 overflow-hidden">
                     <div>
@@ -623,16 +623,16 @@ const showPayment = ref(false);
 const showReceipt = ref(false);
 const idempotencyKey = ref(uuidv4());
 
-// Quick cash denominations — disesuaikan dengan pecahan umum Rupiah
+// Quick cash denominations — pecahan umum Rupiah
 const quickCashDenominations = [
     5000,
     10000,
     20000,
     50000,
     100000,
-    50000 * 3,
-    100000 * 2,
-    100000 * 5,
+    200000,
+    500000,
+    1000000,
 ];
 const showAddCustomer = ref(false);
 const saving = ref(false);

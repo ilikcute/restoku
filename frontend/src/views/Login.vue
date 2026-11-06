@@ -41,22 +41,10 @@
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
                   <Checkbox v-model="form.remember" inputId="remember" :binary="true" />
-                  <label for="remember" class="text-sm text-slate-600 cursor-pointer">Ingat saya</label>
+                  <label for="remember" class="text-sm text-slate-600 cursor-pointer">{{ $t('auth.remember_me') }}</label>
                 </div>
-                <!-- Lupa Password (Optional) -->
-                <!-- <router-link to="/forgot-password" class="text-emerald-600 hover:text-emerald-700 text-sm font-medium transition-colors">
-                  Lupa Password?
-                </router-link> -->
               </div>
             </div>
-
-            <!-- Lupa Password
-            <div class="flex justify-end">
-              <router-link to="/forgot-password"
-                class="text-emerald-600 hover:text-emerald-700 text-sm font-medium transition-colors">
-                Lupa Password?
-              </router-link>
-            </div> -->
 
             <!-- Login Button -->
             <Button type="submit" :label="$t('auth.login_button')" :loading="authStore.loading" class="w-full !bg-emerald-600 hover:!bg-emerald-700 active:!bg-emerald-800 
