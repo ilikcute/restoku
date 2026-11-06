@@ -10,15 +10,12 @@ use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
+use Tests\TestCase;
 
-/**
- * @property Tenant $tenant
- * @property User $admin
- * @property Shift $shift
- */
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var TestCase $this */
     $this->tenant = Tenant::factory()->create();
     $this->admin = User::factory()->admin()->create(['tenant_id' => $this->tenant->id]);
     Permission::findOrCreate('view-reports');
@@ -33,6 +30,7 @@ beforeEach(function () {
 });
 
 test('can retrieve reconciliation data successfully', function () {
+    /** @var TestCase $this */
     // Create completed order in Restoku
     $order = Order::create([
         'tenant_id' => $this->tenant->id,
@@ -104,6 +102,7 @@ test('can retrieve reconciliation data successfully', function () {
 });
 
 test('can sync un-synced orders from reconciliation endpoint', function () {
+    /** @var TestCase $this */
     $order = Order::create([
         'tenant_id' => $this->tenant->id,
         'shift_id' => $this->shift->id,
