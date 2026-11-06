@@ -14,8 +14,7 @@
           <input type="file" ref="fileInput" class="hidden" accept=".xlsx,.xls,.csv" @change="handleImport" />
         </div>
         <div class="hidden lg:block h-8 w-px bg-slate-200"></div>
-        <Button :label="`${$t('common.add')} ${$t('sidebar.products')}`" icon="pi pi-plus"
-          class="!rounded-2xl !px-6 !bg-emerald-600 !border-none shadow-lg shadow-emerald-200/50" @click="openCreate" />
+        <AppButton :label="`${$t('common.add')} ${$t('sidebar.products')}`" icon="pi pi-plus" @click="openCreate" />
       </div>
     </template>
 

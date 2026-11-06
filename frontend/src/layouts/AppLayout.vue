@@ -1,18 +1,18 @@
 <template>
-  <div class="flex h-screen bg-slate-50 font-sans text-slate-800 p-2 gap-2">
+  <div class="flex h-screen bg-slate-50/70 font-sans text-slate-800 overflow-hidden">
     <!-- Mobile Overlay -->
-    <div v-if="sidebarOpen" class="fixed inset-0 z-40 bg-black/50 lg:hidden" @click="sidebarOpen = false" />
+    <div v-if="sidebarOpen" class="fixed inset-0 z-40 bg-black/40 lg:hidden" @click="sidebarOpen = false" />
 
-    <!-- Sidebar as Floating Card -->
+    <!-- Docked Sidebar -->
     <AppSidebar v-model="sidebarOpen" />
 
-    <!-- Main Area -->
-    <div class="flex flex-1 flex-col gap-2 overflow-hidden min-w-0">
-      <!-- Header as Floating Card -->
+    <!-- Main Workspace Area -->
+    <div class="flex flex-1 flex-col min-w-0 overflow-hidden">
+      <!-- Docked Header -->
       <AppHeader @toggle-sidebar="sidebarOpen = !sidebarOpen" />
 
-      <!-- Scrollable Content -->
-      <main class="flex-1 overflow-y-auto">
+      <!-- Scrollable Content Canvas -->
+      <main class="flex-1 overflow-y-auto p-4 md:p-6">
         <router-view />
       </main>
     </div>

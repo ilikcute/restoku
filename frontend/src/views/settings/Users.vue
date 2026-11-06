@@ -5,10 +5,9 @@
         no-card
     >
         <template #actions>
-            <Button
+            <AppButton
                 :label="$t('settings.add_user')"
                 icon="pi pi-plus"
-                class="!rounded-2xl !px-6 !bg-emerald-600 !border-none shadow-lg shadow-emerald-200/50"
                 @click="openCreate"
             />
         </template>

@@ -20,7 +20,7 @@
             />
 
             <!-- Tax Report Table -->
-            <Card class="border-none shadow-sm overflow-hidden">
+            <Card class="border border-slate-200/80 shadow-xs !rounded-2xl overflow-hidden bg-white">
                 <template #title>
                     <div class="flex justify-between items-center px-2">
                         <div class="flex flex-col">
@@ -29,7 +29,7 @@
                                 >Rekapitulasi Penjualan Terlapor Fixed (TAX)</span
                             >
                             <span
-                                class="text-xs text-slate-400 font-medium uppercase tracking-wider"
+                                class="text-xs text-slate-400 font-medium tracking-wide"
                                 >Membaca data langsung dari database DPKAD (resto_dpkad)</span
                             >
                         </div>
@@ -102,13 +102,13 @@
                         <Column
                             field="subtotal"
                             header="Subtotal"
-                            class="text-right font-medium text-slate-700"
+                            class="text-right font-medium text-slate-700 border-l border-slate-200/80"
                         >
                             <template #body="{ data }">
                                 Rp {{ money(data.subtotal) }}
                             </template>
                             <template #footer>
-                                <span class="font-bold text-slate-800">
+                                <span class="font-bold text-slate-900">
                                     Rp {{ money(totals.subtotal) }}
                                 </span>
                             </template>
@@ -117,7 +117,7 @@
                         <Column
                             field="tax"
                             header="Tax (1%)"
-                            class="text-right font-medium text-slate-600"
+                            class="text-right font-medium text-slate-600 bg-slate-50/40"
                         >
                             <template #body="{ data }">
                                 Rp {{ money(data.tax) }}
@@ -132,7 +132,7 @@
                         <Column
                             field="service"
                             header="Service (1%)"
-                            class="text-right font-medium text-slate-600"
+                            class="text-right font-medium text-slate-600 bg-slate-50/40"
                         >
                             <template #body="{ data }">
                                 Rp {{ money(data.service) }}
@@ -147,7 +147,7 @@
                         <Column
                             field="grand_total"
                             header="Total"
-                            class="text-right font-bold text-slate-900"
+                            class="text-right font-bold text-slate-900 bg-slate-50/40"
                         >
                             <template #body="{ data }">
                                 Rp {{ money(data.grand_total) }}
@@ -162,13 +162,15 @@
                         <Column
                             field="pb1"
                             header="PB1 (40%)"
-                            class="text-right font-bold text-emerald-600"
+                            class="text-right font-bold text-slate-900 bg-slate-50/70 border-l border-slate-200/80"
                         >
                             <template #body="{ data }">
-                                Rp {{ money(data.pb1 ?? (data.subtotal ? data.subtotal * 0.4 : 0)) }}
+                                <span class="font-mono text-slate-900">
+                                    Rp {{ money(data.pb1 ?? (data.subtotal ? data.subtotal * 0.4 : 0)) }}
+                                </span>
                             </template>
                             <template #footer>
-                                <span class="font-bold text-emerald-700">
+                                <span class="font-mono font-bold text-slate-900">
                                     Rp {{ money(totals.pb1 || (totals.subtotal ? totals.subtotal * 0.4 : 0)) }}
                                 </span>
                             </template>
@@ -178,7 +180,7 @@
             </Card>
 
             <!-- Detailed Invoices Table (Collapsible / Secondary) -->
-            <Card class="border-none shadow-sm overflow-hidden">
+            <Card class="border border-slate-200/80 shadow-xs !rounded-2xl overflow-hidden bg-white">
                 <template #title>
                     <div class="px-2">
                         <span
@@ -277,10 +279,12 @@
                         <Column
                             field="pb1"
                             header="PB1 (40%)"
-                            class="text-right font-bold text-emerald-600"
+                            class="text-right font-bold text-slate-900 bg-slate-50/60"
                         >
                             <template #body="{ data }">
-                                Rp {{ money(data.pb1 ?? (data.subtotal ? data.subtotal * 0.4 : 0)) }}
+                                <span class="font-mono text-slate-900">
+                                    Rp {{ money(data.pb1 ?? (data.subtotal ? data.subtotal * 0.4 : 0)) }}
+                                </span>
                             </template>
                         </Column>
                     </AppDataTable>

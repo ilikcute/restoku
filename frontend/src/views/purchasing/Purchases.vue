@@ -1,8 +1,7 @@
 <template>
   <AppPage title="Pembelian Stok" :breadcrumb="['Manajemen', 'Pembelian']" no-card>
     <template #actions>
-      <Button label="Tambah Pembelian" icon="pi pi-plus"
-        class="!rounded-2xl !px-6 !bg-orange-600 !border-none shadow-lg shadow-orange-200/50" @click="openDialog" />
+      <AppButton label="Tambah Pembelian" icon="pi pi-plus" @click="openDialog" />
     </template>
 
     <AppDataTable framed :value="rows" :loading="loading" paginator :rows="20" class="app-table"
@@ -75,7 +74,6 @@
     <Dialog v-model:visible="dialogOpen" :header="$t('purchasing.create_purchase')" modal :style="{ width: '56rem' }"
       class="p-fluid !rounded-3xl overflow-hidden shadow-2xl" pt:root:class="!rounded-3xl"
       pt:header:class="!bg-slate-50 !p-6 !border-b !border-slate-100" pt:content:class="!p-6">
-      <!-- ... rest of dialog ... -->
       <div class="space-y-6">
         <!-- Form Header Info -->
         <div class="flex items-start gap-4 p-4 bg-orange-50 rounded-2xl border border-orange-100">

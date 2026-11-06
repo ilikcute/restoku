@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary-50: var(--color-emerald-50);
-  --color-primary-100: var(--color-emerald-100);
-  --color-primary-200: var(--color-emerald-200);
-  --color-primary-300: var(--color-emerald-300);
-  --color-primary-400: var(--color-emerald-400);
-  --color-primary-500: var(--color-emerald-500);
-  --color-primary-600: var(--color-emerald-600);
-  --color-primary-700: var(--color-emerald-700);
-  --color-primary-800: var(--color-emerald-800);
-  --color-primary-900: var(--color-emerald-900);
-  --color-primary-950: var(--color-emerald-950);
+  --color-primary-50: var(--color-orange-50);
+  --color-primary-100: var(--color-orange-100);
+  --color-primary-200: var(--color-orange-200);
+  --color-primary-300: var(--color-orange-300);
+  --color-primary-400: var(--color-orange-400);
+  --color-primary-500: var(--color-orange-500);
+  --color-primary-600: var(--color-orange-600);
+  --color-primary-700: var(--color-orange-700);
+  --color-primary-800: var(--color-orange-800);
+  --color-primary-900: var(--color-orange-900);
+  --color-primary-950: var(--color-orange-950);
 
-  --background-image-app-gradient: linear-gradient(to bottom right, var(--color-emerald-500), var(--color-teal-600), var(--color-cyan-600));
+  --background-image-app-gradient: linear-gradient(to bottom right, var(--color-slate-900), var(--color-slate-800));
   --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
@@ -48,6 +48,7 @@ body {
   background-color: #ffffff;
   border-radius: 0.75rem;
   border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05);
   padding: 1rem;
 }
 
@@ -75,15 +76,15 @@ body {
 
 /* Header */
 .app-table .p-datatable-thead > tr > th {
-  background-color: #ffffff !important;
-  color: #94a3b8 !important;
-  font-size: 10px !important;
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  font-size: 11px !important;
   font-weight: 700 !important;
   text-transform: uppercase !important;
-  letter-spacing: 0.12em !important;
+  letter-spacing: 0.06em !important;
   border-top: none !important;
-  border-bottom: 1px solid #f1f5f9 !important;
-  padding: 1rem 1.25rem !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 0.875rem 1.25rem !important;
   white-space: nowrap;
 }
 
@@ -103,6 +104,18 @@ body {
   color: #334155 !important;
   font-size: 0.8125rem !important; /* 13px */
   font-weight: 500;
+  vertical-align: middle;
+}
+
+/* Footer row */
+.app-table .p-datatable-tfoot > tr > td {
+  background-color: #f8fafc !important;
+  border-top: 2px solid #e2e8f0 !important;
+  border-bottom: none !important;
+  padding: 0.875rem 1.25rem !important;
+  color: #0f172a !important;
+  font-size: 0.875rem !important;
+  font-weight: 700 !important;
   vertical-align: middle;
 }
 

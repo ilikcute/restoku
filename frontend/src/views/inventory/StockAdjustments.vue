@@ -2,8 +2,7 @@
     <AppPage :title="$t('inventory.history')" :breadcrumb="[$t('common.inventory'), $t('inventory.adjustments')]"
         no-card>
         <template #actions>
-            <Button :label="$t('inventory.new_adjustment')" icon="pi pi-plus"
-                class="!rounded-2xl !px-6 !bg-emerald-600 !border-none shadow-lg shadow-emerald-200/50"
+            <AppButton :label="$t('inventory.new_adjustment')" icon="pi pi-plus"
                 @click="openDialog()" />
         </template>
 
@@ -384,8 +383,6 @@ function statusSeverity(status) {
 
 async function loadProducts() {
     const response = await productApi.getAll();
-    // Handle paginated response: response.data.data is usually the array for Resource collections
-    // but if it's a LengthAwarePaginator, it might be response.data.data.data
     const rawData = response?.data?.data;
     products.value = Array.isArray(rawData) ? rawData : rawData?.data || [];
 }

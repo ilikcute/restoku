@@ -11,6 +11,7 @@ import i18n from './i18n';
 import './style.css';
 import './echo';
 import App from './App.vue';
+import AppButton from './components/ui/AppButton.vue';
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -31,5 +32,6 @@ app.use(PrimeVue, {
 app.use(ToastService);
 app.use(ConfirmationService);
 app.directive('tooltip', Tooltip);
+app.component('AppButton', AppButton);
 
 app.mount('#app');

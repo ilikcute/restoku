@@ -1,15 +1,15 @@
 <template>
     <aside
         :class="[
-            'flex flex-col bg-white rounded-2xl shadow-sm border border-slate-100 transition-all duration-300 shrink-0 h-full overflow-hidden',
-            modelValue ? 'fixed inset-y-2 left-2 z-50 flex w-64' : 'hidden lg:flex',
+            'flex flex-col bg-white border-r border-slate-200/80 transition-all duration-300 shrink-0 h-full overflow-hidden z-30',
+            modelValue ? 'fixed inset-y-0 left-0 z-50 flex w-64 shadow-2xl' : 'hidden lg:flex',
             isCollapsed ? 'lg:w-20' : 'lg:w-64',
         ]"
     >
         <!-- Logo Section -->
         <div
             :class="[
-                'flex h-16 shrink-0 items-center border-b border-slate-100',
+                'flex h-16 shrink-0 items-center border-b border-slate-200/80',
                 isCollapsed ? 'justify-center px-2' : 'justify-between px-4',
             ]"
         >
@@ -82,8 +82,8 @@
                             ? 'justify-center px-0 mx-auto w-10 h-10'
                             : 'px-3',
                         route.path === '/dashboard'
-                            ? 'bg-orange-500 text-white shadow-sm'
-                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800',
+                            ? 'bg-slate-900 text-white shadow-xs'
+                            : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900',
                     ]"
                     @click="$emit('update:modelValue', false)"
                 >
@@ -158,8 +158,8 @@
                             !item.external &&
                             (route.path === item.to ||
                                 route.path.startsWith(item.to + '/'))
-                                ? 'bg-orange-500 text-white shadow-sm'
-                                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800',
+                                ? 'bg-slate-900 text-white shadow-xs'
+                                : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900',
                         ]"
                         @click="
                             item.external
@@ -185,7 +185,7 @@
         </nav>
 
         <!-- Footer: User Card -->
-        <div class="shrink-0 border-t border-slate-100 p-3">
+        <div class="shrink-0 border-t border-slate-200/80 p-3">
             <div
                 v-if="!isCollapsed"
                 class="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"

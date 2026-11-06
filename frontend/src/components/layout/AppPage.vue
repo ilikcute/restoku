@@ -31,7 +31,7 @@
     <!-- Content Section -->
     <div
       v-if="!noCard"
-      class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden animate-in slide-in-from-bottom-4 duration-500"
+      class="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden animate-in slide-in-from-bottom-4 duration-500"
     >
       <div class="p-5">
         <slot></slot>

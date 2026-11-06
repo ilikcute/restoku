@@ -1,6 +1,6 @@
 <template>
   <header
-    class="flex min-h-[4rem] py-3 shrink-0 items-center justify-between px-4 md:px-6 bg-white rounded-2xl shadow-sm border border-slate-100 transition-all duration-300">
+    class="flex min-h-[4rem] py-3 shrink-0 items-center justify-between px-4 md:px-6 bg-white border-b border-slate-200/80 transition-all duration-300 z-20">
     <div class="flex items-center gap-4 flex-1">
       <!-- Mobile Menu Toggle -->
       <div class="lg:hidden">

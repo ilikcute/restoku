@@ -5,10 +5,9 @@
         no-card
     >
         <template #actions>
-            <Button
+            <AppButton
                 label="Tambah Rekening"
                 icon="pi pi-plus"
-                class="!rounded-2xl !px-6 !bg-emerald-600 !border-none shadow-lg shadow-emerald-200/50"
                 @click="openDialog"
             />
         </template>

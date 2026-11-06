@@ -1,8 +1,7 @@
 <template>
     <AppPage :title="title" :breadcrumb="[$t('common.master_data'), title]">
         <template #actions>
-            <Button :label="createLabel" icon="pi pi-plus"
-                class="!rounded-3xl !px-7 !py-3 !bg-emerald-600 !border-none shadow-xl shadow-emerald-500/20 hover:shadow-emerald-600/30 transition-all duration-200 hover:-translate-y-0.5"
+            <AppButton :label="createLabel" icon="pi pi-plus"
                 @click="openCreate" />
         </template>
 

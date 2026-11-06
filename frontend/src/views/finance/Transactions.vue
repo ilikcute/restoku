@@ -1,10 +1,9 @@
 <template>
     <AppPage title="Keuangan" :breadcrumb="['Manajemen', 'Transaksi']" no-card>
         <template #actions>
-            <Button
+            <AppButton
                 label="Tambah Transaksi"
                 icon="pi pi-plus"
-                class="!rounded-2xl !px-6 !bg-emerald-600 !border-none shadow-lg shadow-emerald-200/50"
                 @click="openDialog"
             />
         </template>

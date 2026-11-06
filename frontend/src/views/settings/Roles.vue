@@ -4,7 +4,7 @@
         :breadcrumb="[$t('common.settings'), $t('settings.roles')]"
     >
         <template #actions>
-            <Button
+            <AppButton
                 :label="$t('settings.add_role')"
                 icon="pi pi-plus"
                 @click="openCreate"

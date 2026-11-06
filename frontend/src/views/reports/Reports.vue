@@ -20,49 +20,49 @@
             <!-- KPI Board -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card
-                    class="border-none shadow-sm bg-gradient-to-br from-blue-600 to-blue-800 text-white"
+                    class="border border-slate-200/80 shadow-xs !rounded-2xl overflow-hidden bg-white hover:shadow-md transition-shadow"
                 >
                     <template #content>
                         <div class="flex justify-between items-start">
                             <div>
                                 <p
-                                    class="text-xs opacity-70 font-bold uppercase mb-1"
+                                    class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1"
                                 >
                                     {{ $t("reports.total_net") }}
                                 </p>
-                                <h3 class="text-2xl font-black">
+                                <h3 class="text-2xl font-black text-slate-900 tracking-tight">
                                     Rp {{ money(summary.sales?.net) }}
                                 </h3>
-                                <p class="text-[10px] opacity-80 mt-1">
+                                <p class="text-[11px] text-slate-400 font-medium mt-1">
                                     {{ summary.sales?.count }}
                                     {{ $t("reports.transactions") }}
                                 </p>
                             </div>
-                            <div class="bg-white/20 p-2 rounded-lg">
-                                <i class="pi pi-shopping-cart text-xl"></i>
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                <i class="pi pi-shopping-cart text-lg"></i>
                             </div>
                         </div>
                     </template>
                 </Card>
 
                 <Card
-                    class="border-none shadow-sm bg-gradient-to-br from-emerald-600 to-emerald-800 text-white"
+                    class="border border-slate-200/80 shadow-xs !rounded-2xl overflow-hidden bg-white hover:shadow-md transition-shadow"
                 >
                     <template #content>
                         <div class="flex justify-between items-start">
                             <div>
                                 <p
-                                    class="text-xs opacity-70 font-bold uppercase mb-1"
+                                    class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1"
                                 >
                                     {{ $t("reports.gross_profit") }}
                                 </p>
-                                <h3 class="text-2xl font-black">
+                                <h3 class="text-2xl font-black text-slate-900 tracking-tight">
                                     Rp
                                     {{
                                         money(summary.financials?.gross_profit)
                                     }}
                                 </h3>
-                                <p class="text-[10px] opacity-80 mt-1">
+                                <p class="text-[11px] text-slate-400 font-medium mt-1">
                                     Margin:
                                     {{
                                         calculateMargin(
@@ -72,53 +72,53 @@
                                     }}%
                                 </p>
                             </div>
-                            <div class="bg-white/20 p-2 rounded-lg">
-                                <i class="pi pi-chart-line text-xl"></i>
+                            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                <i class="pi pi-chart-line text-lg"></i>
                             </div>
                         </div>
                     </template>
                 </Card>
 
                 <Card
-                    class="border-none shadow-sm bg-gradient-to-br from-rose-600 to-rose-800 text-white"
+                    class="border border-slate-200/80 shadow-xs !rounded-2xl overflow-hidden bg-white hover:shadow-md transition-shadow"
                 >
                     <template #content>
                         <div class="flex justify-between items-start">
                             <div>
                                 <p
-                                    class="text-xs opacity-70 font-bold uppercase mb-1"
+                                    class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1"
                                 >
                                     {{ $t("reports.total_expenses") }}
                                 </p>
-                                <h3 class="text-2xl font-black">
+                                <h3 class="text-2xl font-black text-slate-900 tracking-tight">
                                     Rp {{ money(summary.financials?.expenses) }}
                                 </h3>
                             </div>
-                            <div class="bg-white/20 p-2 rounded-lg">
-                                <i class="pi pi-external-link text-xl"></i>
+                            <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                                <i class="pi pi-external-link text-lg"></i>
                             </div>
                         </div>
                     </template>
                 </Card>
 
                 <Card
-                    class="border-none shadow-sm bg-gradient-to-br from-indigo-600 to-indigo-800 text-white"
+                    class="border border-slate-200/80 shadow-xs !rounded-2xl overflow-hidden bg-white hover:shadow-md transition-shadow"
                 >
                     <template #content>
                         <div class="flex justify-between items-start">
                             <div>
                                 <p
-                                    class="text-xs opacity-70 font-bold uppercase mb-1"
+                                    class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1"
                                 >
                                     {{ $t("reports.net_profit") }}
                                 </p>
-                                <h3 class="text-2xl font-black">
+                                <h3 class="text-2xl font-black text-slate-900 tracking-tight">
                                     Rp
                                     {{ money(summary.financials?.net_profit) }}
                                 </h3>
                             </div>
-                            <div class="bg-white/20 p-2 rounded-lg">
-                                <i class="pi pi-wallet text-xl"></i>
+                            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                                <i class="pi pi-wallet text-lg"></i>
                             </div>
                         </div>
                     </template>
@@ -127,7 +127,7 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Sales Trend Chart -->
-                <Card class="lg:col-span-2 border-none shadow-sm">
+                <Card class="lg:col-span-2 border border-slate-200/80 shadow-xs !rounded-2xl bg-white">
                     <template #title
                         ><span class="text-slate-800">{{
                             $t("reports.daily_trend")
